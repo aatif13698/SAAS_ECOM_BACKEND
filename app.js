@@ -61,6 +61,7 @@ const staffAuthRouter = require("./staffAuthentication/routes/staffAuth.routes.j
 // routes import for customer
 const customerAuthRouter = require("./commonUserAuthentication/routes/user.routes.js");
 const customer = require("./commonCustomerWebiste/routes/customer.routes.js");
+const productListing = require("./productListing/routes/productListing.routes.js")
 
 
 
@@ -126,6 +127,7 @@ app.use("/api/vendor/staff/auth/", staffAuthRouter.router);
 // routes for cutomer
 app.use("/api/customer/auth", customerAuthRouter.router);
 app.use("/api/customer", customer.router);
+app.use("/api/listing", productListing.router)
 
 
 
