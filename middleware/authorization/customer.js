@@ -77,9 +77,9 @@ const PRIVATEKEY = process.env.PRIVATEKEY;
 exports.customer = async (req, res, next) => {
     let token;
     const { authorization } = req.headers;
-
     
 
+    
     try {
         // Check if Authorization header exists and starts with "Bearer"
         if (!authorization || !authorization.startsWith("Bearer")) {
