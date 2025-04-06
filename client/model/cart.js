@@ -35,6 +35,20 @@ const cartSchema = new Schema(
           required: true,
           min: [1, "Quantity must be at least 1"],
         },
+        customizationDetails: {
+          type: Map,
+          of: Schema.Types.Mixed, // Supports strings, numbers, booleans, etc.
+          default: new Map(),
+        },
+        customizationFiles: [
+          {
+            fieldName: { type: String, required: true }, // e.g., "DesignFile"
+            fileUrl: { type: String, required: true }, // Stored file path/URL
+            originalName: { type: String },
+            mimeType: { type: String },
+            size: { type: Number },
+          },
+        ],
         priceOption: {
           quantity: { type: Number, required: true },
           unit: { type: String, required: true },

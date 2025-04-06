@@ -7,7 +7,13 @@ let router = express.Router();
 
 const customerCoontroller = require("../controller/customer.controller");
 
-const customerAuth = require("../../middleware/authorization/customer")
+const customerAuth = require("../../middleware/authorization/customer");
+const {
+    uploadCustomizable
+    
+} = require('../../utils/multer');
+const httpStatusCode = require("../../utils/http-status-code");
+
 
 
 router.get('/getCategoryAndSubcategory/:clientId', customerCoontroller.getCategoryAndSubCategory);
@@ -21,6 +27,8 @@ router.get('/getAddresses/:clientId/:customerId', customerAuth.customer, custome
 
 // routes for cart
 router.post("/cart/add", customerAuth.customer, customerCoontroller.addToCart);
+
+router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), customerCoontroller.addToCartNew);
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);
 

@@ -5,6 +5,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
+const path = require("path");
+
 
 const errorHandler = require("./middleware/errorHandler/errorHandler.js");
 
@@ -18,8 +20,12 @@ const dotnev = require("dotenv");
 dotnev.config();
 
 
+
 // socket setup
 const { app, server } = require("./socket/socket.js");
+
+app.use(express.static(path.join(__dirname, "public")));
+
 
 // databse connection setup
 const { ConnectDb, createClientDatabase, getClientDatabaseConnection } = require("./db/connection.js");

@@ -306,6 +306,135 @@ exports.getAddresses = async (req, res, next) => {
   }
 };
 
+// add to cart new
+exports.addToCartNew = async (req, res, next) => {
+  try {
+    const { clientId, productStockId, quantity, priceOption, sessionId } = req.body;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const userId = req.user ? req.user._id : null; // From auth middleware
+    // Validate input
+    if (!productStockId || !quantity || !priceOption) {
+      return res.status(httpStatusCode.BadRequest).send({
+        success: false,
+        message: message.lblRequiredFieldMissing,
+      });
+    }
+    
+    // handling customisation
+    const customizationDetails = {};
+    const customizationFiles = [];
+    for (const [key, value] of Object.entries(req.body)) {
+      if (key !== "productStockId" && key !== "quantity" && key !== "priceOption" && key !== "sessionId" && key !== "clientId") {
+        customizationDetails[key] = value;
+      }
+    }
+
+    // Handle file uploads
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        customizationFiles.push({
+          fieldName: file.fieldname,
+          fileUrl: `/public/customizations/${file.filename}`, // Correct path
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+        });
+      });
+    } else {
+      console.log("No files uploaded"); // Debug log
+    }
+
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const clientUser = clientConnection.model("clientUsers", clinetUserSchema);
+    const Stock = clientConnection.model("productStock", productStockSchema);
+    const Cart = clientConnection.model("cart", cartSchema);
+    // Fetch product stock
+    const productStock = await Stock.findById(productStockId);
+    if (!productStock || !productStock.isActive) {
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "Product stock not found or inactive",
+      });
+    }
+    // Validate price option
+    const parsedPriceOption = JSON.parse(priceOption);
+    console.log("parsedPriceOption", parsedPriceOption);
+
+    
+    const validPriceOption =  productStock.priceOptions.find(
+      (opt) =>
+        opt.quantity === parsedPriceOption.quantity &&
+        opt.unit === parsedPriceOption.unit &&
+        opt.price === parsedPriceOption.price
+    );
+    if (!validPriceOption) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price option",
+      });
+    }
+    // Check stock availability
+    if (productStock.onlineStock < quantity) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Insufficient stock",
+      });
+    }
+    // Find or create cart
+    let cart;
+    if (userId) {
+      cart = await Cart.findOne({ user: userId, status: "active" });
+      if (!cart) {
+        cart = new Cart({ user: userId, createdBy: userId });
+      }
+    } else if (sessionId) {
+      cart = await Cart.findOne({ sessionId, status: "active", isGuest: true });
+      if (!cart) {
+        cart = new Cart({ sessionId, isGuest: true });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "User or session ID required",
+      });
+    }
+    // Check if item already exists in cart
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productStock.toString() === productStockId
+    );
+    if (itemIndex > -1) {
+      // Update quantity if item exists
+      cart.items[itemIndex].quantity += quantity;
+    } else {
+      // Add new item
+      cart.items.push({
+        productStock: productStockId,
+        quantity,
+        priceOption : parsedPriceOption,
+        customizationDetails: new Map(Object.entries(customizationDetails)),
+        customizationFiles,
+      });
+    }
+    // Save cart
+    await cart.save();
+    // Optionally, update product stock (e.g., reserve stock)
+    // productStock.onlineStock -= quantity;
+    // await productStock.save();
+    res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "Item added to cart",
+      data: cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // add to cart
 exports.addToCart = async (req, res, next) => {
   try {
@@ -549,7 +678,7 @@ exports.getCart = async (req, res, next) => {
           select: "name description images sku categoryId subCategoryId brandId",
         },
       })
-      .lean();
+        .lean();
     }
     if (!cart) {
       return res.status(httpStatusCode.NotFound).json({

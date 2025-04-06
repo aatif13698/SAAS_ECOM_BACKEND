@@ -53,7 +53,7 @@ exports.signIn = async (req, res, next) => {
 
         // Check if user exists
         const user = await User.findOne(query).populate('role');
-
+        
         await  commonCheckForClient(user);
 
         // Validate password

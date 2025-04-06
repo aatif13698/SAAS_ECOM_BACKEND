@@ -1,59 +1,64 @@
 /* eslint-disable consistent-return */
 const multer = require('multer');
-const fs = require('fs')
+const fs = require('fs');
+const path = require("path");
 
 // create public folder
-if(!fs.existsSync('./public')){
+if (!fs.existsSync('./public')) {
     fs.mkdirSync('./public')
 }
 
 // create profile folder
-if(!fs.existsSync('./public/profile')){
+if (!fs.existsSync('./public/profile')) {
     fs.mkdirSync('./public/profile')
 }
 
 // create icons folder
-if(!fs.existsSync('./public/icon')){
+if (!fs.existsSync('./public/icon')) {
     fs.mkdirSync('./public/icon')
 }
 
 // create images folder
-if(!fs.existsSync('./public/images')){
+if (!fs.existsSync('./public/images')) {
     fs.mkdirSync('./public/images')
 }
 
 // create brand folder
-if(!fs.existsSync('./public/brand')){
+if (!fs.existsSync('./public/brand')) {
     fs.mkdirSync('./public/brand')
 }
 
 
 // create manufacturer folder
-if(!fs.existsSync('./public/manufacturer')){
+if (!fs.existsSync('./public/manufacturer')) {
     fs.mkdirSync('./public/manufacturer')
 }
 
 
 // create business folder
-if(!fs.existsSync('./public/business')){
+if (!fs.existsSync('./public/business')) {
     fs.mkdirSync('./public/business')
 }
 
 
 // create branch folder
-if(!fs.existsSync('./public/branch')){
+if (!fs.existsSync('./public/branch')) {
     fs.mkdirSync('./public/branch')
 }
 
 
 // create warehouse folder
-if(!fs.existsSync('./public/warehouse')){
+if (!fs.existsSync('./public/warehouse')) {
     fs.mkdirSync('./public/warehouse')
 }
 
 // create product blueprint folder
-if(!fs.existsSync('./public/productBluePrint')){
+if (!fs.existsSync('./public/productBluePrint')) {
     fs.mkdirSync('./public/productBluePrint')
+}
+
+if (!fs.existsSync('./public/customizations')) {
+    fs.mkdirSync('./public/customizations')
 }
 
 
@@ -132,7 +137,7 @@ const imagesStorage = multer.diskStorage({
 
 
 const uploadImages = multer({
-    storage:  imagesStorage,
+    storage: imagesStorage,
     limits: {
         fileSize: 1024 * 1024,
         files: 5
@@ -261,11 +266,63 @@ const productBlueprintStorage = multer.diskStorage({
 const uploadProductBlueprint = multer({
     storage: productBlueprintStorage,
     limits: {
-        fileSize: 10 * 1024 * 1024, 
+        fileSize: 10 * 1024 * 1024,
         files: 5
     },
     fileFilter: imageFilter
 });
+
+
+// add to cart
+// const customoseableDetailstorage = multer.diskStorage({
+//     destination: (req, file, cb) => cb(null, "./public/customizations"), // Adjust path
+//     filename: (req, file, cb) =>
+//         cb(null, `${Date.now()}-${file.originalname}`),
+// });
+
+// const customoseableDetailstorage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, './public/customizations');
+//     },
+//     filename: async (req, file, cb) => {
+//         console.log("file", file);
+//         console.log("req",req)
+        
+//         cb(null, `${Date.now()}_${file.originalname.toLowerCase().replaceAll(' ', '')}`);
+//     },
+// });
+
+// const uploadCustomiseable = multer({
+//     customoseableDetailstorage,
+//     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+//     fileFilter: imageFilter,
+// });
+
+const imageFilters = (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png|pdf|webp/;
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = fileTypes.test(file.mimetype);
+    if (extname && mimetype) return cb(null, true);
+    cb(new Error("Only images and PDFs are allowed"));
+  };
+  
+  // Multer storage configuration
+  const customizableDetailStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "./public/customizations"); // Ensure this folder exists
+    },
+    filename: (req, file, cb) => {
+      console.log("Uploading file:", file); // Debug log
+      cb(null, `${Date.now()}_${file.originalname.toLowerCase().replaceAll(" ", "")}`);
+    },
+  });
+  
+  // Correct multer configuration
+  const uploadCustomizable = multer({
+    storage: customizableDetailStorage, // Use 'storage' key
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: imageFilters,
+  });
 
 
 
@@ -281,3 +338,4 @@ exports.uploadBusinesUnitIcon = uploadBusinesUnitIcon;
 exports.uploadBranchIcon = uploadBranchIcon;
 exports.uploadWarehouseIcon = uploadWarehouseIcon;
 exports.uploadProductBlueprint = uploadProductBlueprint;
+exports.uploadCustomizable = uploadCustomizable;

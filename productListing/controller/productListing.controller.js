@@ -44,7 +44,7 @@ exports.getProduct = async (req, res, next) => {
       const product = await Stock.findOne({isActive :  true, _id : productStockId}).populate({
           path: 'product',
           model: ProductBluePrint,
-          select: 'name _id images '
+          select: 'name _id images customizableOptions isCustomizable'
       });
       return res.status(httpStatusCode.OK).send({
           message : "Product found successfully.",
