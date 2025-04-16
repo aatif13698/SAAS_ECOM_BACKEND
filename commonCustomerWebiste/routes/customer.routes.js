@@ -32,7 +32,7 @@ router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), cu
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);
 
-
+ 
 
 
 

@@ -56,6 +56,7 @@ const vendorProductBlueprint = require("./VendorAdministration/routes/productBlu
 const vendorProductPrice = require("./VendorAdministration/routes/productRate.routes.js");
 const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
 const vendorStock = require("./VendorInventory/routes/stock.routes.js");
+const vendorOrder = require("./VendorInventory/routes/orders.routes.js")
 
 
 
@@ -67,7 +68,8 @@ const staffAuthRouter = require("./staffAuthentication/routes/staffAuth.routes.j
 // routes import for customer
 const customerAuthRouter = require("./commonUserAuthentication/routes/user.routes.js");
 const customer = require("./commonCustomerWebiste/routes/customer.routes.js");
-const productListing = require("./productListing/routes/productListing.routes.js")
+const productListing = require("./productListing/routes/productListing.routes.js");
+const productOrder = require("./commonCustomerOrder/routes/order.routes.js")
 
 
 
@@ -90,7 +92,6 @@ app.use(bodyParser.json());
 
 // connecting database
 const DATABASE_URL = process.env.DATABASE_URL;
-ConnectDb(DATABASE_URL);
 
 
 // routes setup for super admin
@@ -122,6 +123,7 @@ app.use("/api/vendor/price", vendorProductPrice.router);
 // route setup for inventory
 app.use("/api/vendor/supplier", vendorSupplier.router);
 app.use("/api/vendor/stock", vendorStock.router);
+app.use("/api/vendor/order", vendorOrder.router);
 
 
 
@@ -133,7 +135,8 @@ app.use("/api/vendor/staff/auth/", staffAuthRouter.router);
 // routes for cutomer
 app.use("/api/customer/auth", customerAuthRouter.router);
 app.use("/api/customer", customer.router);
-app.use("/api/listing", productListing.router)
+app.use("/api/listing", productListing.router);
+app.use("/api/customer/order", productOrder.router);
 
 
 
@@ -167,7 +170,6 @@ async function insertRole() {
 
 }
 
-insertRole()
 
 // insert super admin
 async function createSuperAdmin() {
@@ -304,7 +306,12 @@ app.use(errorHandler);
 const port = process.env.PORT;
 
 // listening server
-server.listen(port, () => {
+server.listen(port, async () => {
+
+await ConnectDb(DATABASE_URL);
+
+await insertRole()
+
     console.log(`APP STARTED SUCCESSFULLY on port ${port}....`)
 });
 

@@ -1,8 +1,11 @@
 const customerAddressSchema = require("../../client/model/customerAddress");
 const orderSchema = require("../../client/model/order");
+const productBlueprintSchema = require("../../client/model/productBlueprint");
 const productStockSchema = require("../../client/model/productStock");
+const { getClientDatabaseConnection } = require("../../db/connection");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
+const mongoose = require("mongoose")
 
 // place normal order
 exports.placeOrderTypeOne = async (req, res, next) => {
@@ -162,13 +165,205 @@ exports.placeOrderTypeOne = async (req, res, next) => {
   }
 };
 
+// place normal order new
+exports.placeOrderTypeOneNew = async (req, res, next) => {
+  let clientConnection;
+  let session;
+
+  try {
+    const { clientId, productStockId, quantity, priceOption, addressId } = req.body;
+    const userId = req.user ? req.user._id : null; // From auth middleware
+
+    if (!clientId) {
+      return res.status(httpStatusCode.BadRequest).send({
+        message: "Client ID is required",
+      });
+    }
+
+    // Validate input
+    if (!productStockId || !quantity || !priceOption || !addressId) {
+      return res.status(httpStatusCode.BadRequest).send({
+        success: false,
+        message: "productStockId, quantity, priceOption, and addressId are required",
+      });
+    }
+
+    if (quantity < 1) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Quantity must be at least 1",
+      });
+    }
+
+    // Handle customization
+    const customizationDetails = {};
+    const customizationFiles = [];
+    for (const [key, value] of Object.entries(req.body)) {
+      if (
+        key !== "productStockId" &&
+        key !== "quantity" &&
+        key !== "priceOption" &&
+        key !== "sessionId" &&
+        key !== "clientId" &&
+        key !== "addressId"
+      ) {
+        customizationDetails[key] = value;
+      }
+    }
+
+    // Handle file uploads
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        customizationFiles.push({
+          fieldName: file.fieldname,
+          fileUrl: `/public/customizations/${file.filename}`,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+        });
+      });
+    } else {
+      console.log("No files uploaded");
+    }
+
+    // Get client-specific database connection
+    clientConnection = await getClientDatabaseConnection(clientId);
+
+    // Start session from the client-specific connection
+    session = await clientConnection.startSession();
+    session.startTransaction();
+
+    // Define models using the client-specific connection
+    const CustomerAddress = clientConnection.model("customerAddress", customerAddressSchema);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const Order = clientConnection.model("Order", orderSchema); // Consistent with schema
+
+    // Verify address exists and belongs to the user
+    const address = await CustomerAddress.findOne({
+      _id: addressId,
+      customerId: userId,
+      deletedAt: null,
+    }).session(session);
+    if (!address) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Address not found or does not belong to user",
+      });
+    }
+
+    // Fetch and validate product stock
+    const stock = await ProductStock.findById(productStockId).session(session);
+    if (!stock || !stock.isActive) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "Product stock not found or inactive",
+      });
+    }
+
+    // Validate price option
+    const parsedPriceOption = JSON.parse(priceOption);
+    console.log("parsedPriceOption", parsedPriceOption);
+
+    const validPriceOption = stock.priceOptions.find(
+      (opt) =>
+        opt.quantity === parsedPriceOption.quantity &&
+        opt.unit === parsedPriceOption.unit &&
+        opt.price === parsedPriceOption.price
+    );
+    if (!validPriceOption) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Invalid price option",
+      });
+    }
+
+    // Check stock availability
+    if (stock.onlineStock < quantity) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Insufficient stock",
+      });
+    }
+
+    // Deduct stock
+    stock.onlineStock -= quantity;
+    stock.totalStock -= quantity;
+    await stock.save({ session });
+
+    // Prepare order item
+    const orderItem = {
+      productStock: productStockId,
+      quantity,
+      priceOption: parsedPriceOption,
+      customizationDetails: new Map(Object.entries(customizationDetails)),
+      customizationFiles,
+    };
+
+    const count = await Order.countDocuments({
+      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    });
+    const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+
+    const orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`
+
+    // Create order (orderNumber will be generated by pre-save hook)
+    const order = new Order({
+      orderNumber : orderNumber,
+      customer: userId,
+      items: [orderItem],
+      address: addressId,
+      paymentMethod: "COD",
+      paymentStatus: "PENDING",
+      status: "PENDING",
+      createdBy: userId,
+      activities: [
+        {
+          status: "PENDING",
+          updatedBy: userId,
+        },
+      ],
+    });
+
+    await order.save({ session });
+
+    // Commit transaction
+    await session.commitTransaction();
+
+    res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "Order placed successfully",
+      data: order,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+    }
+    if (error.code === 11000) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Order number generation conflict, please try again",
+      });
+    }
+    console.error(error);
+    next(error);
+  } finally {
+    if (session) {
+      session.endSession();
+    }
+  }
+};
+
 // place order from the cart
 exports.placeOrderTypeTwo = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { addressId,clientId } = req.body;
+    const { addressId, clientId } = req.body;
     const userId = req.user._id;
 
     // Validate addressId
@@ -336,5 +531,77 @@ exports.placeOrderTypeTwo = async (req, res, next) => {
     });
   } finally {
     session.endSession();
+  }
+};
+
+
+// get order list
+exports.getAllOrders = async (req, res, next) => {
+  let clientConnection;
+
+  try {
+    const { clientId } = req.query; // Using query param for clientId
+    const userId = req.user ? req.user._id : null; // From auth middleware
+
+    if (!clientId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Client ID is required",
+      });
+    }
+
+    if (!userId) {
+      return res.status(httpStatusCode.Unauthorized).json({
+        success: false,
+        message: "User authentication required",
+      });
+    }
+
+    // Get client-specific database connection
+    clientConnection = await getClientDatabaseConnection(clientId);
+
+    // Define models using the client-specific connection
+    const Order = clientConnection.model("Order", orderSchema);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+    // Fetch orders for the user
+    const orders = await Order.find({ customer: userId })
+      .populate({
+        path: "items.productStock",
+        model: ProductStock,
+        populate: {
+          path: "product", // Assuming productStock has a 'product' ref
+          model: ProductBluePrint,
+          select: "name images", // Only fetch necessary fields
+        },
+      })
+      .lean(); // Convert to plain JS objects for easier manipulation
+
+    // Transform data to match frontend expectations
+    const formattedOrders = orders.flatMap((order) =>
+      order.items.map((item) => ({
+        id: order._id.toString(), // Convert ObjectId to string
+        productStock: {
+          product: {
+            name: item.productStock?.product?.name || "Unnamed Product",
+            images: item.productStock?.product?.images || [],
+          },
+        },
+        priceOption: item.priceOption || {},
+        quantity: item.quantity || 1,
+        status: order.status || "PENDING",
+        deliveryDate: order.activities?.find((act) => act.status === "DELIVERED")?.timestamp || null, // Dynamic delivery date
+      }))
+    );
+
+    res.status(httpStatusCode.OK).json({
+      success: true,
+      message: "Orders retrieved successfully",
+      data: formattedOrders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    next(error);
   }
 };

@@ -192,6 +192,15 @@ module.exports = {
   lblStockRestoredSuccess: "Stock restored succesfully!",
   lblStockIdIsRequired: "Stock Id is required!",
 
+  // order
+  lblOrderNotFound: "Order not found!",
+  lblOrderAlreadyExists: "Order already exists!",
+  lblOrderCreatedSuccess: "Order created successfully!",
+  lblOrderUpdatedSuccess: "Order updated successfully!",
+  lblOrderFoundSuccessfully: "Order found successfully!",
+  lblOrderSoftDeletedSuccess: "Order soft deleted successfully!",
+  lblOrderRestoredSuccess: "Order restored succesfully!",
+  lblOrderIdIsRequired: "Order Id is required!",
 
 
 
