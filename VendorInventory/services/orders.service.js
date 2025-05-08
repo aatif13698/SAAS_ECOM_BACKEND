@@ -10,30 +10,94 @@ const clinetUserSchema = require("../../client/model/user");
 const customerAddressSchema = require("../../client/model/customerAddress");
 
 
+// const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const Stock = clientConnection.model('productStock', productStockSchema);
+//         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+//         const Order = clientConnection.model("Order", orderSchema); // Consistent with schema
+//         const User = clientConnection.model("clientUsers", clinetUserSchema)
+
+
+//         const { page, limit } = options;
+//         const skip = (page - 1) * limit;
+//         const [orders, total] = await Promise.all([
+//             Order.find(filters).skip(skip).limit(limit).sort({ _id: -1 }).populate({
+//                 path: 'customer',
+//                 model: User,
+//                 select: 'firstName lastName email phone _id'
+//             }),
+//             Order.countDocuments(filters),
+//         ]);
+//         return { count: total, orders };
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+//     }
+// };
+
+// new
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const Stock = clientConnection.model('productStock', productStockSchema);
-        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
-        const Order = clientConnection.model("Order", orderSchema); // Consistent with schema
-        const User = clientConnection.model("clientUsers", clinetUserSchema)
-
-
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-        const [orders, total] = await Promise.all([
-            Order.find(filters).skip(skip).limit(limit).sort({ _id: -1 }).populate({
-                path: 'customer',
-                model: User,
-                select: 'firstName lastName email phone _id'
-            }),
-            Order.countDocuments(filters),
-        ]);
-        return { count: total, orders };
+      const clientConnection = await getClientDatabaseConnection(clientId);
+      const Stock = clientConnection.model("productStock", productStockSchema);
+      const ProductBluePrint = clientConnection.model("productBlueprint", productBlueprintSchema);
+      const Order = clientConnection.model("Order", orderSchema);
+      const User = clientConnection.model("clientUsers", clinetUserSchema);
+  
+      const { page, limit } = options;
+      const skip = (page - 1) * limit;
+  
+      const [orders, total] = await Promise.all([
+        Order.find(filters)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 }) // Sort by createdAt (newest first)
+          .populate({
+            path: "customer",
+            model: User,
+            select: "firstName lastName email phone _id",
+          })
+          .populate({
+            path: "items.productStock",
+            model: Stock,
+            populate: {
+              path: "product",
+              model: ProductBluePrint,
+              select: "name images",
+            },
+          })
+          .lean(), // Use lean for performance
+        Order.countDocuments(filters),
+      ]);
+  
+      // Format orders to match frontend expectations
+    //   const formattedOrders = orders.map((order) => ({
+    //     id: order._id.toString(),
+    //     orderNumber: order.orderNumber,
+    //     customer: order.customer,
+    //     status: order.status,
+    //     createdAt: order.createdAt,
+    //     items: order.items.map((item) => ({
+    //       productStock: {
+    //         product: {
+    //           name: item.productStock?.product?.name || "Unnamed Product",
+    //           images: item.productStock?.product?.images || [],
+    //         },
+    //       },
+    //       quantity: item.quantity,
+    //       priceOption: item.priceOption,
+    //       subtotal: item.subtotal,
+    //       customizationDetails: item.customizationDetails,
+    //     })),
+    //     totalAmount: order.totalAmount,
+    //     deliveryDate: order.activities?.find((act) => act.status === "DELIVERED")?.timestamp || null,
+    //   }));
+  
+      return { count: total, orders: orders };
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+      throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
     }
-};
+  };
 
 
 const getById = async (clientId, orderId) => {
@@ -57,7 +121,7 @@ const getById = async (clientId, orderId) => {
             populate: {
                 path: "product", // Assuming productStock has a 'product' ref
                 model: ProductBluePrint,
-                select: "name images", // Only fetch necessary fields
+                select: "name images isCustomizable _id", // Only fetch necessary fields
             },
         }).lean();
 

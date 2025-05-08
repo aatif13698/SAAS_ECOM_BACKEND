@@ -19,36 +19,123 @@ const orderSchema = require("../../client/model/order");
 
 
 // list 
+// exports.list = async (req, res, next) => {
+//     try {
+
+//         const mainUser = req.user;
+//         const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
+
+//         console.log("req.query", req.query);
+
+//         if (!clientId) {
+//             return res.status(statusCode.BadRequest).send({
+//                 message: message.lblClinetIdIsRequired,
+//             });
+//         }
+//         const filters = {
+//             deletedAt: null,
+//             ...(keyword && {
+//                 $or: [
+//                     { orderNumber: { $regex: keyword.trim(), $options: "i" } },
+//                 ],
+//             }),
+//         };
+//         const result = await orderService.list(clientId, filters, { page, limit: perPage });
+//         return res.status(statusCode.OK).send({
+//             message: message.lblStockFoundSuccessfully,
+//             data: result,
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
+
+// new list
 exports.list = async (req, res, next) => {
     try {
-
-        const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
-
-        console.log("req.query", req.query);
-
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblClinetIdIsRequired,
-            });
-        }
-        const filters = {
-            deletedAt: null,
-            ...(keyword && {
-                $or: [
-                    { orderNumber: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
-        };
-        const result = await orderService.list(clientId, filters, { page, limit: perPage });
-        return res.status(statusCode.OK).send({
-            message: message.lblStockFoundSuccessfully,
-            data: result,
+      const mainUser = req.user;
+      const {
+        clientId,
+        keyword = "",
+        page = 1,
+        perPage = 10,
+        status = "", // New: Comma-separated statuses (e.g., "PENDING,APPROVED")
+        startDate = "", // New: Start date for createdAt (e.g., "2025-04-01")
+        endDate = "", // New: End date for createdAt (e.g., "2025-04-30")
+      } = req.query;
+  
+      console.log("req.query", req.query);
+  
+      if (!clientId) {
+        return res.status(statusCode.BadRequest).send({
+          message: message.lblClinetIdIsRequired,
         });
+      }
+  
+      // Build filters
+      const filters = {
+        deletedAt: null,
+        ...(keyword && {
+          $or: [{ orderNumber: { $regex: keyword.trim(), $options: "i" } }],
+        }),
+        ...(status && {
+          status: { $in: status.split(",").map((s) => s.trim().toUpperCase()) },
+        }),
+        ...(startDate && {
+          createdAt: { $gte: new Date(startDate) },
+        }),
+        ...(endDate && {
+          createdAt: {
+            ...filters.createdAt,
+            $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+          },
+        }),
+      };
+  
+      // Validate status values
+      const validStatuses = [
+        "PENDING",
+        "APPROVED",
+        "DISAPPROVED",
+        "IN_PRODUCTION",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+      ];
+      if (status) {
+        const statusArray = status.split(",").map((s) => s.trim().toUpperCase());
+        if (!statusArray.every((s) => validStatuses.includes(s))) {
+          return res.status(statusCode.BadRequest).send({
+            message: "Invalid status value provided",
+          });
+        }
+      }
+  
+      // Validate dates
+      if (startDate && isNaN(Date.parse(startDate))) {
+        return res.status(statusCode.BadRequest).send({
+          message: "Invalid startDate format. Use YYYY-MM-DD",
+        });
+      }
+      if (endDate && isNaN(Date.parse(endDate))) {
+        return res.status(statusCode.BadRequest).send({
+          message: "Invalid endDate format. Use YYYY-MM-DD",
+        });
+      }
+  
+      const result = await orderService.list(clientId, filters, {
+        page: parseInt(page),
+        limit: parseInt(perPage),
+      });
+  
+      return res.status(statusCode.OK).send({
+        message: message.lblStockFoundSuccessfully,
+        data: result,
+      });
     } catch (error) {
-        next(error);
+      next(error);
     }
-};
+  };
 
 
 
