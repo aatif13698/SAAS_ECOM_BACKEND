@@ -283,6 +283,18 @@ const defaultPersmissionsList = [
                 }
             },
             {
+                name: "Customer",
+                displayName: "All Customer",
+                access: false,
+                subMenus: {
+                    create: { id: 66, access: false, api: "/demo/path" },
+                    view: { id: 67, access: false, api: "/demo/path" },
+                    update: { id: 68, access: false, api: "/demo/path" },
+                    softDelete: { id: 69, access: false, api: "/demo/path" },
+                    activeActive: { id: 70, access: false, api: "/demo/path" },
+                }
+            },
+            {
                 name: "BusinessUnit",
                 displayName: "All BusinessUnit",
                 access: false,
@@ -475,6 +487,18 @@ const vendorPersmissionsList = [
                     update: { id: 8, access: true, api: "/demo/path" },
                     softDelete: { id: 9, access: true, api: "/demo/path" },
                     activeActive: { id: 10, access: true, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Customer",
+                displayName: "All Customer",
+                access: true,
+                subMenus: {
+                    create: { id: 66, access: true, api: "/demo/path" },
+                    view: { id: 67, access: true, api: "/demo/path" },
+                    update: { id: 68, access: true, api: "/demo/path" },
+                    softDelete: { id: 69, access: true, api: "/demo/path" },
+                    activeActive: { id: 70, access: true, api: "/demo/path" },
                 }
             },
             {

@@ -270,6 +270,14 @@ module.exports = {
   lblEmployeeNotFound: "Employee not found!",
   lblEmployeeFoundSucessfully: "Employee found successfully!",
 
+  // customer
+  lblCustomerAlreadyExists: "Customer already exists with email or phone!",
+  lblCustomerCreatedSuccess: "Customer created successfully!",
+  lblCustomerUpdatedSuccess: "Customer updated successfully!",
+  lblCustomerIdIdAndClientIdRequired: "Customer Id and Client Id are required!",
+  lblCustomerNotFound: "Customer not found!",
+  lblCustomerFoundSucessfully: "Customer found successfully!",
+
 
 
   // customer address

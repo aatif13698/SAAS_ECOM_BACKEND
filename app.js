@@ -49,6 +49,7 @@ const vendorBrandRouter = require("./VendorAdministration/routes/brand.routes.js
 const vendorManufacturerRouter = require("./VendorAdministration/routes/manufacturer.routes.js");
 const vendorRoleRouter = require("./commonClinetRolesAndPermission/routes/roles.routes.js");
 const vendorEmployeeRouter = require("./VendorAdministration/routes/employee.routes.js");
+const vendorCustomerRouter = require("./VendorAdministration/routes/customers.routes.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
@@ -113,6 +114,7 @@ app.use("/api/vendor/brand/", vendorBrandRouter.router);
 app.use("/api/vendor/manufacturer/", vendorManufacturerRouter.router);
 app.use("/api/vendor/role", vendorRoleRouter.router);
 app.use("/api/vendor/employee", vendorEmployeeRouter.router);
+app.use("/api/vendor/customer", vendorCustomerRouter.router);
 
 
 // route setup for products
@@ -277,7 +279,7 @@ async function createRoleInDatbaseInstance() {
 
 async function updateRoleInDatbaseInstance() {
     try {
-        const clientId = "6788bc044a9bdd4b16e7b94a";
+        const clientId = "67cdae13e177fa43c603b832";
         const capability = vendorPersmissionsList;
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Role = clientConnection.model('clientRoles', clientRoleSchema);
