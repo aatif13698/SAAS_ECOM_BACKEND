@@ -87,6 +87,26 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const getAllStock = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+        const [stocks, total] = await Promise.all([
+            Stock.find(filters).sort({ _id: -1 }).populate({
+                path: 'product',
+                model: ProductBluePrint,
+                select: 'name _id'
+            }),
+            Stock.countDocuments(filters),
+        ]);
+        return { count: total, stocks };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, stockId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -132,4 +152,6 @@ module.exports = {
     list,
     activeInactive,
     deleted,
+
+    getAllStock
 };

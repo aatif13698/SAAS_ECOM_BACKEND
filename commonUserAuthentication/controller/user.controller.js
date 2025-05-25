@@ -660,12 +660,12 @@ exports.addNewAddress = async (req, res, next) => {
             });
         }
         const createdAddress = await customerAddress.create({
-            customerId : user?._id,
-            fullName, phone, alternamtivePhone, country, state, city, ZipCode, houseNumber, roadName, nearbyLandmark, address 
+            customerId: user?._id,
+            fullName, phone, alternamtivePhone, country, state, city, ZipCode, houseNumber, roadName, nearbyLandmark, address
         });
         return res.status(statusCode.OK).send({
             message: "Address added successfully!",
-            createdAddress : createdAddress
+            createdAddress: createdAddress
         });
     } catch (error) {
         next(error);
@@ -673,3 +673,79 @@ exports.addNewAddress = async (req, res, next) => {
 };
 
 
+
+// create business info
+exports.createBusinessInfo = async (req, res) => {
+    try {
+        const user = req.user;
+        const {
+            clientId, businessName, tanNumber,
+            licenseNumber, gstin, businessAddress
+        } = req.body;
+        // Validate required fields
+        if (!businessName || !tanNumber || !licenseNumber || !gstin || !businessAddress) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblRequiredFieldMissing
+            });
+        }
+        // Build the update business object
+        const businessUpdates = {
+            businessName, tanNumber,
+            licenseNumber, gstin, businessAddress,
+            isBusinessAccount : true
+        };
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const updatedUser = await clientUser.findOneAndUpdate(
+            { _id: user._id },
+            { $set: businessUpdates },
+            { new: true, runValidators: true }
+        );
+        if (!updatedUser) {
+            return res.status(statusCode.NotFound).send({
+                message: "User not found."
+            });
+        }
+        // Return the updated profile
+        const updatedBusiness = {
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            profileImage: updatedUser.profileImage
+        };
+        return res.status(statusCode.OK).send({
+            message: "Business updated successfully.",
+            data: updatedBusiness
+        });
+    } catch (error) {
+        console.error("Business Updatation Error:", error);
+        return res.status(statusCode.InternalServerError).send({
+            message: errorMessage.lblInternalServerError
+        });
+    }
+};
+
+
+
+// get business info
+exports.getBusinessInfo = async (req, res) => {
+    try {
+        const { clientId, customerId } = req.params;
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const user = await clientUser.findById(customerId).select('businessName tanNumber licenseNumber gstin businessAddress isBusinessAccount');
+        if (!user) {
+            return res.status(statusCode.NotFound).send({
+                message: "User not found."
+            });
+        }
+        return res.status(statusCode.OK).send({
+            data: user,
+            message: "Business Data Found successfully."
+        });
+    } catch (error) {
+        console.error("Error in getting business data:", error);
+        return res.status(statusCode.InternalServerError).send({
+            message: errorMessage.lblInternalServerError
+        });
+    }
+};

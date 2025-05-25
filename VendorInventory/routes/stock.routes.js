@@ -25,6 +25,8 @@ router.post("/activeInactiveStock", entityAuth.authorizeEntity("Inventory", "Sup
 
 router.post("/softDeleteStock", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.softDelete);
 
+router.get('/getAllStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getAllStock);
+
 
 
 

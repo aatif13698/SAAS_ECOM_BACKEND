@@ -7,16 +7,16 @@ const ObjectId = Schema.ObjectId;
 const clinetUserSchema = new Schema(
     {
         role: { type: ObjectId, ref: "clientRoles", index: true }, // Index for role-based queries
-        businessUnit: { type: ObjectId, ref: "businessUnit", default:null, index: true }, 
-        branch: { type: ObjectId, ref: "branch", default:null, index: true },
-        warehouse: { type: ObjectId, ref: "warehouse", default:null, index: true },
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
+        branch: { type: ObjectId, ref: "branch", default: null, index: true },
+        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
-        isVendorLevel :  { type: Boolean, default: false },
-        isBuLevel :  { type: Boolean, default: false },
-        isBranchLevel :  { type: Boolean, default: false },
-        isWarehouseLevel :  { type: Boolean, default: false },
+        isVendorLevel: { type: Boolean, default: false },
+        isBuLevel: { type: Boolean, default: false },
+        isBranchLevel: { type: Boolean, default: false },
+        isWarehouseLevel: { type: Boolean, default: false },
 
-        
+
 
         roleId: { type: Number },
         firstName: { type: String, required: true },
@@ -109,6 +109,15 @@ const clinetUserSchema = new Schema(
         verificationOtp: { type: String },
         otpGeneratedAt: { type: Date },
         OTP: { type: String },
+
+
+        // business informations
+        isBusinessAccount:{ type: Boolean, default: false },
+        businessName: { type: String },
+        tanNumber: { type: String },
+        licenseNumber: { type: String },
+        gstin: { type: String },
+        businessAddress: { type: String },
 
 
         // handlign created by

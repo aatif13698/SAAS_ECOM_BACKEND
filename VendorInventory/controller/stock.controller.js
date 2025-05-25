@@ -242,6 +242,42 @@ exports.softDelete = async (req, res, next) => {
 };
 
 
+// get all stock
+exports.getAllStock = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId } = req.query;
+
+        console.log("req.query",req.query);
+        
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const filters = {
+            deletedAt: null,
+            ...(keyword && {
+                $or: [
+                    // { name: { $regex: keyword.trim(), $options: "i" } },
+                    // { contactPerson: { $regex: keyword.trim(), $options: "i" } },
+                    // { emailContact: { $regex: keyword.trim(), $options: "i" } },
+                    // { contactNumber: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+        const result = await stockService.getAllStock(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblStockFoundSuccessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 
 
 

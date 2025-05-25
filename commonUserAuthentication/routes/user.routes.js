@@ -52,14 +52,17 @@ router.post('/editProfile',  customerAuth.customer, (req, res, next) => {
     });
 }, userAuthController.editProfile);
 
-
-
 // get  profile
 router.get('/getProfile/:clientId/:customerId', customerAuth.customer, userAuthController.getProfile);
 
-
-
+// add address
 router.post('/addNewAddress', userAuthController.addNewAddress );
+
+// Create Business info
+router.post('/create/businessinfo',  customerAuth.customer, userAuthController.createBusinessInfo);
+
+// get business info
+router.get('/get/businessinfo/:clientId/:customerId', customerAuth.customer, userAuthController.getBusinessInfo);
 
 
 
