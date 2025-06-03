@@ -132,6 +132,84 @@ exports.addNewAddress = async (req, res, next) => {
   }
 };
 
+// add new address by vendor
+exports.addNewAddressByVendor = async (req, res, next) => {
+  try {
+    const {
+      clientId,
+      customerId,
+      fullName,
+      phone,
+      alternamtivePhone,
+      country,
+      state,
+      city,
+      ZipCode,
+      houseNumber,
+      roadName,
+      nearbyLandmark,
+      address,
+    } = req.body;
+    const user = req.user;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const requiredFields = [
+      fullName,
+      phone,
+      alternamtivePhone,
+      country,
+      state,
+      city,
+      ZipCode,
+      houseNumber,
+      roadName,
+      nearbyLandmark,
+      address,
+    ];
+    if (requiredFields.some((field) => !field)) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblRequiredFieldMissing });
+    }
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Role = clientConnection.model("clientRoles", clientRoleSchema);
+    const clientUser = clientConnection.model("clientUsers", clinetUserSchema);
+    const customerAddress = clientConnection.model(
+      "customerAddress",
+      customerAddressSchema
+    );
+    const customer = await clientUser.findById(customerId);
+    if (!customer) {
+      return res.status(httpStatusCode.NotFound).send({
+        message: "User not found.",
+      });
+    }
+    const createdAddress = await customerAddress.create({
+      customerId: customerId,
+      fullName,
+      phone,
+      alternamtivePhone,
+      country,
+      state,
+      city,
+      ZipCode,
+      houseNumber,
+      roadName,
+      nearbyLandmark,
+      address,
+    });
+    return res.status(httpStatusCode.OK).send({
+      message: "Address added successfully!",
+      createdAddress: createdAddress,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // update address
 exports.updateAddress = async (req, res, next) => {
   try {
@@ -227,8 +305,143 @@ exports.updateAddress = async (req, res, next) => {
   }
 };
 
+// update address by vendor
+exports.updateAddressByVendor = async (req, res, next) => {
+  try {
+    const {
+      clientId,
+      addressId,
+      customerId,
+      fullName,
+      phone,
+      alternamtivePhone,
+      country,
+      state,
+      city,
+      ZipCode,
+      houseNumber,
+      roadName,
+      nearbyLandmark,
+      address,
+    } = req.body;
+    const user = req.user;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    if (!addressId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblAddressIdIdRequired });
+    }
+    const requiredFields = [
+      fullName,
+      phone,
+      alternamtivePhone,
+      country,
+      state,
+      city,
+      ZipCode,
+      houseNumber,
+      roadName,
+      nearbyLandmark,
+      address,
+    ];
+    if (requiredFields.some((field) => !field)) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblRequiredFieldMissing });
+    }
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Role = clientConnection.model("clientRoles", clientRoleSchema);
+    const clientUser = clientConnection.model("clientUsers", clinetUserSchema);
+    const customerAddress = clientConnection.model(
+      "customerAddress",
+      customerAddressSchema
+    );
+    const customer = await clientUser.findById(customerId);
+    if (!customer) {
+      return res.status(httpStatusCode.NotFound).send({
+        message: "User not found.",
+      });
+    }
+    const existingAddress = await customerAddress.findById(addressId);
+
+    if (!existingAddress) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblAddressNotFound });
+    }
+
+    const updatedAddress = await customerAddress.findByIdAndUpdate(
+      addressId,
+      {
+        fullName,
+        phone,
+        alternamtivePhone,
+        country,
+        state,
+        city,
+        ZipCode,
+        houseNumber,
+        roadName,
+        nearbyLandmark,
+        address,
+      },
+      { new: true }
+    );
+
+    return res.status(httpStatusCode.OK).json({
+      message: message.lblAddressUpdatedSuccess,
+      data: updatedAddress,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // delete address
 exports.deleteAddress = async (req, res, next) => {
+  try {
+    const { clientId, addressId } = req.body;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .json({ message: message.lblClinetIdIsRequired });
+    }
+    if (!addressId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .json({ message: message.lblAddressIdIdRequired });
+    }
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const customerAddress = clientConnection.model(
+      "customerAddress",
+      customerAddressSchema
+    );
+    const existingAddress = await customerAddress.findOne({
+      _id: addressId,
+      deletedAt: null,
+    });
+    if (!existingAddress) {
+      return res
+        .status(httpStatusCode.NotFound)
+        .json({ message: message.lblAddressNotFound });
+    }
+    await customerAddress.findByIdAndUpdate(addressId, {
+      deletedAt: new Date(),
+    });
+    return res.status(httpStatusCode.OK).json({
+      message: message.lblAddressSoftDeletedSuccess,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// delete address by vendor
+exports.deleteAddressByVendor = async (req, res, next) => {
   try {
     const { clientId, addressId } = req.body;
     if (!clientId) {
@@ -270,6 +483,7 @@ exports.deleteAddress = async (req, res, next) => {
 exports.getAddresses = async (req, res, next) => {
   try {
     const { clientId, customerId } = req.params;
+    
     const user = req.user;
     if (!clientId) {
       return res

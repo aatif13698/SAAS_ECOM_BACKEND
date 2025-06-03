@@ -258,6 +258,7 @@ exports.getAllStock = async (req, res, next) => {
         }
         const filters = {
             deletedAt: null,
+           onlineStock: { $ne: 0 },
             ...(keyword && {
                 $or: [
                     // { name: { $regex: keyword.trim(), $options: "i" } },

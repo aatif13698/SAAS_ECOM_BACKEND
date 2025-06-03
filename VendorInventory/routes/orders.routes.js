@@ -19,7 +19,7 @@ router.get('/order/:clientId/:orderId', entityAuth.authorizeEntity("Inventory", 
 
 router.post("/order/status/update",entityAuth.authorizeEntity("Inventory", "Order", "update"), orderContrller.updateOrderStatus);
 
-router.post('/createOrder', entityAuth.authorizeEntity("Inventory", "Order", "create"), orderContrller.create);
+router.post('/createOrder', entityAuth.authorizeEntity("Inventory", "Order", "create"), orderContrller.createOrder);
 
 router.put('/updateOrder', entityAuth.authorizeEntity("Inventory", "Order", "update"), orderContrller.update);
 

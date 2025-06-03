@@ -355,6 +355,32 @@ exports.list = async (req, res, next) => {
     }
 };
 
+// get all customers
+exports.getAllCustomers = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            _id: { $ne: mainUser?._id },
+            roleId: 0,
+        };
+        const result = await customerService.getAllCustomer(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblCustomerFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.activeinactive = async (req, res, next) => {
     try {
         const { keyword, page, perPage, id, status, clientId } = req.body;

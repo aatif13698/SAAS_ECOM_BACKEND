@@ -14,6 +14,9 @@ const {
 } = require('../../utils/multer');
 const httpStatusCode = require("../../utils/http-status-code");
 
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
+
+
 
 
 router.get('/getCategoryAndSubcategory/:clientId', customerCoontroller.getCategoryAndSubCategory);
@@ -23,6 +26,10 @@ router.post('/addNewAddress', customerAuth.customer, customerCoontroller.addNewA
 router.post('/updateAddress', customerAuth.customer, customerCoontroller.updateAddress);
 router.post('/deleteAddress', customerAuth.customer, customerCoontroller.deleteAddress);
 router.get('/getAddresses/:clientId/:customerId', customerAuth.customer, customerCoontroller.getAddresses);
+router.get('/vendor/getAddresses/:clientId/:customerId', entityAuth.authorizeEntity("Administration", "Customer", "create"), customerCoontroller.getAddresses);
+router.post('/vendor/addNewAddress', entityAuth.authorizeEntity("Administration", "Customer", "create"), customerCoontroller.addNewAddressByVendor);
+router.post('/vendor/updateAddress', entityAuth.authorizeEntity("Administration", "Customer", "create"), customerCoontroller.updateAddressByVendor);
+router.post('/vendor/deleteAddress', entityAuth.authorizeEntity("Administration", "Customer", "create"), customerCoontroller.deleteAddressByVendor);
 
 
 // routes for cart
