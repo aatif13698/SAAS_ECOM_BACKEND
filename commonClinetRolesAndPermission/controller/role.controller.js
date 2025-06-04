@@ -241,6 +241,7 @@ exports.getRolesList = async (req, res) => {
         const RolesAndPermission = clientConnection.model('clientRoles', clientRoleSchema);
 
         let filter = {
+            id : {$ne : 0},
             deletedAt: null
         }
 
