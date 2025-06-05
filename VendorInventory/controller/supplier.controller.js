@@ -209,7 +209,7 @@ exports.activeinactive = async (req, res, next) => {
         const updated = await supplierService.activeInactive(clientId, id, {
             isActive: status == "1",
         });
-        this.listBranch(req, res, next)
+        this.list(req, res, next)
     } catch (error) {
         next(error);
     }

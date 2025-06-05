@@ -18,9 +18,9 @@ router.post('/createSupplier', entityAuth.authorizeEntity("Inventory", "Supplier
 
 // router.put('/updateBranch', entityAuth.authorizeEntity("Supplier", "update"), supplierContrller.updateBranchByVendor);
 
-router.put('/updateSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.update);
+router.post('/updateSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.update);
 
-router.get('/Supplier/:clientId/:employeeId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.getParticular);
+router.get('/Supplier/:clientId/:supplierId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.getParticular);
 
 router.get('/listSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.list);
 

@@ -40,8 +40,8 @@ const update = async (clientId, supplierId, updateData) => {
             $and: [
                 { _id: { $ne: supplierId } },
                 {
-                    $or: [{ emailContact: data.emailContact },
-                        { contactNumber: data?.contactNumber }
+                    $or: [{ emailContact: updateData.emailContact },
+                        { contactNumber: updateData?.contactNumber }
                     ],
                 },
             ],
