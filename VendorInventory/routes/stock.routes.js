@@ -15,9 +15,9 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 router.post('/createStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.create);
 
-router.put('/updateStock', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), stockContrller.update);
+router.post('/updateStock', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), stockContrller.update);
 
-router.get('/stock/:clientId/:employeeId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getParticular);
+router.get('/stock/:clientId/:stockId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getParticular);
 
 router.get('/listStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.list);
 

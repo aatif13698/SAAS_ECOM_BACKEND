@@ -153,7 +153,7 @@ exports.getParticular = async (req, res, next) => {
                 message: message.lblRequiredFieldMissing,
             });
         }
-        const data = await stockService.getById(clientId, supplierId);
+        const data = await stockService.getById(clientId, stockId);
         return res.status(200).send({
             message: message.lblStockFoundSuccessfully,
             data: data,

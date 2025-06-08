@@ -36,7 +36,7 @@ const update = async (clientId, stockId, updateData) => {
             $and: [
                 { _id: { $ne: stockId } },
                 {
-                    $or: [{ product: data.product },
+                    $or: [{ product: updateData.product },
                     ],
                 },
             ],
