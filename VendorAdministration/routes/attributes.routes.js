@@ -5,7 +5,7 @@ let router = express.Router();
 
 
 
-const attributesContrller = require("../controller/Attributes.controller");
+const attributesContrller = require("../controller/attributes.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization")
 
 
