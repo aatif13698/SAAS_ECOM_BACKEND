@@ -22,6 +22,11 @@ router.post('/place-order/from-cart', customerAuth.customer, customerOrder.place
 // get orders list
 router.get("/order", customerAuth.customer, customerOrder.getAllOrders);
 
+// get order by Id
+router.get("/unique/order/:id", customerAuth.customer, customerOrder.getParticularOrder);
+
+
+
 
 
 exports.router = router;

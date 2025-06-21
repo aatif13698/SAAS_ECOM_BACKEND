@@ -605,3 +605,79 @@ exports.getAllOrders = async (req, res, next) => {
     next(error);
   }
 };
+
+
+// get particular order
+exports.getParticularOrder = async (req, res, next) => {
+  let clientConnection;
+
+  try {
+    const { clientId } = req.query; // Using query param for clientId
+    const { id } = req.params; 
+    const userId = req.user ? req.user._id : null; // From auth middleware
+
+    if (!clientId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Client ID is required",
+      });
+    }
+
+    if (!userId) {
+      return res.status(httpStatusCode.Unauthorized).json({
+        success: false,
+        message: "User authentication required",
+      });
+    }
+
+    // Get client-specific database connection
+    clientConnection = await getClientDatabaseConnection(clientId);
+
+    // Define models using the client-specific connection
+    const Order = clientConnection.model("Order", orderSchema);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+    // Fetch orders for the user
+    const orders = await Order.find({ customer: userId, _id: id })
+      .populate({
+        path: "items.productStock",
+        model: ProductStock,
+        populate: {
+          path: "product", // Assuming productStock has a 'product' ref
+          model: ProductBluePrint,
+          select: "name images", // Only fetch necessary fields
+        },
+      })
+      .lean(); // Convert to plain JS objects for easier manipulation
+
+      console.log("orders",orders);
+      
+
+    // Transform data to match frontend expectations
+    const formattedOrders = orders.flatMap((order) =>
+      order.items.map((item) => ({
+        id: order._id.toString(), // Convert ObjectId to string
+        productStock: {
+          product: {
+            name: item.productStock?.product?.name || "Unnamed Product",
+            images: item.productStock?.product?.images || [],
+          },
+        },
+        priceOption: item.priceOption || {},
+        quantity: item.quantity || 1,
+        status: order.status || "PENDING",
+        deliveryDate: order.activities?.find((act) => act.status === "DELIVERED")?.timestamp || null, // Dynamic delivery date
+      }))
+    );
+
+    res.status(httpStatusCode.OK).json({
+      success: true,
+      message: "Orders retrieved successfully",
+      data: orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    next(error);
+  }
+};
