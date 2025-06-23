@@ -14,4 +14,8 @@ router.get('/get/product/v1/:clientId/:productStockId', productlistingController
 
 
 
+router.get("/products/:clientId/category/:categoryId", productlistingController.getProductsByCategory);
+router.get("/products/:clientId/subcategory/:subcategoryId", productlistingController.getProductsBySubcategory);
+
+
 exports.router = router;
