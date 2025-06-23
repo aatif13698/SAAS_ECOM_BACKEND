@@ -33,9 +33,7 @@ exports.getCategoryAndSubCategory = async (req, res) => {
           id: sub._id,
           name: sub.name,
           icon: sub.icon,
-          link: `/${category.name.replace(/\s+/g, "-").toLowerCase()}/${sub.name
-            .replace(/\s+/g, "-")
-            .toLowerCase()}`,
+          link: `/${category._id}/${sub._id}`,
         }));
 
       return {
@@ -44,7 +42,7 @@ exports.getCategoryAndSubCategory = async (req, res) => {
         icon: category.icon,
         ...(relatedSubcategories.length > 0
           ? { submenu: relatedSubcategories }
-          : { link: `/${category.name.replace(/\s+/g, "-").toLowerCase()}` }),
+          : { link: `/${category._id}` }),
       };
     });
 
