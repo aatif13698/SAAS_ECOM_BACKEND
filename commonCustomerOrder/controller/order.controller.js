@@ -511,6 +511,8 @@ exports.placeOrderFromCart = async (req, res, next) => {
   }
 };
 
+// testin push
+
 // place order from the cart
 exports.placeOrderTypeTwo = async (req, res, next) => {
   const session = await mongoose.startSession();
