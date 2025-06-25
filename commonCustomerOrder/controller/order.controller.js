@@ -1,3 +1,4 @@
+const cartSchema = require("../../client/model/cart");
 const customerAddressSchema = require("../../client/model/customerAddress");
 const orderSchema = require("../../client/model/order");
 const productBlueprintSchema = require("../../client/model/productBlueprint");
@@ -350,6 +351,159 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
     }
     console.error(error);
     next(error);
+  } finally {
+    if (session) {
+      session.endSession();
+    }
+  }
+};
+
+exports.placeOrderFromCart = async (req, res, next) => {
+  let clientConnection;
+  let session;
+
+  try {
+    const { clientId, addressId } = req.body;
+    const userId = req.user ? req.user._id : null; // From auth middleware
+
+    if (!clientId || !addressId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Client ID and address ID are required",
+      });
+    }
+
+    if (!userId) {
+      return res.status(httpStatusCode.Unauthorized).json({
+        success: false,
+        message: "User authentication required",
+      });
+    }
+
+    // Get client-specific database connection
+    clientConnection = await getClientDatabaseConnection(clientId);
+    session = await clientConnection.startSession();
+    session.startTransaction();
+
+    // Define models
+    const Cart = clientConnection.model("cart", cartSchema);
+    const CustomerAddress = clientConnection.model("customerAddress", customerAddressSchema);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const Order = clientConnection.model("Order", orderSchema);
+
+    // Fetch cart
+    const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null }).session(session);
+    if (!cart || !cart.items.length) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Cart is empty or not found",
+      });
+    }
+
+    // Verify address
+    const address = await CustomerAddress.findOne({
+      _id: addressId,
+      customerId: userId,
+      deletedAt: null,
+    }).session(session);
+    if (!address) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Address not found or does not belong to user",
+      });
+    }
+
+    // Validate stock for all items
+    for (const item of cart.items) {
+      const stock = await ProductStock.findById(item.productStock).session(session);
+      if (!stock || !stock.isActive) {
+        await session.abortTransaction();
+        return res.status(httpStatusCode.NotFound).json({
+          success: false,
+          message: `Product stock not found or inactive for item: ${item.productStock}`,
+        });
+      }
+      if (stock.onlineStock < item.quantity) {
+        await session.abortTransaction();
+        return res.status(httpStatusCode.Conflict).json({
+          success: false,
+          message: `Insufficient stock for item: ${item.productStock}`,
+        });
+      }
+      // Deduct stock
+      stock.onlineStock -= item.quantity;
+      stock.totalStock -= item.quantity;
+      await stock.save({ session });
+    }
+
+    // Prepare order items
+    const orderItems = cart.items.map((item) => ({
+      productStock: item.productStock,
+      quantity: item.quantity,
+      priceOption: item.priceOption,
+      customizationDetails: item.customizationDetails,
+      customizationFiles: item.customizationFiles,
+      subtotal: item.subtotal,
+    }));
+
+    const count = await Order.countDocuments({
+      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    });
+    const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+
+    const orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`
+
+    // Create order
+    const order = new Order({
+      orderNumber: orderNumber,
+      customer: userId,
+      items: orderItems,
+      address: addressId,
+      paymentMethod: "COD",
+      paymentStatus: "PENDING",
+      status: "PENDING",
+      createdBy: userId,
+      activities: [
+        {
+          status: "PENDING",
+          updatedBy: userId,
+        },
+      ],
+    });
+
+    await order.save({ session });
+
+    // Update cart status
+    cart.status = "converted";
+    cart.lastModified = Date.now();
+    await cart.save({ session });
+
+    // Commit transaction
+    await session.commitTransaction();
+
+    return res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "Order placed successfully",
+      data: order,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+    }
+    if (error.code === 11000) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Order number generation conflict, please try again",
+      });
+    }
+    console.error("Error placing order from cart:", error);
+    res.status(httpStatusCode.InternalServerError).json({
+      success: false,
+      message: "Failed to place order",
+      error: error.message,
+    });
   } finally {
     if (session) {
       session.endSession();

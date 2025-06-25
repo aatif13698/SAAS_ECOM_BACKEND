@@ -16,6 +16,8 @@ const { uploadCustomizable } = require("../../utils/multer");
 
 router.post('/place-order', customerAuth.customer, uploadCustomizable.any(), customerOrder.placeOrderTypeOneNew);
 
+router.post("/place-order-from-cart", customerAuth.customer, customerOrder.placeOrderFromCart);
+
 // place order from the cart
 router.post('/place-order/from-cart', customerAuth.customer, customerOrder.placeOrderTypeTwo);
 
