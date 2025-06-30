@@ -37,7 +37,8 @@ const superAdminRouter = require("./superAdminManagement/routes/superAdmin.route
 const superAdminCategoryRouter = require("./superAdminManagement/routes/category.routes.js");
 const superAdminSubCategoryRouter = require("./superAdminManagement/routes/subCategory.routes.js");
 const superAdminBuRouter = require("./superAdminVendorManagement/routes/superAdminVendor.routes.js");
-const superAdminRequestRoute = require("./superAdminVendorManagement/routes/request.routes.js")
+const superAdminRequestRoute = require("./superAdminVendorManagement/routes/request.routes.js");
+const superAdminQueryRoute = require("./superAdminVendorManagement/routes/query.routes.js");
 
 // routes import for vendor
 
@@ -103,6 +104,7 @@ app.use("/api/superAdmin/category", superAdminCategoryRouter.router);
 app.use("/api/superAdmin/subCategory", superAdminSubCategoryRouter.router);
 app.use("/api/superAdmin/vendor/", superAdminBuRouter.router);
 app.use("/api/superAdmin/request/", superAdminRequestRoute.router);
+app.use("/api/superAdmin/query/", superAdminQueryRoute.router);
 
 
 
