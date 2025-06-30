@@ -170,7 +170,7 @@ exports.getIndividualRequest = async (req, res, next) => {
 };
 
 
-exports.softDeleteRequest = async (req, res, next) => {
+exports.deleteRequest = async (req, res, next) => {
   try {
     const { clientId, keyword, page, perPage } = req.body;
     req.query.keyword = keyword;

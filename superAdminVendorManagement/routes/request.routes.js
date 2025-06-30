@@ -25,7 +25,7 @@ router.get('/get/demoRequest', auth.superAdminAuth, supersuperAdminRequestContro
 
 router.get('/get/demo/request/:id', auth.superAdminAuth, supersuperAdminRequestController.getIndividualRequest);
 
-router.delete('/softdelete/demoRequest', auth.superAdminAuth, supersuperAdminRequestController.softDeleteRequest);
+router.post('/delete/demoRequest', auth.superAdminAuth, supersuperAdminRequestController.deleteRequest);
 
 router.post('/restore/demoRequest', auth.superAdminAuth, supersuperAdminRequestController.restoreRequest);
 
