@@ -403,7 +403,7 @@ exports.resendSignInOtp = async (req, res, next) => {
 // forget passwoed 
 exports.forgetPassword = async (req, res, next) => {
     try {
-        const { identifier } = req.body;
+        const { identifier, clientId } = req.body;
 
         // Validate input
         if (!identifier) {
@@ -426,35 +426,26 @@ exports.forgetPassword = async (req, res, next) => {
         // Query based on whether it's email or phone
         const query = isEmail ? { email: identifier } : { phone: identifier };
 
-        // Check if user exists
-        const user = await User.findOne(query);
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const userExist = await clientUser.findOne(query);
 
-        await commonCheckForClient(user);
+        await commonCheckForCustomer(userExist);
 
         // Generate OTP
         const otp = generateOtp();
-
-        // Update OTP in the user record
-        const otpUpdate = await User.updateOne(
-            query,
-            { OTP: otp, otpGeneratedAt: new Date() }
-        );
-
-        if (!otpUpdate.acknowledged) {
-            return res.status(statusCode.InternalServerError).send({
-                message: "Failed to generate OTP, please try again."
-            });
-        }
+        await clientUser.updateOne(query, { OTP: otp, otpGeneratedAt: new Date() });
+       
 
         // Send OTP to email
         const mailOptions = {
             from: process.env.EMAIL_FROM,
-            to: user.email,
+            to: userExist.email,
             subject: "Password Reset OTP",
             template: "forgetPassword",
             context: {
                 otp,
-                name: user.firstName,
+                name: userExist.firstName,
                 emailSignature: process.env.EMAIL_SIGNATURE,
                 appName: process.env.APP_NAME
             }
@@ -473,7 +464,10 @@ exports.forgetPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
 
     try {
-        const { identifier, password, otp } = req.body;  // Can be email or phone
+        const { identifier, password, otp, clientId } = req.body;  // Can be email or phone
+
+        console.log("req.body",req.body);
+        
 
         // Validate input
         if (!identifier || !password || !otp) {
@@ -496,10 +490,14 @@ exports.resetPassword = async (req, res, next) => {
         // Query based on whether it's email or phone
         const query = isEmail ? { email: identifier } : { phone: identifier };
 
-        // Check if user exists
-        const user = await User.findOne(query);
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const user = await clientUser.findOne(query);
 
-        await commonCheckForClient(user);
+        // Check if user exists
+        // const user = await User.findOne(query);
+
+        await commonCheckForCustomer(user);
 
         // Check if OTP exists (user must have requested a password reset)
         if (!user.OTP) {
@@ -519,7 +517,7 @@ exports.resetPassword = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Update user password and clear OTP
-        const updateResult = await User.updateOne(
+        const updateResult = await clientUser.updateOne(
             query,  // Use email or phone as query
             { password: hashedPassword, OTP: null }  // Clear OTP after successful password reset
         );
