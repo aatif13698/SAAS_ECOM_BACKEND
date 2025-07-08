@@ -86,7 +86,15 @@ const {vendorPersmissionsList} = require("./utils/constant.js");
 
 // middleware setup
 
-app.use(cors());
+// app.use(cors());
+
+app.use(cors({
+  origin: ['http://127.0.0.1:5173', 'http://localhost:5173'], // Allow Vite dev server
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // If your app uses cookies or auth
+}));
+
 app.use(express.json())
 app.use(express.static('public'))
 app.use(bodyParser.json());
