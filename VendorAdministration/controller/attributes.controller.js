@@ -10,7 +10,7 @@ const attributeService = require("../services/attributes.service")
 // create
 exports.createAttributes = async (req, res, next) => {
     try {
-        const { clientId, categoryId, subCategoryId,  name, description, typeOfAttributes, values } = req.body;
+        const { clientId, categoryId, subCategoryId, attributes } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
@@ -27,13 +27,13 @@ exports.createAttributes = async (req, res, next) => {
                 message: message.lblSubCategoryIdIsRequired,
             });
         }
-        if (!name || !description || !values ) {
+        if (attributes?.length == 0) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         const created = await attributeService.create(clientId, {
-            categoryId, subCategoryId,  name, description, values,
+            categoryId, subCategoryId, attributes,
             createdBy: mainUser._id,
         });
         return res.status(statusCode.OK).send({
@@ -48,7 +48,7 @@ exports.createAttributes = async (req, res, next) => {
 // update  
 exports.updateAttributes = async (req, res, next) => {
     try {
-        const { clientId, attributesId, categoryId, subCategoryId,  name, description, values } = req.body;
+        const { clientId, attributesId, categoryId, subCategoryId, name, description, values } = req.body;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
@@ -64,13 +64,13 @@ exports.updateAttributes = async (req, res, next) => {
                 message: message.lblSubCategoryIdIsRequired,
             });
         }
-        if (!name || !description || !values ) {
+        if (!name || !description || !values) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         const updated = await attributeService.update(clientId, attributesId, {
-            categoryId, subCategoryId,  name, description, values
+            categoryId, subCategoryId, name, description, values
         });
         return res.status(statusCode.OK).send({
             message: message.lblAttributeUpdatedSuccess,

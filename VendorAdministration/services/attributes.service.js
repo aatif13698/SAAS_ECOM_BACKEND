@@ -3,7 +3,9 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const attributesSchema = require("../../client/model/attributes")
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
-const CustomError = require("../../utils/customeError")
+const CustomError = require("../../utils/customeError");
+const clinetSubCategorySchema = require("../../client/model/subCategory");
+const clinetCategorySchema = require("../../client/model/category");
 
 
 const create = async (clientId, data) => {
@@ -11,8 +13,8 @@ const create = async (clientId, data) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attribute = clientConnection.model('attributes', attributesSchema);
         const existing = await Attribute.findOne({
-            $or: [{ name: data.name },
-            ],
+            categoryId: data.categoryId,
+            subCategoryId: data?.subCategoryId
         });
         if (existing) {
             throw new CustomError(statusCode.Conflict, message.lblAttributeAlreadyExists);
@@ -65,12 +67,25 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attribute = clientConnection.model('attributes', attributesSchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+
+
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
 
         const [attributes, total] = await Promise.all([
-            Attribute.find(filters).skip(skip).limit(limit).sort({ _id: -1 }),
+            Attribute.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
+                .populate({
+                    path: "categoryId",
+                    model: Category,
+                })
+                .populate({
+                    path: "subCategoryId",
+                    model: SubCategory,
+                })
+            ,
             Attribute.countDocuments(filters),
         ]);
 
