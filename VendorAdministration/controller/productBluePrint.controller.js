@@ -9,7 +9,7 @@ const productBluePrintService = require("../services/productBluePrint.service")
 // create brand by vendor
 exports.create = async (req, res, next) => {
     try {
-        const { clientId, categoryId, subCategoryId, brandId, manufacturerId, attributeId, name, description, taxRate, sku, isCustomizable, customizableOptions, } = req.body;
+        const { clientId, categoryId, subCategoryId, brandId, manufacturerId, name, description, taxRate, sku, isCustomizable, customizableOptions, } = req.body;
         const mainUser = req.user;
 
         console.log("req.body", req.body);
@@ -21,7 +21,7 @@ exports.create = async (req, res, next) => {
             });
         }
 
-        if (!categoryId || !subCategoryId || !brandId || !manufacturerId || !attributeId || !name || !description || !sku || !isCustomizable) {
+        if (!categoryId || !subCategoryId || !brandId || !manufacturerId  || !name || !description || !sku || !isCustomizable) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -31,7 +31,6 @@ exports.create = async (req, res, next) => {
             subCategoryId: subCategoryId,
             brandId: brandId,
             manufacturerId: manufacturerId,
-            attributeId: attributeId,
             name, description, taxRate: Number(taxRate), sku, isCustomizable: isCustomizable == 'true' ? true : false,
             createdBy: mainUser._id,
         }
@@ -65,7 +64,7 @@ exports.create = async (req, res, next) => {
 // update  brand by vendor
 exports.update = async (req, res, next) => {
     try {
-        const { clientId, productBlueprintId, categoryId, subCategoryId, brandId, manufacturerId, attributeId, name, description, taxRate, sku, isCustomizable, customizableOptions, } = req.body;
+        const { clientId, productBlueprintId, categoryId, subCategoryId, brandId, manufacturerId, name, description, taxRate, sku, isCustomizable, customizableOptions, } = req.body;
         const mainUser = req.user;
 
         if (!clientId) {
@@ -74,7 +73,7 @@ exports.update = async (req, res, next) => {
             });
         }
 
-        if (!categoryId || !subCategoryId || !brandId || !manufacturerId || !attributeId || !name || !description || !sku || !isCustomizable) {
+        if (!categoryId || !subCategoryId || !brandId || !manufacturerId || !name || !description || !sku || !isCustomizable) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -84,7 +83,6 @@ exports.update = async (req, res, next) => {
             subCategoryId: subCategoryId,
             brandId: brandId,
             manufacturerId: manufacturerId,
-            attributeId: attributeId,
             name, description, taxRate: Number(taxRate), sku, isCustomizable: isCustomizable == 'true' ? true : false,
             createdBy: mainUser._id,
         }

@@ -13,7 +13,7 @@ const productBlueprintSchema = new Schema(
         description: { type: String }, 
         brandId: { type: ObjectId, ref: 'brand' }, 
         manufacturerId: { type: ObjectId, ref: 'manufacturer' }, 
-        attributeId: { type: ObjectId, ref: 'attribute' }, 
+        // attributeId: { type: ObjectId, ref: 'attribute' }, 
         images: [{ type: String }], 
         taxRate: { type: Number, default: 0 },
         sku: { type: String, unique: true }, 

@@ -6,6 +6,7 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clinetSubCategorySchema = require("../../client/model/subCategory");
 const clinetCategorySchema = require("../../client/model/category");
+const productBlueprintSchema = require("../../client/model/productBlueprint");
 
 
 const create = async (clientId, data) => {
@@ -13,8 +14,7 @@ const create = async (clientId, data) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attribute = clientConnection.model('attributes', attributesSchema);
         const existing = await Attribute.findOne({
-            categoryId: data.categoryId,
-            subCategoryId: data?.subCategoryId
+            productId: data.productId,
         });
         if (existing) {
             throw new CustomError(statusCode.Conflict, message.lblAttributeAlreadyExists);
@@ -36,7 +36,7 @@ const update = async (clientId, attributeId, data) => {
         if (data.name && data.name !== attributes.name) {
             const conflict = await Attribute.exists({
                 _id: { $ne: attributeId },
-                name: data.name,
+                productId: data.productId,
             });
             if (conflict) {
                 throw new CustomError(statusCode.Conflict, message.lblAttributeAlreadyExists);
@@ -63,14 +63,27 @@ const getById = async (clientId, attributeId) => {
     }
 };
 
+
+
+const getByProduct = async (clientId, productId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Attribute = clientConnection.model('attributes', attributesSchema);
+        const attribute = await Attribute.findOne({productId: productId});
+        if (!attribute) {
+            throw new CustomError(statusCode.NotFound, message.lblAttributeNotFound);
+        }
+        return attribute;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting attribute: ${error.message}`);
+    }
+};
+
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attribute = clientConnection.model('attributes', attributesSchema);
-        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
-        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
-
-
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
@@ -78,13 +91,10 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const [attributes, total] = await Promise.all([
             Attribute.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
                 .populate({
-                    path: "categoryId",
-                    model: Category,
+                    path: "productId",
+                    model: ProductBluePrint,
                 })
-                .populate({
-                    path: "subCategoryId",
-                    model: SubCategory,
-                })
+               
             ,
             Attribute.countDocuments(filters),
         ]);
@@ -174,5 +184,6 @@ module.exports = {
     getActive,
     activeInactive,
     deleted,
-    restore
+    restore,
+    getByProduct
 };

@@ -7,12 +7,11 @@ const ObjectId = Schema.ObjectId;
 
 const attributesSchema = new Schema(
     {
-        categoryId: { type: ObjectId, ref: "clientCategory", index: true },
-        subCategoryId: { type: ObjectId, ref: "clientSubCategory", index: true },
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true },
         attributes: [
             {
                 name: {
-                    type: String, unique: true, trim: true, sparse: true, index: true
+                    type: String,  trim: true, 
                 },
                 description: { type: String, required: true },
                 values: {

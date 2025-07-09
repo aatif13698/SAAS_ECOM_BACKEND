@@ -10,21 +10,17 @@ const attributeService = require("../services/attributes.service")
 // create
 exports.createAttributes = async (req, res, next) => {
     try {
-        const { clientId, categoryId, subCategoryId, attributes } = req.body;
+        const { clientId, productId, attributes } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!categoryId) {
+
+        if (!productId) {
             return res.status(statusCode.BadRequest).send({
-                message: message.lblCategoryIdIsRequired,
-            });
-        }
-        if (!subCategoryId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblSubCategoryIdIsRequired,
+                message: message.lblProductBlueprintIdIsRequired,
             });
         }
         if (attributes?.length == 0) {
@@ -33,7 +29,7 @@ exports.createAttributes = async (req, res, next) => {
             });
         }
         const created = await attributeService.create(clientId, {
-            categoryId, subCategoryId, attributes,
+            attributes, productId,
             createdBy: mainUser._id,
         });
         return res.status(statusCode.OK).send({
@@ -48,29 +44,25 @@ exports.createAttributes = async (req, res, next) => {
 // update  
 exports.updateAttributes = async (req, res, next) => {
     try {
-        const { clientId, attributesId, categoryId, subCategoryId, name, description, values } = req.body;
+        const { clientId, attributesId, productId, attributes } = req.body;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!categoryId) {
+       
+        if (!productId) {
             return res.status(statusCode.BadRequest).send({
-                message: message.lblCategoryIdIsRequired,
+                message: message.lblProductBlueprintIdIsRequired,
             });
         }
-        if (!subCategoryId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblSubCategoryIdIsRequired,
-            });
-        }
-        if (!name || !description || !values) {
+        if (attributes?.length == 0) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         const updated = await attributeService.update(clientId, attributesId, {
-            categoryId, subCategoryId, name, description, values
+             productId, attributes
         });
         return res.status(statusCode.OK).send({
             message: message.lblAttributeUpdatedSuccess,
@@ -91,6 +83,29 @@ exports.getParticularAttributes = async (req, res, next) => {
             });
         }
         const attribute = await attributeService.getById(clientId, attributesId);
+        return res.status(200).send({
+            message: message.lblAttributeFoundSuccessfully,
+            data: attribute,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
+// get attribute of product
+exports.getAttributesOfProduct = async (req, res, next) => {
+    try {
+        const { clientId, productId } = req.params;
+
+        console.log("req.params",req.params);
+        
+        if (!clientId || !productId) {
+            return res.status(400).send({
+                message: "Required field is missing",
+            });
+        }
+        const attribute = await attributeService.getByProduct(clientId, productId);
         return res.status(200).send({
             message: message.lblAttributeFoundSuccessfully,
             data: attribute,
