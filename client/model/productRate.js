@@ -8,13 +8,7 @@ const ObjectId = Schema.ObjectId;
 const productRateSchema = new Schema(
     {
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true },
-        priceOptions: [
-            {
-                quantity: { type: Number, required: true },
-                unit: { type: String, required: true },
-                price: { type: Number, required: true }
-            },
-        ],
+        priceOptions: [],
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         deletedAt: { type: Date, default: null, index: true },
         updatedAt: { type: Date, default: null, index: true },

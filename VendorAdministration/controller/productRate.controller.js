@@ -51,13 +51,12 @@ exports.update = async (req, res, next) => {
             });
         }
 
-        if (!productRateId || !product || !priceOptions) {
+        if (!productRateId || !priceOptions) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         let dataObject = {
-            product: product,
             priceOptions: priceOptions,
             createdBy: mainUser._id,
         }
