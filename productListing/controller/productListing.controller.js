@@ -4,6 +4,7 @@ const productStockSchema = require("../../client/model/productStock");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
+const productMainStockSchema = require("../../client/model/productMainStock");
 
 
 
@@ -41,11 +42,20 @@ exports.getProduct = async (req, res, next) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
     const Stock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    
 
     const product = await Stock.findOne({ isActive: true, _id: productStockId }).populate({
       path: 'product',
       model: ProductBluePrint,
       select: 'name _id images customizableOptions isCustomizable'
+    }).populate({
+      path: 'normalSaleStock',
+      model: MainStock,
+      populate: {
+        path: "product",
+        model:  ProductBluePrint
+      }
     });
     return res.status(httpStatusCode.OK).send({
       message: "Product found successfully.",

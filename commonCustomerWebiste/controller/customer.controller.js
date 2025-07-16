@@ -46,7 +46,8 @@ exports.getCategoryAndSubCategory = async (req, res) => {
       };
     });
 
-    return res.status(200).json({ success: true, data: result });
+    console.log("result", result);
+    return res.status(200).send({ success: true, data: result });
   } catch (error) {
     console.error("Error fetching categories and subcategories:", error);
     return res.status(500).send({ message: "Internal Server Error" });

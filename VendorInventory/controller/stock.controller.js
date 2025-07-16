@@ -27,6 +27,8 @@ exports.create = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
 
         } = req.body;
         const mainUser = req.user;
@@ -45,6 +47,8 @@ exports.create = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -62,13 +66,24 @@ exports.create = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
         };
+
+        let attachments = [];
+        if (req.files && req.files.length > 0) {
+            for (let index = 0; index < req.files.length; index++) {
+                const element = req.files[index];
+                attachments.push(element.filename)
+            }
+            dataObject.images = attachments;
+        }
 
         // Create 
         const created = await stockService.create(clientId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblStockCreatedSuccess,
-            data: { empId: created._id },
+            data: created,
         });
     } catch (error) {
         next(error);
@@ -82,7 +97,6 @@ exports.update = async (req, res, next) => {
         const {
             clientId,
             stockId,
-
             product,
             businessUnit,
             branch,
@@ -93,6 +107,8 @@ exports.update = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
         } = req.body;
 
         const mainUser = req.user;
@@ -113,6 +129,8 @@ exports.update = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -130,13 +148,24 @@ exports.update = async (req, res, next) => {
             offlineStock,
             lowStockThreshold,
             restockQuantity,
+            name,
+            description
         };
 
-        // Create 
+
+        let attachments = [];
+        if (req.files && req.files.length > 0) {
+            for (let index = 0; index < req.files.length; index++) {
+                const element = req.files[index];
+                attachments.push(element.filename)
+            }
+            dataObject.images = attachments;
+        }
+
         const updated = await stockService.update(clientId, stockId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblStockUpdatedSuccess,
-            data: { empId: updated._id },
+            data: updated,
         });
     } catch (error) {
         next(error);
@@ -170,8 +199,8 @@ exports.list = async (req, res, next) => {
         const mainUser = req.user;
         const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
 
-        console.log("req.query",req.query);
-        
+        console.log("req.query", req.query);
+
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
@@ -249,8 +278,8 @@ exports.getAllStock = async (req, res, next) => {
         const mainUser = req.user;
         const { clientId } = req.query;
 
-        console.log("req.query",req.query);
-        
+        console.log("req.query", req.query);
+
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
@@ -258,7 +287,7 @@ exports.getAllStock = async (req, res, next) => {
         }
         const filters = {
             deletedAt: null,
-           onlineStock: { $ne: 0 },
+            onlineStock: { $ne: 0 },
             ...(keyword && {
                 $or: [
                     // { name: { $regex: keyword.trim(), $options: "i" } },

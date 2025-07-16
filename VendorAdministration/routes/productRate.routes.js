@@ -17,11 +17,12 @@ const {
 
 // # create, update, view, list, activate/inactive, delete 
 
-router.post('/createProductRate', entityAuth.authorizeEntity("Product", "Product", "create"),  productRateContrller.create);
+router.post('/createProductRate', entityAuth.authorizeEntity("Product", "Product", "create"), productRateContrller.create);
 
 router.post('/updateProductRate', entityAuth.authorizeEntity("Product", "Product", "update"), productRateContrller.update);
 
 router.get('/productRate/:clientId/:productRateId', entityAuth.authorizeEntity("Product", "Product", "view"), productRateContrller.getParticular);
+
 router.get('/productRateByProduct/:clientId/:productId', entityAuth.authorizeEntity("Product", "Product", "view"), productRateContrller.getRateByProduct);
 
 router.get('/listProductRate', entityAuth.authorizeEntity("Product", "Product", "view"), productRateContrller.list);

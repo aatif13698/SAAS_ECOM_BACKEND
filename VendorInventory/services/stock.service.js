@@ -5,20 +5,72 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const productStockSchema = require("../../client/model/productStock");
 const productBlueprintSchema = require("../../client/model/productBlueprint");
+const productMainStockSchema = require("../../client/model/productMainStock");
+const clinetSubCategorySchema = require("../../client/model/subCategory");
+const clinetCategorySchema = require("../../client/model/category");
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Stock = clientConnection.model('productStock', productStockSchema)
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        console.log("dataobject ", data);
+
+        let newStock;
         const existing = await Stock.findOne({
             $or: [{ product: data.product },
             ],
         });
         if (existing) {
+            newStock = existing
+        } else {
+            newStock = await Stock.create({
+                product: data?.product,
+                businessUnit: data?.businessUnit,
+                branch: data?.branch,
+                warehouse: data?.warehouse,
+            });
+        }
+        const existingMainStock = await MainStock.findOne({
+            product: data.product,
+            priceOptions: JSON.parse(data?.priceOptions),
+        });
+        if (existingMainStock) {
             throw new CustomError(statusCode.Conflict, message.lblStockAlreadyExists);
         }
-        return await Stock.create(data);
+        const mainStock = await MainStock.create({
+            product: data.product,
+            businessUnit: data?.businessUnit,
+            branch: data?.branch,
+            warehouse: data?.warehouse,
+            totalStock: data?.totalStock,
+            priceOptions: JSON.parse(data?.priceOptions),
+            images: data?.images,
+            defaultImage: data?.images[0],
+            onlineStock: data?.onlineStock,
+            offlineStock: data?.offlineStock,
+            lowStockThreshold: data?.lowStockThreshold,
+            restockQuantity: data?.restockQuantity,
+            lastRestockedAt: Date.now(),
+            isBulkType: false,
+            name: data?.name,
+            description: data?.description
+        })
+        const oldStock = newStock.normalSaleStock;
+        const newStockArray = [...oldStock, mainStock._id]
+        newStock.normalSaleStock = newStockArray;
+
+        await newStock.save();
+
+        const stock = await Stock.findOne({ product: data.product }).populate({
+            path: 'normalSaleStock',
+            model: MainStock,
+        });
+
+
+        return stock
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating: ${error.message}`);
     }
@@ -27,25 +79,43 @@ const create = async (clientId, data) => {
 const update = async (clientId, stockId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Stock = clientConnection.model('productStock', productStockSchema)
-        const stock = await Stock.findById(stockId);
-        if (!stock) {
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        const mainStock = await MainStock.findById(stockId);
+        console.log("mainStock", mainStock);
+
+        if (!mainStock) {
             throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
         }
-        const existing = await Stock.findOne({
-            $and: [
-                { _id: { $ne: stockId } },
-                {
-                    $or: [{ product: updateData.product },
-                    ],
-                },
-            ],
-        });
-        if (existing) {
-            throw new CustomError(statusCode.Conflict, message.lblStockAlreadyExists);
+
+        mainStock.product = updateData.product;
+        mainStock.businessUnit = updateData.businessUnit;
+        mainStock.branch = updateData.branch;
+        mainStock.warehouse = updateData.warehouse;
+        mainStock.totalStock = updateData.totalStock;
+        mainStock.priceOptions = JSON.parse(updateData.priceOptions);
+        mainStock.onlineStock = updateData.onlineStock;
+        mainStock.offlineStock = updateData.offlineStock;
+        mainStock.lowStockThreshold = updateData.lowStockThreshold;
+        mainStock.restockQuantity = updateData.restockQuantity;
+        mainStock.lastRestockedAt = Date.now();
+        mainStock.name = updateData.name;
+        mainStock.description = updateData.description;
+
+        if (updateData?.images && updateData?.images?.length > 0) {
+            mainStock.images = updateData?.images;
+            mainStock.defaultImage = updateData?.images[0]
         }
-        Object.assign(stock, updateData);
-        return  await stock.save();
+        await mainStock.save();
+
+
+        const stock = await Stock.findOne({ product: updateData.product }).populate({
+            path: 'normalSaleStock',
+            model: MainStock,
+        });
+
+        return stock;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error updating: ${error.message}`);
     }
@@ -54,8 +124,13 @@ const update = async (clientId, stockId, updateData) => {
 const getById = async (clientId, stockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Stock = clientConnection.model('productStock', productStockSchema)
-        const stock = await Stock.findById(stockId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        const stock = await Stock.findById(stockId).populate({
+            path: 'normalSaleStock',
+            model: MainStock,
+        });
         if (!stock) {
             throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
         }
@@ -70,14 +145,25 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Stock = clientConnection.model('productStock', productStockSchema);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
-
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [stocks, total] = await Promise.all([
             Stock.find(filters).skip(skip).limit(limit).sort({ _id: -1 }).populate({
                 path: 'product',
                 model: ProductBluePrint,
-                select: 'name _id'
+                select: 'name categoryId subCategoryId _id ',
+                populate: {
+                    path: "subCategoryId",
+                    model: SubCategory,
+                    select: "name _id",
+                },
+                populate: {
+                    path: "categoryId",
+                    model: Category,
+                    select: "name _id",
+                }
             }),
             Stock.countDocuments(filters),
         ]);
