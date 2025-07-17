@@ -193,7 +193,7 @@ exports.getProductsBySubcategory = [
       const products = await Stock.find({
         isActive: true,
         deletedAt: null,
-        onlineStock: { $gt: 0 },
+        // onlineStock: { $gt: 0 },
       })
         .populate({
           path: "product",
