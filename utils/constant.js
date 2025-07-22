@@ -375,6 +375,18 @@ const defaultPersmissionsList = [
                 }
             },
             {
+                name: "Product",
+                displayName: "All Product",
+                access: false,
+                subMenus: {
+                    create: { id: 46, access: false, api: "/demo/path" },
+                    view: { id: 47, access: false, api: "/demo/path" },
+                    update: { id: 48, access: false, api: "/demo/path" },
+                    softDelete: { id: 49, access: false, api: "/demo/path" },
+                    activeActive: { id: 50, access: false, api: "/demo/path" },
+                }
+            },
+            {
                 name: "Attribute",
                 displayName: "All Attribute",
                 access: false,
@@ -387,15 +399,15 @@ const defaultPersmissionsList = [
                 }
             },
             {
-                name: "Product",
-                displayName: "All Product",
+                name: "Variant",
+                displayName: "All Variant",
                 access: false,
                 subMenus: {
-                    create: { id: 46, access: false, api: "/demo/path" },
-                    view: { id: 47, access: false, api: "/demo/path" },
-                    update: { id: 48, access: false, api: "/demo/path" },
-                    softDelete: { id: 49, access: false, api: "/demo/path" },
-                    activeActive: { id: 50, access: false, api: "/demo/path" },
+                    create: { id: 71, access: false, api: "/demo/path" },
+                    view: { id: 72, access: false, api: "/demo/path" },
+                    update: { id: 73, access: false, api: "/demo/path" },
+                    softDelete: { id: 74, access: false, api: "/demo/path" },
+                    activeActive: { id: 75, access: false, api: "/demo/path" },
                 }
             },
             {
@@ -452,7 +464,7 @@ const defaultPersmissionsList = [
                     activeActive: { id: 65, access: false, api: "/demo/path" },
                 }
             }
-            
+
         ]
     }
 ];
@@ -582,18 +594,6 @@ const vendorPersmissionsList = [
                 }
             },
             {
-                name: "Attribute",
-                displayName: "All Attribute",
-                access: true,
-                subMenus: {
-                    create: { id: 41, access: true, api: "/demo/path" },
-                    view: { id: 42, access: true, api: "/demo/path" },
-                    update: { id: 43, access: true, api: "/demo/path" },
-                    softDelete: { id: 44, access: true, api: "/demo/path" },
-                    activeActive: { id: 45, access: true, api: "/demo/path" },
-                }
-            },
-            {
                 name: "Product",
                 displayName: "All Product",
                 access: true,
@@ -605,6 +605,32 @@ const vendorPersmissionsList = [
                     activeActive: { id: 50, access: true, api: "/demo/path" },
                 }
             },
+            {
+                name: "Attribute",
+                displayName: "All Attribute",
+                access: true,
+                subMenus: {
+                    create: { id: 41, access: true, api: "/demo/path" },
+                    view: { id: 42, access: true, api: "/demo/path" },
+                    update: { id: 43, access: true, api: "/demo/path" },
+                    softDelete: { id: 44, access: true, api: "/demo/path" },
+                    activeActive: { id: 45, access: true, api: "/demo/path" },
+                }
+            },
+
+            {
+                name: "Variant",
+                displayName: "All Variant",
+                access: true,
+                subMenus: {
+                    create: { id: 71, access: true, api: "/demo/path" },
+                    view: { id: 72, access: true, api: "/demo/path" },
+                    update: { id: 73, access: true, api: "/demo/path" },
+                    softDelete: { id: 74, access: true, api: "/demo/path" },
+                    activeActive: { id: 75, access: true, api: "/demo/path" },
+                }
+            },
+
             {
                 name: "Pricing",
                 displayName: "All Pricing",
@@ -659,7 +685,7 @@ const vendorPersmissionsList = [
                     activeActive: { id: 65, access: true, api: "/demo/path" },
                 }
             }
-            
+
         ]
     }
 ]
@@ -669,7 +695,7 @@ const vendorPersmissionsList = [
 
 // clients role
 const clientRoles = [
-    { id: 0 , name: 'Customer', capability: defaultPersmissionsList },
+    { id: 0, name: 'Customer', capability: defaultPersmissionsList },
     { id: 1, name: 'Vendor', capability: vendorPersmissionsList },
     { id: 2, name: 'Business Unit Head', capability: defaultPersmissionsList },
     { id: 3, name: 'Branch Head', capability: defaultPersmissionsList },

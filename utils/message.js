@@ -163,13 +163,24 @@ module.exports = {
 
   // product rate 
   lblProductRateNotFound: "Product Rate not found!",
-  lblProductRateAlreadyExists: "Product Rate already exists!",
+  lblProductRateAlreadyExists: "Product Rate for this variant already exists!",
   lblProductRateCreatedSuccess: "Product Rate created successfully!",
   lblProductRateUpdatedSuccess: "Product Rate updated successfully!",
   lblProductRateFoundSuccessfully: "Product Rate found successfully!",
   lblProductRateSoftDeletedSuccess: "Product Rate soft deleted successfully!",
   lblProductRateRestoredSuccess: "Product Rate restored succesfully!",
   lblProductRateIdIsRequired: "Product Rate Id is required!",
+
+
+  // variant
+  lblProductVariantNotFound: "Product Variant not found!",
+  lblProductVariantAlreadyExists: "Product Variant already exists!",
+  lblProductVariantCreatedSuccess: "Product Variant created successfully!",
+  lblProductVariantUpdatedSuccess: "Product Variant updated successfully!",
+  lblProductVariantFoundSuccessfully: "Product Variant found successfully!",
+  lblProductVariantSoftDeletedSuccess: "Product Variant soft deleted successfully!",
+  lblProductVariantRestoredSuccess: "Product Variant restored succesfully!",
+  lblProductVariantIdIsRequired: "Product Variant Id is required!",
 
   // supplier
   lblSupplierAlreadyExists: "Supplier already exists with this email or phone!",

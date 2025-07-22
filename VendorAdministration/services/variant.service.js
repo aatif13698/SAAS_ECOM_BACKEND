@@ -17,33 +17,40 @@ const create = async (clientId, data) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
-        const productRate = await ProductRate.findOne({product: data.product, variant: data.variant});
-        if (productRate) {
-            throw new CustomError(statusCode.NotFound, message.lblProductRateAlreadyExists);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const productVariant = await ProductVariant.findOne({ product: data.product, variant: data.variant });
+        if (productVariant) {
+            throw new CustomError(statusCode.NotFound, message.lblProductVariantAlreadyExists);
         }
-        return await ProductRate.create(data);
+        return await ProductVariant.create(data);
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
 };
 
-const update = async (clientId, productRateId, data) => {
+const update = async (clientId, variantId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
-        const productRate = await ProductRate.findById(productRateId);
-        if (!productRate) {
-            throw new CustomError(statusCode.NotFound, message.lblProductRateNotFound);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const variantConflict = await ProductVariant.findOne({
+            _id: { $ne: variantId },
+            product: data.product,
+            variant: data.variant,
+        });
+        if (variantConflict) {
+            throw new CustomError(statusCode.NotFound, message.lblProductVariantAlreadyExists);
         }
-        Object.assign(productRate, data);
-        return await productRate.save();
+        const vari = await ProductVariant.findById(variantId);
+        Object.assign(vari, data);
+        return await vari.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error updating : ${error.message}`);
     }
 };
 
-const getById = async (clientId,productRateId) => {
+const getById = async (clientId, productRateId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
@@ -58,16 +65,18 @@ const getById = async (clientId,productRateId) => {
     }
 };
 
-const getByProductId = async (clientId,productId) => {
+const getByProductId = async (clientId, productId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
-        const productRate = await ProductRate.findOne({product: productId});
-        if (!productRate) {
-            throw new CustomError(statusCode.NotFound, message.lblProductRateNotFound);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+
+        const productVariant = await ProductVariant.find({ product: productId });
+        if (!productVariant) {
+            throw new CustomError(statusCode.NotFound, message.lblProductVariantNotFound);
         }
-        return productRate;
+        return productVariant;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
     }
@@ -80,7 +89,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }, ke
         const ProductRate = clientConnection.model('productRate', productRateSchema);
         const Category = clientConnection.model('clientCategory', clinetCategorySchema);
         const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
-        
+
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
@@ -90,18 +99,18 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }, ke
         // If a search keyword is provided, filter productRates by product name
         if (keyword) {
             // First, find matching products by name
-            const matchingProducts = await ProductBluePrint.find({ 
+            const matchingProducts = await ProductBluePrint.find({
                 name: { $regex: keyword, $options: 'i' } // Case-insensitive search
             }).select('_id');
 
             const productIds = matchingProducts.map(prod => prod._id);
-            
+
             // Add to filter
             query.product = { $in: productIds };
         }
 
-        const [productRates, total] = await Promise.all([
-            ProductRate.find(query)
+        const [productVariant, total] = await Promise.all([
+            ProductVariant.find(query)
                 .skip(skip)
                 .limit(limit)
                 .sort({ _id: -1 })
@@ -114,25 +123,21 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }, ke
                         path: 'categoryId',
                         select: 'name _id', // Selecting only necessary fields from category
                     }
-                })
-                .populate({
-                    path: 'variant',
-                    model: ProductVariant,
                 }),
-            ProductRate.countDocuments(filters),
+            ProductVariant.countDocuments(filters),
         ]);
 
-        console.log("productRates",productRates);
-        
+        console.log("productVariant", productVariant);
 
-        return { count: total, productRates };
+
+        return { count: total, productVariant };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
     }
 };
 
 
-const deleted = async (clientId,productRateId, softDelete = true) => {
+const deleted = async (clientId, productRateId, softDelete = true) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Brand = clientConnection.model('brand', clinetBrandSchema);

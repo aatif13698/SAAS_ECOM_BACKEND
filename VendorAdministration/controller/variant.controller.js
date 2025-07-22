@@ -1,15 +1,16 @@
 
 
 
+
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 
-const productRateService = require("../services/productRate.service")
+const productVariantService = require("../services/variant.service")
 
-// create brand by vendor
+// create 
 exports.create = async (req, res, next) => {
     try {
-        const { clientId, product, variant, price } = req.body;
+        const { clientId, product, variant, stockEffect } = req.body;
         const mainUser = req.user;
 
         if (!clientId) {
@@ -18,7 +19,7 @@ exports.create = async (req, res, next) => {
             });
         }
 
-        if (!product || !variant || !price) {
+        if (!product || !variant || !stockEffect) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -26,13 +27,13 @@ exports.create = async (req, res, next) => {
         let dataObject = {
             product: product,
             variant: variant,
-            price: price,
+            stockEffect: stockEffect,
             createdBy: mainUser._id,
         }
 
-        const newdata = await productRateService.create(clientId, { ...dataObject });
+        const newdata = await productVariantService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
-            message: message.lblProductRateCreatedSuccess,
+            message: message.lblProductVariantCreatedSuccess,
             data: { productId: newdata._id },
         });
     } catch (error) {
@@ -43,7 +44,10 @@ exports.create = async (req, res, next) => {
 // update  brand by vendor
 exports.update = async (req, res, next) => {
     try {
-        const { clientId, productRateId, variant, price } = req.body;
+        const { clientId, variantId, product, variant, stockEffect } = req.body;
+
+        console.log("req.body",req.body);
+        
         const mainUser = req.user;
 
         if (!clientId) {
@@ -52,21 +56,22 @@ exports.update = async (req, res, next) => {
             });
         }
 
-        if (!productRateId || !variant || !price) {
+        if (!variantId || !variant || !stockEffect) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         let dataObject = {
+            product: product,
             variant: variant,
-            price: price,
+            stockEffect: stockEffect,
             createdBy: mainUser._id,
         }
 
-        const newdata = await productRateService.update(clientId, productRateId, { ...dataObject });
+        const newdata = await productVariantService.update(clientId, variantId, { ...dataObject });
         return res.status(statusCode.OK).send({
-            message: message.lblProductRateUpdatedSuccess,
-            data: { productId: newdata._id },
+            message: message.lblProductVariantUpdatedSuccess,
+            data: { variantId: newdata._id },
         });
     } catch (error) {
         next(error)
@@ -82,7 +87,7 @@ exports.getParticular = async (req, res, next) => {
                 message: message.lblProductRateIdIsRequired,
             });
         }
-        const productRate = await productRateService.getById(clientId, productRateId);
+        const productRate = await productVariantService.getById(clientId, productRateId);
         return res.status(200).send({
             message: message.lblProductRateFoundSuccessfully,
             data: productRate,
@@ -92,16 +97,18 @@ exports.getParticular = async (req, res, next) => {
     }
 };
 
-// get rate by product
-exports.getRateByProduct = async (req, res, next) => {
+// get variant by product
+exports.getVariantByProduct = async (req, res, next) => {
     try {
         const { productId, clientId } = req.params;
+        console.log("req.params",req.params);
+        
         if (!productId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblProductBlueprintIdIsRequired,
             });
         }
-        const productRate = await productRateService.getByProductId(clientId, productId);
+        const productRate = await productVariantService.getByProductId(clientId, productId);
         return res.status(200).send({
             message: message.lblProductRateFoundSuccessfully,
             data: productRate,
@@ -121,10 +128,10 @@ exports.list = async (req, res, next) => {
         };
 
         // Pass keyword to the service function
-        const result = await productRateService.list(clientId, filters, { page, limit: perPage }, keyword);
+        const result = await productVariantService.list(clientId, filters, { page, limit: perPage }, keyword);
 
         return res.status(statusCode.OK).send({
-            message: message.lblProductRateFoundSuccessfully,
+            message: message.lblProductVariantFoundSuccessfully,
             data: result,
         });
     } catch (error) {
@@ -147,7 +154,7 @@ exports.softDelete = async (req, res, next) => {
                 message: message.lblProductRateIdIsRequired,
             });
         }
-        await productRateService.deleted(clientId, productRateId, softDelete = true)
+        await productVariantService.deleted(clientId, productRateId, softDelete = true)
         this.list(req, res, next);
     } catch (error) {
         next(error);
