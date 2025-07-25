@@ -5,6 +5,8 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const productMainStockSchema = require("../../client/model/productMainStock");
+const productVariantSchema = require("../../client/model/productVariant");
+const productRateSchema = require("../../client/model/productRate");
 
 
 
@@ -36,34 +38,97 @@ exports.getLaptopList1 = async (req, res, next) => {
 
 
 // get product
+// exports.getProduct = async (req, res, next) => {
+//   try {
+//     const { clientId, productStockId } = req.params;
+//     const clientConnection = await getClientDatabaseConnection(clientId);
+//     const Stock = clientConnection.model("productStock", productStockSchema);
+//     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+//     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+//     const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+
+
+
+//     const product = await Stock.findOne({ isActive: true, _id: productStockId }).populate({
+//       path: 'product',
+//       model: ProductBluePrint,
+//       select: 'name _id images customizableOptions isCustomizable'
+//     }).populate({
+//       path: 'normalSaleStock',
+//       model: MainStock,
+//       populate: {
+//         path: "product",
+//         model: ProductBluePrint
+//       },
+//       populate: {
+//         path: "variant",
+//         model: ProductVariant
+//       }
+//     }).populate({
+//       path: 'normalSaleStock',
+//       model: MainStock,
+//       populat: {
+//         path: "variant",
+//         model: ProductVariant
+//       }
+//     })
+//     return res.status(httpStatusCode.OK).send({
+//       message: "Product found successfully.",
+//       data: product
+//     })
+//   } catch (error) {
+//     console.error("Error fetching product", error);
+//     next(error)
+//   }
+// };
 exports.getProduct = async (req, res, next) => {
   try {
     const { clientId, productStockId } = req.params;
     const clientConnection = await getClientDatabaseConnection(clientId);
+    
+    // Define models
     const Stock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
-    
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
 
-    const product = await Stock.findOne({ isActive: true, _id: productStockId }).populate({
-      path: 'product',
-      model: ProductBluePrint,
-      select: 'name _id images customizableOptions isCustomizable'
-    }).populate({
-      path: 'normalSaleStock',
-      model: MainStock,
-      populate: {
-        path: "product",
-        model:  ProductBluePrint
-      }
-    });
+    const product = await Stock.findOne({ 
+      isActive: true, 
+      _id: productStockId 
+    })
+      .populate({
+        path: 'product',
+        model: ProductBluePrint,
+        select: 'name _id images customizableOptions isCustomizable'
+      })
+      .populate({
+        path: 'normalSaleStock',
+        model: MainStock,
+        populate: [
+          {
+            path: 'product',
+            model: ProductBluePrint
+          },
+          {
+            path: 'variant',
+            model: ProductVariant,
+            populate: {
+              path: 'priceId',
+              model: ProductRate
+            }
+          }
+        ]
+      })
+      
+
     return res.status(httpStatusCode.OK).send({
       message: "Product found successfully.",
       data: product
-    })
+    });
   } catch (error) {
     console.error("Error fetching product", error);
-    next(error)
+    next(error);
   }
 };
 

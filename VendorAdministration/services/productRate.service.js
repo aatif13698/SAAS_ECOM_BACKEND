@@ -21,7 +21,12 @@ const create = async (clientId, data) => {
         if (productRate) {
             throw new CustomError(statusCode.NotFound, message.lblProductRateAlreadyExists);
         }
-        return await ProductRate.create(data);
+        const newProductRate = await ProductRate.create(data);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const existingVariant = await ProductVariant.findById(data.variant);
+        existingVariant.priceId = newProductRate._id;
+        await existingVariant.save()
+        return newProductRate
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
@@ -63,7 +68,7 @@ const getByProductId = async (clientId,productId) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
-        const productRate = await ProductRate.findOne({product: productId});
+        const productRate = await ProductRate.find({product: productId});
         if (!productRate) {
             throw new CustomError(statusCode.NotFound, message.lblProductRateNotFound);
         }

@@ -35,7 +35,8 @@ const create = async (clientId, data) => {
         }
         const existingMainStock = await MainStock.findOne({
             product: data.product,
-            priceOptions: JSON.parse(data?.priceOptions),
+            variant: data.variant,
+            varianValue: JSON.parse(data.varianValue),
         });
         if (existingMainStock) {
             throw new CustomError(statusCode.Conflict, message.lblStockAlreadyExists);
@@ -45,8 +46,9 @@ const create = async (clientId, data) => {
             businessUnit: data?.businessUnit,
             branch: data?.branch,
             warehouse: data?.warehouse,
+            variant: data?.variant,
+            varianValue: JSON.parse(data.varianValue),
             totalStock: data?.totalStock,
-            priceOptions: JSON.parse(data?.priceOptions),
             images: data?.images,
             defaultImage: data?.images[0],
             onlineStock: data?.onlineStock,

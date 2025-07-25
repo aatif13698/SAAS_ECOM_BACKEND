@@ -8,6 +8,7 @@ const ObjectId = Schema.ObjectId;
 const productVariantSchema = new Schema(
     {
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true },
+        priceId: { type: mongoose.Schema.Types.ObjectId, ref: 'productRate', default: null },
         variant: {},
         stockEffect: {},
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },

@@ -18,9 +18,12 @@ router.put('/updateAttributes', entityAuth.authorizeEntity("Product", "Attribute
 router.get('/attributes/:clientId/:AttributesId', entityAuth.authorizeEntity("Product", "Attribute", "create"), attributesContrller.getParticularAttributes);
 
 router.get('/attributes/product/:clientId/:productId', entityAuth.authorizeEntity("Product", "Attribute", "create"), attributesContrller.getAttributesOfProduct);
+router.get('/all/attributes/product/:clientId/:productId', attributesContrller.getAttributesOfProduct);
 
 router.get('/listAttributes', entityAuth.authorizeEntity("Product", "Attribute", "create"), attributesContrller.listAttributes);
 router.get('/getActiveAttributes/:clientId', entityAuth.authorizeEntity("Product", "Attribute", "create"), attributesContrller.getActive);
+
+router.get('/all/getActiveAttributes/:clientId', attributesContrller.getAllActive);
 
 router.post("/activeInactiveAttributes", entityAuth.authorizeEntity("Product", "Attribute", "create"), attributesContrller.activeinactiveAttributes);
 

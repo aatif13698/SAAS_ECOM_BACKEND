@@ -118,6 +118,27 @@ exports.getVariantByProduct = async (req, res, next) => {
     }
 };
 
+// get all variant by product id
+exports.getAllVariantByProduct = async (req, res, next) => {
+    try {
+        const { productId, clientId } = req.params;
+        console.log("req.params",req.params);
+        
+        if (!productId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblProductBlueprintIdIsRequired,
+            });
+        }
+        const productRate = await productVariantService.getAllByProductId(clientId, productId);
+        return res.status(200).send({
+            message: message.lblProductRateFoundSuccessfully,
+            data: productRate,
+        });
+    } catch (error) {
+        next(error)
+    }
+}
+
 // list 
 exports.list = async (req, res, next) => {
     try {

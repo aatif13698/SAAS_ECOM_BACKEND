@@ -115,6 +115,30 @@ exports.getAttributesOfProduct = async (req, res, next) => {
     }
 };
 
+
+// get attributes for customer
+exports.getAttributesOfProductForCustomer = async (req, res, next) => {
+    try {
+        const { clientId, productId } = req.params;
+
+        console.log("req.params",req.params);
+        
+        if (!clientId || !productId) {
+            return res.status(400).send({
+                message: "Required field is missing",
+            });
+        }
+        const attribute = await attributeService.getByProductForCustomer(clientId, productId);
+        return res.status(200).send({
+            message: message.lblAttributeFoundSuccessfully,
+            data: attribute,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
 // list 
 exports.listAttributes = async (req, res, next) => {
     try {
@@ -165,6 +189,29 @@ exports.getActive = async (req, res, next) => {
         next(error);
     }
 };
+
+// get all active attributes for customer
+exports.getAllActive = async (req, res, next) => {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const filters = {
+            deletedAt: null,
+            isActive: true
+        };
+        const result = await attributeService.getAllActive(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblAttributeFoundSuccessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 // active inactive 
 exports.activeinactiveAttributes = async (req, res, next) => {

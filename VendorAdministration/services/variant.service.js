@@ -71,8 +71,29 @@ const getByProductId = async (clientId, productId) => {
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
         const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        
 
-        const productVariant = await ProductVariant.find({ product: productId });
+        const productVariant = await ProductVariant.find({ product: productId, priceId: { $ne: null }  }).populate({
+            path: "priceId",
+            model : ProductRate
+        });
+        if (!productVariant) {
+            throw new CustomError(statusCode.NotFound, message.lblProductVariantNotFound);
+        }
+        return productVariant;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+    }
+};
+
+const getAllByProductId = async (clientId, productId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+        const ProductRate = clientConnection.model('productRate', productRateSchema);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+
+        const productVariant = await ProductVariant.find({ product: productId  });
         if (!productVariant) {
             throw new CustomError(statusCode.NotFound, message.lblProductVariantNotFound);
         }
@@ -164,6 +185,7 @@ module.exports = {
     update,
     getById,
     getByProductId,
+    getAllByProductId,
     list,
     deleted,
 };

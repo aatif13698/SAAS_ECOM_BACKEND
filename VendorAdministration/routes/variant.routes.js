@@ -25,6 +25,8 @@ router.get('/variant/:clientId/:productRateId', entityAuth.authorizeEntity("Prod
 
 router.get('/productVariantByProduct/:clientId/:productId', entityAuth.authorizeEntity("Product", "Variant", "view"), productVariantContrller.getVariantByProduct);
 
+router.get('/all/productVariantByProduct/:clientId/:productId', entityAuth.authorizeEntity("Product", "Variant", "view"), productVariantContrller.getAllVariantByProduct);
+
 router.get('/listVariant', entityAuth.authorizeEntity("Product", "Variant", "view"), productVariantContrller.list);
 
 router.post("/softDeleteVariant", entityAuth.authorizeEntity("Product", "Variant", "create"), productVariantContrller.softDelete);

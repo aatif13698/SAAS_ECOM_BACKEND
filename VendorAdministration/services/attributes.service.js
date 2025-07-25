@@ -79,6 +79,24 @@ const getByProduct = async (clientId, productId) => {
     }
 };
 
+
+const getByProductForCustomer = async (clientId, productId) => {
+
+    console.log("productId",productId);
+    
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Attribute = clientConnection.model('attributes', attributesSchema);
+        const attribute = await Attribute.findOne({productId: productId});
+        if (!attribute) {
+            throw new CustomError(statusCode.NotFound, message.lblAttributeNotFound);
+        }
+        return attribute;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting attribute: ${error.message}`);
+    }
+};
+
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -109,6 +127,24 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 
 
 const getActive = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Attribute = clientConnection.model('attributes', attributesSchema);
+
+        const [attributes] = await Promise.all([
+            Attribute.find(filters).sort({ _id: -1 }),
+        ]);
+
+        return { attributes };
+
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing attribute: ${error.message}`);
+
+    }
+};
+
+
+const getAllActive = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attribute = clientConnection.model('attributes', attributesSchema);
@@ -185,5 +221,7 @@ module.exports = {
     activeInactive,
     deleted,
     restore,
-    getByProduct
+    getByProduct,
+    getAllActive,
+    getByProductForCustomer
 };

@@ -11,6 +11,9 @@ const productMainStockSchema = new Schema(
         businessUnit: { type: ObjectId, ref: "businessUnit", default:null, index: true }, 
         branch: { type: ObjectId, ref: "branch", default:null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default:null, index: true },
+        variant: { type: mongoose.Schema.Types.ObjectId, ref: 'productVariant', required: true },
+        varianValue: {},
+        
         name:  {type: String, default: null},
         description:  {type: String, default: null},
         totalStock: { type: Number, required: true }, 
