@@ -30,6 +30,11 @@ const cartSchema = new Schema(
           ref: "productStock",
           required: true,
         },
+        productMainStock: {
+          type: ObjectId,
+          ref: "productMainStock",
+          required: true,
+        },
         quantity: {
           type: Number,
           required: true,
@@ -51,7 +56,7 @@ const cartSchema = new Schema(
         ],
         priceOption: {
           quantity: { type: Number, required: true },
-          unit: { type: String, required: true },
+          unitPrice: { type: String, required: true },
           price: { type: Number, required: true },
         },
         subtotal: {
@@ -103,7 +108,7 @@ const cartSchema = new Schema(
 // Pre-save hook to calculate subtotal and total amount
 cartSchema.pre("save", function (next) {
   this.items.forEach((item) => {
-    item.subtotal = item.quantity * item.priceOption.price;
+    item.subtotal = item.priceOption.price;
   });
   this.totalAmount = this.items.reduce((acc, item) => acc + item.subtotal, 0);
   this.lastModified = Date.now();

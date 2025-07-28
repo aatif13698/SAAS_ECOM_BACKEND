@@ -2,8 +2,12 @@ const cartSchema = require("../../client/model/cart");
 const customerAddressSchema = require("../../client/model/customerAddress");
 const orderSchema = require("../../client/model/order");
 const productBlueprintSchema = require("../../client/model/productBlueprint");
+const productMainStockSchema = require("../../client/model/productMainStock");
+const productRateSchema = require("../../client/model/productRate");
 const productStockSchema = require("../../client/model/productStock");
+const productVariantSchema = require("../../client/model/productVariant");
 const { getClientDatabaseConnection } = require("../../db/connection");
+const { convertPricingTiers } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const mongoose = require("mongoose")
@@ -172,7 +176,7 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
   let session;
 
   try {
-    const { clientId, productStockId, quantity, priceOption, addressId } = req.body;
+    const { clientId, productStockId, productMainStockId, quantity, priceOption, addressId } = req.body;
     const userId = req.user ? req.user._id : null; // From auth middleware
 
     if (!clientId) {
@@ -182,7 +186,7 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
     }
 
     // Validate input
-    if (!productStockId || !quantity || !priceOption || !addressId) {
+    if (!productStockId || !productMainStockId || !quantity || !priceOption || !addressId) {
       return res.status(httpStatusCode.BadRequest).send({
         success: false,
         message: "productStockId, quantity, priceOption, and addressId are required",
@@ -202,6 +206,7 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
     for (const [key, value] of Object.entries(req.body)) {
       if (
         key !== "productStockId" &&
+        key !== "productMainStockId" &&
         key !== "quantity" &&
         key !== "priceOption" &&
         key !== "sessionId" &&
@@ -238,6 +243,11 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
     const CustomerAddress = clientConnection.model("customerAddress", customerAddressSchema);
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const Order = clientConnection.model("Order", orderSchema); // Consistent with schema
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
 
     // Verify address exists and belongs to the user
     const address = await CustomerAddress.findOne({
@@ -263,26 +273,61 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
       });
     }
 
-    // Validate price option
-    const parsedPriceOption = JSON.parse(priceOption);
-    console.log("parsedPriceOption", parsedPriceOption);
 
-    const validPriceOption = stock.priceOptions.find(
-      (opt) =>
-        opt.quantity === parsedPriceOption.quantity &&
-        opt.unit === parsedPriceOption.unit &&
-        opt.price === parsedPriceOption.price
-    );
-    if (!validPriceOption) {
-      await session.abortTransaction();
-      return res.status(httpStatusCode.BadRequest).json({
+
+    const productMainStock = await MainStock.findById(productMainStockId).populate({
+      path: 'product',
+      model: ProductBluePrint
+    }).populate({
+      path: 'variant',
+      model: ProductVariant,
+      populate: {
+        path: 'priceId',
+        model: ProductRate
+      }
+
+    });
+
+    if (!productMainStock || !productMainStock.isActive) {
+      return res.status(httpStatusCode.NotFound).json({
         success: false,
-        message: "Invalid price option",
+        message: "Product stock not found or inactive",
+      });
+    }
+    const priceArray = productMainStock.variant.priceId.price;
+    const priceTiers = convertPricingTiers(priceArray);
+    const priceObject = priceTiers.find(item =>
+      quantity >= item.minQuantity &&
+      (item.maxQuantity === null || quantity <= item.maxQuantity)
+    ) || null;
+    const calculatedPrice = priceObject?.unitPrice * quantity;
+    if (calculatedPrice !== JSON.parse(priceOption)?.price) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Invalid price calculation occured.",
       });
     }
 
+    // Validate price option
+    // const parsedPriceOption = JSON.parse(priceOption);
+    // console.log("parsedPriceOption", parsedPriceOption);
+
+    // const validPriceOption = stock.priceOptions.find(
+    //   (opt) =>
+    //     opt.quantity === parsedPriceOption.quantity &&
+    //     opt.unit === parsedPriceOption.unit &&
+    //     opt.price === parsedPriceOption.price
+    // );
+    // if (!validPriceOption) {
+    //   await session.abortTransaction();
+    //   return res.status(httpStatusCode.BadRequest).json({
+    //     success: false,
+    //     message: "Invalid price option",
+    //   });
+    // }
+
     // Check stock availability
-    if (stock.onlineStock < quantity) {
+    if (productMainStock.onlineStock < quantity) {
       await session.abortTransaction();
       return res.status(httpStatusCode.Conflict).json({
         success: false,
@@ -291,15 +336,16 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
     }
 
     // Deduct stock
-    stock.onlineStock -= quantity;
-    stock.totalStock -= quantity;
+    productMainStock.onlineStock -= quantity;
+    productMainStock.totalStock -= quantity;
     await stock.save({ session });
 
     // Prepare order item
     const orderItem = {
       productStock: productStockId,
+      productMainStock: productMainStock,
       quantity,
-      priceOption: parsedPriceOption,
+      priceOption:  JSON.parse(priceOption),
       customizationDetails: new Map(Object.entries(customizationDetails)),
       customizationFiles,
     };

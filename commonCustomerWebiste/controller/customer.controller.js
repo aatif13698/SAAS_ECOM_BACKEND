@@ -2,11 +2,15 @@ const cartSchema = require("../../client/model/cart");
 const clinetCategorySchema = require("../../client/model/category");
 const customerAddressSchema = require("../../client/model/customerAddress");
 const productBlueprintSchema = require("../../client/model/productBlueprint");
+const productMainStockSchema = require("../../client/model/productMainStock");
+const productRateSchema = require("../../client/model/productRate");
 const productStockSchema = require("../../client/model/productStock");
+const productVariantSchema = require("../../client/model/productVariant");
 const clientRoleSchema = require("../../client/model/role");
 const clinetSubCategorySchema = require("../../client/model/subCategory");
 const clinetUserSchema = require("../../client/model/user");
 const { getClientDatabaseConnection } = require("../../db/connection");
+const { convertPricingTiers } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
 
 const message = require("../../utils/message");
@@ -482,7 +486,7 @@ exports.deleteAddressByVendor = async (req, res, next) => {
 exports.getAddresses = async (req, res, next) => {
   try {
     const { clientId, customerId } = req.params;
-    
+
     const user = req.user;
     if (!clientId) {
       return res
@@ -522,7 +526,7 @@ exports.getAddresses = async (req, res, next) => {
 // add to cart new
 exports.addToCartNew = async (req, res, next) => {
   try {
-    const { clientId, productStockId, quantity, priceOption, sessionId } = req.body;
+    const { clientId, productStockId, productMainStockId, quantity, priceOption, sessionId } = req.body;
     if (!clientId) {
       return res
         .status(httpStatusCode.BadRequest)
@@ -530,18 +534,18 @@ exports.addToCartNew = async (req, res, next) => {
     }
     const userId = req.user ? req.user._id : null; // From auth middleware
     // Validate input
-    if (!productStockId || !quantity || !priceOption) {
+    if (!productStockId || !productMainStockId || !quantity || !priceOption) {
       return res.status(httpStatusCode.BadRequest).send({
         success: false,
         message: message.lblRequiredFieldMissing,
       });
     }
-    
+
     // handling customisation
     const customizationDetails = {};
     const customizationFiles = [];
     for (const [key, value] of Object.entries(req.body)) {
-      if (key !== "productStockId" && key !== "quantity" && key !== "priceOption" && key !== "sessionId" && key !== "clientId") {
+      if (key !== "productStockId" && key !== "productMainStockId" && key !== "quantity" && key !== "priceOption" && key !== "sessionId" && key !== "clientId") {
         customizationDetails[key] = value;
       }
     }
@@ -566,6 +570,12 @@ exports.addToCartNew = async (req, res, next) => {
     const clientUser = clientConnection.model("clientUsers", clinetUserSchema);
     const Stock = clientConnection.model("productStock", productStockSchema);
     const Cart = clientConnection.model("cart", cartSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+
     // Fetch product stock
     const productStock = await Stock.findById(productStockId);
     if (!productStock || !productStock.isActive) {
@@ -574,25 +584,62 @@ exports.addToCartNew = async (req, res, next) => {
         message: "Product stock not found or inactive",
       });
     }
-    // Validate price option
-    const parsedPriceOption = JSON.parse(priceOption);
-    console.log("parsedPriceOption", parsedPriceOption);
 
-    
-    const validPriceOption =  productStock.priceOptions.find(
-      (opt) =>
-        opt.quantity === parsedPriceOption.quantity &&
-        opt.unit === parsedPriceOption.unit &&
-        opt.price === parsedPriceOption.price
-    );
-    if (!validPriceOption) {
-      return res.status(400).json({
+    const productMainStock = await MainStock.findById(productMainStockId).populate({
+      path: 'product',
+      model: ProductBluePrint
+    }).populate({
+      path: 'variant',
+      model: ProductVariant,
+      populate: {
+        path: 'priceId',
+        model: ProductRate
+      }
+
+    });
+
+    if (!productMainStock || !productMainStock.isActive) {
+      return res.status(httpStatusCode.NotFound).json({
         success: false,
-        message: "Invalid price option",
+        message: "Product stock not found or inactive",
       });
     }
+    const priceArray = productMainStock.variant.priceId.price;
+    const priceTiers = convertPricingTiers(priceArray);
+    const priceObject = priceTiers.find(item =>
+      quantity >= item.minQuantity &&
+      (item.maxQuantity === null || quantity <= item.maxQuantity)
+    ) || null;
+    const calculatedPrice = priceObject?.unitPrice * quantity;
+    if (calculatedPrice !== JSON.parse(priceOption)?.price) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Invalid price calculation occured.",
+      });
+    }
+    
+
+    
+
+
+    // Validate price option
+    // const parsedPriceOption = JSON.parse(priceOption);
+    // const validPriceOption = productStock.priceOptions.find(
+    //   (opt) =>
+    //     opt.quantity === parsedPriceOption.quantity &&
+    //     opt.unit === parsedPriceOption.unit &&
+    //     opt.price === parsedPriceOption.price
+    // );
+    // if (!validPriceOption) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid price option",
+    //   });
+    // }
+
+
     // Check stock availability
-    if (productStock.onlineStock < quantity) {
+    if (productMainStock.onlineStock < quantity) {
       return res.status(httpStatusCode.Conflict).json({
         success: false,
         message: "Insufficient stock",
@@ -618,7 +665,7 @@ exports.addToCartNew = async (req, res, next) => {
     }
     // Check if item already exists in cart
     const itemIndex = cart.items.findIndex(
-      (item) => item.productStock.toString() === productStockId
+      (item) => item.productMainStock.toString() === productMainStock.toString()
     );
     if (itemIndex > -1) {
       // Update quantity if item exists
@@ -627,16 +674,15 @@ exports.addToCartNew = async (req, res, next) => {
       // Add new item
       cart.items.push({
         productStock: productStockId,
+        productMainStock: productMainStockId,
         quantity,
-        priceOption : parsedPriceOption,
+        priceOption: JSON.parse(priceOption),
         customizationDetails: new Map(Object.entries(customizationDetails)),
         customizationFiles,
       });
     }
     // Save cart
     await cart.save();
-    // Optionally, update product stock (e.g., reserve stock)
-    // productStock.onlineStock -= quantity;
     // await productStock.save();
     res.status(httpStatusCode.Created).json({
       success: true,

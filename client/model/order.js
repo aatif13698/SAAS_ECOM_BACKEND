@@ -170,10 +170,11 @@ const orderSchema = new Schema(
     items: [
       {
         productStock: { type: ObjectId, ref: "productStock", required: true },
+        productMainStock: { type: ObjectId, ref: "productMainStock", required: true },
         quantity: { type: Number, required: true, min: [1, "Quantity must be at least 1"] },
         priceOption: {
           quantity: { type: Number, required: true },
-          unit: { type: String, required: true },
+          unitPrice: { type: Number, required: true },
           price: { type: Number, required: true },
         },
         customizationDetails: {
@@ -224,7 +225,7 @@ const orderSchema = new Schema(
 // Pre-save hook to calculate subtotals and total amount
 orderSchema.pre("save", function (next) {
   this.items.forEach((item) => {
-    item.subtotal = item.quantity * item.priceOption.price;
+    item.subtotal = item.priceOption.price;
   });
   this.totalAmount = this.items.reduce((acc, item) => acc + item.subtotal, 0);
   next();
@@ -232,16 +233,16 @@ orderSchema.pre("save", function (next) {
 
 // Generate unique order number using the current model's connection
 orderSchema.pre("save", async function (next) {
-    if (!this.orderNumber) {
-      const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
-      // Use this.model("Order") to reference the client-specific model
-      const OrderModel = this.model("Order");
-      const count = await OrderModel.countDocuments({
-        createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
-      }).session(this.session || null); // Use session if available
-      this.orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`; // e.g., "ORD-20250411-001"
-    }
-    next();
-  });
+  if (!this.orderNumber) {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+    // Use this.model("Order") to reference the client-specific model
+    const OrderModel = this.model("Order");
+    const count = await OrderModel.countDocuments({
+      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    }).session(this.session || null); // Use session if available
+    this.orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`; // e.g., "ORD-20250411-001"
+  }
+  next();
+});
 
 module.exports = orderSchema;
