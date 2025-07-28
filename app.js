@@ -275,7 +275,7 @@ async function createNewRole(params) {
 
 async function createRoleInDatbaseInstance() {
     try {
-        const clientId = "6782a7e9885d04ffc37c3dcb";
+        const clientId = "67cdae13e177fa43c603b832";
         const data =  { id: 4, name: 'Warehouse Head', capability: defaultPersmissionsList };
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Role = clientConnection.model('clientRoles', clientRoleSchema);
@@ -298,10 +298,10 @@ async function createRoleInDatbaseInstance() {
 async function updateRoleInDatbaseInstance() {
     try {
         const clientId = "67cdae13e177fa43c603b832";
-        const capability = vendorPersmissionsList;
+        const capability = defaultPersmissionsList;
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Role = clientConnection.model('clientRoles', clientRoleSchema);
-        const existing = await Role.findOne({ id: 1 });
+        const existing = await Role.findOne({ id: 4 });
         if (existing) {
             existing.capability = capability;
             await existing.save()

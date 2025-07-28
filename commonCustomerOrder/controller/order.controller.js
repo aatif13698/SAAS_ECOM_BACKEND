@@ -436,6 +436,8 @@ exports.placeOrderFromCart = async (req, res, next) => {
     const CustomerAddress = clientConnection.model("customerAddress", customerAddressSchema);
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const Order = clientConnection.model("Order", orderSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    
 
     // Fetch cart
     const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null }).session(session);
@@ -463,12 +465,12 @@ exports.placeOrderFromCart = async (req, res, next) => {
 
     // Validate stock for all items
     for (const item of cart.items) {
-      const stock = await ProductStock.findById(item.productStock).session(session);
+      const stock = await MainStock.findById(item.productMainStock).session(session);
       if (!stock || !stock.isActive) {
         await session.abortTransaction();
         return res.status(httpStatusCode.NotFound).json({
           success: false,
-          message: `Product stock not found or inactive for item: ${item.productStock}`,
+          message: `Product stock not found or inactive for item: ${item.productMainStock}`,
         });
       }
       if (stock.onlineStock < item.quantity) {
@@ -487,6 +489,7 @@ exports.placeOrderFromCart = async (req, res, next) => {
     // Prepare order items
     const orderItems = cart.items.map((item) => ({
       productStock: item.productStock,
+      productMainStock: item.productMainStock,
       quantity: item.quantity,
       priceOption: item.priceOption,
       customizationDetails: item.customizationDetails,
@@ -505,7 +508,7 @@ exports.placeOrderFromCart = async (req, res, next) => {
     const order = new Order({
       orderNumber: orderNumber,
       customer: userId,
-      items: orderItems,
+      items: orderItems, 
       address: addressId,
       paymentMethod: "COD",
       paymentStatus: "PENDING",

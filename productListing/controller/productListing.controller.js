@@ -18,12 +18,33 @@ exports.getLaptopList1 = async (req, res, next) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
     const Stock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
 
     const list = await Stock.find({ isActive: true }).populate({
       path: 'product',
       model: ProductBluePrint,
-      select: 'name _id images '
-    });
+      select: 'name _id images customizableOptions isCustomizable'
+    })
+      .populate({
+        path: 'normalSaleStock',
+        model: MainStock,
+        populate: [
+          {
+            path: 'product',
+            model: ProductBluePrint
+          },
+          {
+            path: 'variant',
+            model: ProductVariant,
+            populate: {
+              path: 'priceId',
+              model: ProductRate
+            }
+          }
+        ]
+      })
     return res.status(httpStatusCode.OK).send({
       message: "Laptop list 1 found successfully.",
       data: list
@@ -85,7 +106,7 @@ exports.getProduct = async (req, res, next) => {
   try {
     const { clientId, productStockId } = req.params;
     const clientConnection = await getClientDatabaseConnection(clientId);
-    
+
     // Define models
     const Stock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
@@ -93,9 +114,9 @@ exports.getProduct = async (req, res, next) => {
     const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
     const ProductRate = clientConnection.model('productRate', productRateSchema);
 
-    const product = await Stock.findOne({ 
-      isActive: true, 
-      _id: productStockId 
+    const product = await Stock.findOne({
+      isActive: true,
+      _id: productStockId
     })
       .populate({
         path: 'product',
@@ -120,7 +141,7 @@ exports.getProduct = async (req, res, next) => {
           }
         ]
       })
-      
+
 
     return res.status(httpStatusCode.OK).send({
       message: "Product found successfully.",
@@ -250,6 +271,9 @@ exports.getProductsBySubcategory = [
       const clientConnection = await getClientDatabaseConnection(clientId);
       const Stock = clientConnection.model("productStock", productStockSchema);
       const ProductBluePrint = clientConnection.model("productBlueprint", productBlueprintSchema);
+      const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+      const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+      const ProductRate = clientConnection.model('productRate', productRateSchema);
 
       // Calculate skip for pagination
       const skip = (page - 1) * limit;
@@ -270,7 +294,25 @@ exports.getProductsBySubcategory = [
           },
           select: "name _id images isCustomizable customizableOptions",
         })
-        .select("priceOptions onlineStock")
+       
+        .populate({
+          path: 'normalSaleStock',
+          model: MainStock,
+          populate: [
+            {
+              path: 'product',
+              model: ProductBluePrint
+            },
+            {
+              path: 'variant',
+              model: ProductVariant,
+              populate: {
+                path: 'priceId',
+                model: ProductRate
+              }
+            }
+          ]
+        })
         .skip(skip)
         .limit(limit)
         .lean();

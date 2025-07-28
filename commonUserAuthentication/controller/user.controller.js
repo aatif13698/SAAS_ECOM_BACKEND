@@ -227,6 +227,10 @@ exports.signIn = async (req, res, next) => {
 
         const clientConnection = await getClientDatabaseConnection(clientId);
         const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const customerAddress = clientConnection.model(
+            "customerAddress",
+            customerAddressSchema
+        );
         const userExist = await clientUser.findOne(query);
 
         await commonCheckForCustomer(userExist);
@@ -243,10 +247,16 @@ exports.signIn = async (req, res, next) => {
         const token = jwt.sign({ id: clientId, identifier: identifier }, process.env.PRIVATEKEY, { expiresIn });
         const expiryTime = new Date().getTime() + 180 * 24 * 60 * 60 * 1000;
 
+        const addresses = await customerAddress.findOne({
+            customerId: userExist._id,
+            deletedAt: null,
+        });
+
         return res.status(statusCode.OK).send({
             token,
             expiryTime,
             customerInfo: userExist,
+            addresses: addresses,
             message: message.lblLoginSuccess
         });
 
@@ -435,7 +445,7 @@ exports.forgetPassword = async (req, res, next) => {
         // Generate OTP
         const otp = generateOtp();
         await clientUser.updateOne(query, { OTP: otp, otpGeneratedAt: new Date() });
-       
+
 
         // Send OTP to email
         const mailOptions = {
@@ -466,8 +476,8 @@ exports.resetPassword = async (req, res, next) => {
     try {
         const { identifier, password, otp, clientId } = req.body;  // Can be email or phone
 
-        console.log("req.body",req.body);
-        
+        console.log("req.body", req.body);
+
 
         // Validate input
         if (!identifier || !password || !otp) {
@@ -690,7 +700,7 @@ exports.createBusinessInfo = async (req, res) => {
         const businessUpdates = {
             businessName, tanNumber,
             licenseNumber, gstin, businessAddress,
-            isBusinessAccount : true
+            isBusinessAccount: true
         };
         const clientConnection = await getClientDatabaseConnection(clientId);
         const clientUser = clientConnection.model('clientUsers', clinetUserSchema);

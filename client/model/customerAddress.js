@@ -42,6 +42,7 @@ const customerAddressSchema = new Schema(
             type: String,
             trim: true,
         },
+        isDefault: {type: Boolean, default: false},
         deletedAt: { type: Date, default: null, index: true }, 
     },
     { timestamps: true }
