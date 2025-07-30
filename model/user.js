@@ -90,7 +90,7 @@ const userSchema = new Schema(
       trim: true,
     },
 
-   
+
 
     address: {
       type: String,
@@ -127,7 +127,7 @@ const userSchema = new Schema(
 
     signupType: {
       type: String,
-      enum:  ['0', '1', '2', '3'], //0=Normal, 1=Google, 2=Facebook, 3=Twitter
+      enum: ['0', '1', '2', '3'], //0=Normal, 1=Google, 2=Facebook, 3=Twitter
       default: "0",
       trim: true,
     },
@@ -138,10 +138,20 @@ const userSchema = new Schema(
     createdBy: { type: ObjectId, ref: "user", index: true }, // Index for admin/user relationships
     isCreatedBySuperAdmin: { type: Boolean, default: false, index: true },
 
-    accessUnit :  [{ id : {type : String} }],
+    accessUnit: [{ id: { type: String } }],
 
     // clinet staff handling
     accessUnit: [{ id: { type: String } }],
+
+    // attributes: [
+    //   {
+    //     jointOperation: { type: String, default: null },
+    //     attName: { type: String, requied: true },
+    //     subOperation: { type: String, required: true },
+    //     value: { type: String, required: true },
+    //     order: {type: Number}
+    //   }
+    // ],
 
     deletedAt: { type: Date, default: null, index: true }, // Index for soft-delete functionality
   },

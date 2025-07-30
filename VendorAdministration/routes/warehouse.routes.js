@@ -57,7 +57,7 @@ router.put('/updateWarehouse', entityAuth.authorizeEntity("Administration", "War
 
 
 router.get('/Warehouse/:clientId/:warehouseId', entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.getParticularWarehouseByVendor);
-router.get('/warehouseByBranch/:clientId/:branchId', entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.getWarehouseByBranch);
+router.get('/warehouseByBranch/:clientId/:branchId',  vendorWarehouseContrller.getWarehouseByBranch);
 
 router.get('/listWarehouse', entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.listWarehouse);
 

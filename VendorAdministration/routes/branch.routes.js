@@ -66,7 +66,7 @@ router.post("/softDeleteBranch", entityAuth.authorizeEntity("Administration", "B
 
 router.post("/restoreBranch", entityAuth.authorizeEntity("Administration", "Branch", "create"), vendorBranchContrller.restoreBranchByVendor);
 
-router.get('/branchByBusinessUnit/:clientId/:businessUnitId', entityAuth.authorizeEntity("Administration", "Branch", "create"), vendorBranchContrller.getBranchByBusinessUnit);
+router.get('/branchByBusinessUnit/:clientId/:businessUnitId',  vendorBranchContrller.getBranchByBusinessUnit);
 
 
 

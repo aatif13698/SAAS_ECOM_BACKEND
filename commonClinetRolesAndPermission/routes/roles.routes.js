@@ -7,7 +7,8 @@ let router = express.Router();
 
 const rolesAndPermissionContrller = require("../controller/role.controller");
 
-const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization")
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
+const { tokenAuth } = require("../../middleware/authorization/superAdmin");
 
 
 // # create, update, view, list,  delete RolesAndPermission by business unit routes starts here
@@ -22,7 +23,7 @@ router.get('/listRolesAndPermission', entityAuth.authorizeEntity("Administration
 
 router.post("/softDeleteRolesAndPermission", entityAuth.authorizeEntity("Administration", "Roles & Permissions", "softDelete"), rolesAndPermissionContrller.softDeleteRolesAndPermissionByBusinesssUnit);
 
-router.get('/getRolesList', entityAuth.authorizeEntity("Administration", "Roles & Permissions", "view"), rolesAndPermissionContrller.getRolesList);
+router.get('/getRolesList', tokenAuth, rolesAndPermissionContrller.getRolesList);
 
 // router.post("/restoreRolesAndPermission", entityAuth.authorizeEntity( "Roles & Permissions", "delete"), rolesAndPermissionContrller.restoreRoleAndPermissionByBusinessUnit);
 

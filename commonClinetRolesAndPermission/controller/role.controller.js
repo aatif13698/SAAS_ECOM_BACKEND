@@ -230,7 +230,7 @@ exports.softDeleteRolesAndPermissionByBusinesssUnit = async (req, res) => {
 exports.getRolesList = async (req, res) => {
     try {
         const admin = req.user;
-        const roleIdOfCurrentUser = admin?.role?.id;
+        const roleIdOfCurrentUser = admin?.roleId;
         const clientId = req.query.clientId;
         if (!clientId) {
             return res.status(400).send({

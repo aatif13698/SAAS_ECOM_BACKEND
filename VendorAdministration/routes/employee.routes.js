@@ -14,7 +14,7 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // router.post('/createBranch', entityAuth.authorizeEntity("Branch", "create"), employeeContrller.createBranchByVendor);
 
-router.post('/createEmployee', entityAuth.authorizeEntity("Administration", "Branch", "create"), (req, res, next) => {
+router.post('/createEmployee', entityAuth.authorizeEntity("Administration", "Employee", "create"), (req, res, next) => {
     uploadBranchIcon.single("icon")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {
@@ -36,7 +36,7 @@ router.post('/createEmployee', entityAuth.authorizeEntity("Administration", "Bra
 
 // router.put('/updateBranch', entityAuth.authorizeEntity("Branch", "update"), employeeContrller.updateBranchByVendor);
 
-router.put('/updateEmployee', entityAuth.authorizeEntity("Administration", "Branch", "update"), (req, res, next) => {
+router.put('/updateEmployee', entityAuth.authorizeEntity("Administration", "Employee", "update"), (req, res, next) => {
     uploadBranchIcon.single("icon")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {
@@ -56,15 +56,15 @@ router.put('/updateEmployee', entityAuth.authorizeEntity("Administration", "Bran
     });
 }, employeeContrller.update);
 
-router.get('/employee/:clientId/:employeeId', entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.getParticular);
+router.get('/employee/:clientId/:employeeId', entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.getParticular);
 
-router.get('/listEmployee', entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.list);
+router.get('/listEmployee', entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.list);
 
-router.post("/activeInactiveEmployee", entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.activeinactive);
+router.post("/activeInactiveEmployee", entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.activeinactive);
 
-router.post("/softDeleteEmployee", entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.softDelete);
+router.post("/softDeleteEmployee", entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.softDelete);
 
-router.post("/restoreBranch", entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.restoreBranchByVendor);
+router.post("/restoreBranch", entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.restoreBranchByVendor);
 
 router.get('/branchByBusinessUnit/:clientId/:businessUnitId', entityAuth.authorizeEntity("Administration", "Branch", "create"), employeeContrller.getBranchByBusinessUnit);
 

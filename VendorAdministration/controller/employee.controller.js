@@ -171,7 +171,7 @@ exports.create = async (req, res, next) => {
         const dataObject = {
             firstName,
             lastName,
-            email,
+            email: email.toLowerCase(),
             phone,
             gender,
             role: roleId,
