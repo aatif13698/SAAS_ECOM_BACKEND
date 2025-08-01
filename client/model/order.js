@@ -165,6 +165,7 @@ const ObjectId = Schema.ObjectId;
 
 const orderSchema = new Schema(
   {
+    warehouse: { type: ObjectId, ref: "warehouse", default:null, index: true },
     customer: { type: ObjectId, ref: "clientUsers", required: true, index: true },
     orderNumber: { type: String, unique: true, required: true, index: true }, // Uncommented
     items: [

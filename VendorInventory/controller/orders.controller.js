@@ -64,6 +64,7 @@ exports.list = async (req, res, next) => {
       status = "", // New: Comma-separated statuses (e.g., "PENDING,APPROVED")
       startDate = "", // New: Start date for createdAt (e.g., "2025-04-01")
       endDate = "", // New: End date for createdAt (e.g., "2025-04-30")
+      level = "vendor", levelId = ""
     } = req.query;
 
     console.log("req.query", req.query);
@@ -75,7 +76,7 @@ exports.list = async (req, res, next) => {
     }
 
     // Build filters
-    const filters = {
+    let filters = {
       deletedAt: null,
       ...(keyword && {
         $or: [{ orderNumber: { $regex: keyword.trim(), $options: "i" } }],
@@ -93,6 +94,17 @@ exports.list = async (req, res, next) => {
         },
       }),
     };
+
+
+    if (level == "warehouse" && levelId) {
+      filters = {
+        ...filters,
+        warehouse: levelId
+      }
+    }
+
+    console.log("filters", filters);
+
 
     // Validate status values
     const validStatuses = [

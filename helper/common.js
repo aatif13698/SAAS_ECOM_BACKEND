@@ -6,17 +6,30 @@ function generateOtp() {
 
 
 function convertPricingTiers(pricingArray) {
-    return pricingArray.map((item, index, arr) => ({
-      minQuantity: item.quantity,
-      maxQuantity: index < arr.length - 1 ? arr[index + 1].quantity - 1 : null,
-      unitPrice: item.unitPrice
-    }));
-  };
+  return pricingArray.map((item, index, arr) => ({
+    minQuantity: item.quantity,
+    maxQuantity: index < arr.length - 1 ? arr[index + 1].quantity - 1 : null,
+    unitPrice: item.unitPrice
+  }));
+};
 
+
+function groupByStockId(array) {
+  const grouped = {};
+  array.forEach(obj => {
+    const warehouseId = obj.productStock.warehouse;
+    if (!grouped[warehouseId]) {
+      grouped[warehouseId] = [];
+    }
+    grouped[warehouseId].push(obj);
+  });
+  return Object.values(grouped);
+}
 
 
 
 module.exports = {
-    generateOtp,
-    convertPricingTiers
+  generateOtp,
+  convertPricingTiers,
+  groupByStockId
 };

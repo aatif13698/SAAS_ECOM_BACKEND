@@ -8,7 +8,7 @@ const productStockSchema = require("../../client/model/productStock");
 const productVariantSchema = require("../../client/model/productVariant");
 const clinetUserSchema = require("../../client/model/user");
 const { getClientDatabaseConnection } = require("../../db/connection");
-const { convertPricingTiers } = require("../../helper/common");
+const { convertPricingTiers, groupByStockId } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const mongoose = require("mongoose")
@@ -441,14 +441,28 @@ exports.placeOrderFromCart = async (req, res, next) => {
 
 
     // Fetch cart
-    const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null }).session(session);
-    if (!cart || !cart.items.length) {
-      await session.abortTransaction();
-      return res.status(httpStatusCode.BadRequest).json({
-        success: false,
-        message: "Cart is empty or not found",
-      });
-    }
+    const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null })
+      .populate({
+        path: "items.productStock",
+        model: ProductStock,
+        select: "product warehouse branch businessUnit"
+      })
+      .session(session);
+
+
+    const arrayOfObjects = groupByStockId(cart.items)
+
+    console.log("cart aa", arrayOfObjects);
+
+    // return null;
+
+    // if (!cart || !cart.items.length) {
+    //   await session.abortTransaction();
+    //   return res.status(httpStatusCode.BadRequest).json({
+    //     success: false,
+    //     message: "Cart is empty or not found",
+    //   });
+    // }
 
     // Verify address
     const address = await CustomerAddress.findOne({
@@ -487,43 +501,83 @@ exports.placeOrderFromCart = async (req, res, next) => {
       await stock.save({ session });
     }
 
-    // Prepare order items
-    const orderItems = cart.items.map((item) => ({
-      productStock: item.productStock,
-      productMainStock: item.productMainStock,
-      quantity: item.quantity,
-      priceOption: item.priceOption,
-      customizationDetails: item.customizationDetails,
-      customizationFiles: item.customizationFiles,
-      subtotal: item.subtotal,
-    }));
+     const count = await Order.countDocuments({
+        createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+      });
 
-    const count = await Order.countDocuments({
-      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
-    });
-    const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+    let orderCount = count;
 
-    const orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`
+    for (let index = 0; index < arrayOfObjects.length; index++) {
+      const element = arrayOfObjects[index];
+      // Prepare order items
+      const orderItems = element.map((item) => ({
+        productStock: item.productStock,
+        productMainStock: item.productMainStock,
+        quantity: item.quantity,
+        priceOption: item.priceOption,
+        customizationDetails: item.customizationDetails,
+        customizationFiles: item.customizationFiles,
+        subtotal: item.subtotal,
+      }));
+      orderCount = orderCount + 1;
+      const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+      const orderNumber = `ORD-${date}-${String(orderCount).padStart(3, "0")}`
+      // Create order
+      const order = new Order({
+        warehouse: orderItems[0].productStock.warehouse,
+        orderNumber: orderNumber,
+        customer: userId,
+        items: orderItems,
+        address: addressId,
+        paymentMethod: "COD",
+        paymentStatus: "PENDING",
+        status: "PENDING",
+        createdBy: userId,
+        activities: [
+          {
+            status: "PENDING",
+            updatedBy: userId,
+          },
+        ],
+      });
+      await order.save({ session });
+    }
 
-    // Create order
-    const order = new Order({
-      orderNumber: orderNumber,
-      customer: userId,
-      items: orderItems,
-      address: addressId,
-      paymentMethod: "COD",
-      paymentStatus: "PENDING",
-      status: "PENDING",
-      createdBy: userId,
-      activities: [
-        {
-          status: "PENDING",
-          updatedBy: userId,
-        },
-      ],
-    });
+    // // Prepare order items
+    // const orderItems = cart.items.map((item) => ({
+    //   productStock: item.productStock,
+    //   productMainStock: item.productMainStock,
+    //   quantity: item.quantity,
+    //   priceOption: item.priceOption,
+    //   customizationDetails: item.customizationDetails,
+    //   customizationFiles: item.customizationFiles,
+    //   subtotal: item.subtotal,
+    // }));
 
-    await order.save({ session });
+    // const count = await Order.countDocuments({
+    //   createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    // });
+    // const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+    // const orderNumber = `ORD-${date}-${String(count + 1).padStart(3, "0")}`
+
+    // // Create order
+    // const order = new Order({
+    //   orderNumber: orderNumber,
+    //   customer: userId,
+    //   items: orderItems,
+    //   address: addressId,
+    //   paymentMethod: "COD",
+    //   paymentStatus: "PENDING",
+    //   status: "PENDING",
+    //   createdBy: userId,
+    //   activities: [
+    //     {
+    //       status: "PENDING",
+    //       updatedBy: userId,
+    //     },
+    //   ],
+    // });
+
 
     // Update cart status
     cart.status = "converted";
@@ -536,9 +590,11 @@ exports.placeOrderFromCart = async (req, res, next) => {
     return res.status(httpStatusCode.Created).json({
       success: true,
       message: "Order placed successfully",
-      data: order,
+      // data: order,
     });
   } catch (error) {
+    console.log("ererer", error);
+    
     if (session) {
       await session.abortTransaction();
     }
