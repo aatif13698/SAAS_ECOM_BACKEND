@@ -54,185 +54,226 @@ const productStockSchema = require("../../client/model/productStock");
 
 // new list
 exports.list = async (req, res, next) => {
-    try {
-      const mainUser = req.user;
-      const {
-        clientId,
-        keyword = "",
-        page = 1,
-        perPage = 10,
-        status = "", // New: Comma-separated statuses (e.g., "PENDING,APPROVED")
-        startDate = "", // New: Start date for createdAt (e.g., "2025-04-01")
-        endDate = "", // New: End date for createdAt (e.g., "2025-04-30")
-      } = req.query;
-  
-      console.log("req.query", req.query);
-  
-      if (!clientId) {
-        return res.status(statusCode.BadRequest).send({
-          message: message.lblClinetIdIsRequired,
-        });
-      }
-  
-      // Build filters
-      const filters = {
-        deletedAt: null,
-        ...(keyword && {
-          $or: [{ orderNumber: { $regex: keyword.trim(), $options: "i" } }],
-        }),
-        ...(status && {
-          status: { $in: status.split(",").map((s) => s.trim().toUpperCase()) },
-        }),
-        ...(startDate && {
-          createdAt: { $gte: new Date(startDate) },
-        }),
-        ...(endDate && {
-          createdAt: {
-            ...filters.createdAt,
-            $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
-          },
-        }),
-      };
-  
-      // Validate status values
-      const validStatuses = [
-        "PENDING",
-        "APPROVED",
-        "DISAPPROVED",
-        "IN_PRODUCTION",
-        "SHIPPED",
-        "DELIVERED",
-        "CANCELLED",
-      ];
-      if (status) {
-        const statusArray = status.split(",").map((s) => s.trim().toUpperCase());
-        if (!statusArray.every((s) => validStatuses.includes(s))) {
-          return res.status(statusCode.BadRequest).send({
-            message: "Invalid status value provided",
-          });
-        }
-      }
-  
-      // Validate dates
-      if (startDate && isNaN(Date.parse(startDate))) {
-        return res.status(statusCode.BadRequest).send({
-          message: "Invalid startDate format. Use YYYY-MM-DD",
-        });
-      }
-      if (endDate && isNaN(Date.parse(endDate))) {
-        return res.status(statusCode.BadRequest).send({
-          message: "Invalid endDate format. Use YYYY-MM-DD",
-        });
-      }
-  
-      const result = await orderService.list(clientId, filters, {
-        page: parseInt(page),
-        limit: parseInt(perPage),
+  try {
+    const mainUser = req.user;
+    const {
+      clientId,
+      keyword = "",
+      page = 1,
+      perPage = 10,
+      status = "", // New: Comma-separated statuses (e.g., "PENDING,APPROVED")
+      startDate = "", // New: Start date for createdAt (e.g., "2025-04-01")
+      endDate = "", // New: End date for createdAt (e.g., "2025-04-30")
+    } = req.query;
+
+    console.log("req.query", req.query);
+
+    if (!clientId) {
+      return res.status(statusCode.BadRequest).send({
+        message: message.lblClinetIdIsRequired,
       });
-  
-      return res.status(statusCode.OK).send({
-        message: message.lblStockFoundSuccessfully,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
     }
-  };
+
+    // Build filters
+    const filters = {
+      deletedAt: null,
+      ...(keyword && {
+        $or: [{ orderNumber: { $regex: keyword.trim(), $options: "i" } }],
+      }),
+      ...(status && {
+        status: { $in: status.split(",").map((s) => s.trim().toUpperCase()) },
+      }),
+      ...(startDate && {
+        createdAt: { $gte: new Date(startDate) },
+      }),
+      ...(endDate && {
+        createdAt: {
+          ...filters.createdAt,
+          $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
+        },
+      }),
+    };
+
+    // Validate status values
+    const validStatuses = [
+      "PENDING",
+      "APPROVED",
+      "DISAPPROVED",
+      "IN_PRODUCTION",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+    ];
+    if (status) {
+      const statusArray = status.split(",").map((s) => s.trim().toUpperCase());
+      if (!statusArray.every((s) => validStatuses.includes(s))) {
+        return res.status(statusCode.BadRequest).send({
+          message: "Invalid status value provided",
+        });
+      }
+    }
+
+    // Validate dates
+    if (startDate && isNaN(Date.parse(startDate))) {
+      return res.status(statusCode.BadRequest).send({
+        message: "Invalid startDate format. Use YYYY-MM-DD",
+      });
+    }
+    if (endDate && isNaN(Date.parse(endDate))) {
+      return res.status(statusCode.BadRequest).send({
+        message: "Invalid endDate format. Use YYYY-MM-DD",
+      });
+    }
+
+    const result = await orderService.list(clientId, filters, {
+      page: parseInt(page),
+      limit: parseInt(perPage),
+    });
+
+    return res.status(statusCode.OK).send({
+      message: message.lblStockFoundSuccessfully,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 
 // get particular 
 exports.getParticular = async (req, res, next) => {
-    try {
-        const { clientId, orderId } = req.params;
-        if (!clientId || !orderId) {
-            return res.status(400).send({
-                message: message.lblRequiredFieldMissing,
-            });
-        }
-        const data = await orderService.getById(clientId, orderId);
-        return res.status(200).send({
-            message: message.lblOrderFoundSuccessfully,
-            data: data,
-        });
-    } catch (error) {
-        next(error)
+  try {
+    const { clientId, orderId } = req.params;
+    if (!clientId || !orderId) {
+      return res.status(400).send({
+        message: message.lblRequiredFieldMissing,
+      });
     }
+    const data = await orderService.getById(clientId, orderId);
+    return res.status(200).send({
+      message: message.lblOrderFoundSuccessfully,
+      data: data,
+    });
+  } catch (error) {
+    next(error)
+  }
 };
 
 
 // update order status
 exports.updateOrderStatus = async (req, res, next) => {
-    let clientConnection;
-    let session;
-    try {
-        const { clientId, status, orderId } = req.body;
-        console.log("req.body",req.body);
-        
-        // const { orderId } = req.params;
-        const userId = req.user ? req.user._id : null;
-        if (!clientId) {
-            return res.status(httpStatusCode.BadRequest).json({
-                success: false,
-                message: "Client ID is required",
-            });
-        }
-        if (!userId) {
-            return res.status(httpStatusCode.Unauthorized).json({
-                success: false,
-                message: "User authentication required",
-            });
-        }
-        if (!status || !["APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"].includes(status)) {
-            return res.status(httpStatusCode.BadRequest).json({
-                success: false,
-                message: "Invalid or missing status",
-            });
-        }
-        clientConnection = await getClientDatabaseConnection(clientId);
-        session = await clientConnection.startSession();
-        session.startTransaction();
-        const Order = clientConnection.model("Order", orderSchema);
-        const order = await Order.findById(orderId).session(session);
-        if (!order) {
-            await session.abortTransaction();
-            return res.status(httpStatusCode.NotFound).json({
-                success: false,
-                message: "Order not found",
-            });
-        }
-        if (order.status === "PENDING" && status === "PENDING") {
-            await session.abortTransaction();
-            return res.status(httpStatusCode.BadRequest).json({
-                success: false,
-                message: "Order is already in PENDING status",
-            });
-        }
-        order.status = status;
-        order.activities.push({
-            status,
-            updatedBy: userId,
-            timestamp: new Date(),
-            notes: req.body.notes || `Status updated to ${status}`,
-        });
-        await order.save({ session });
-        await session.commitTransaction();
-        res.status(httpStatusCode.OK).json({
-            success: true,
-            message: `Order status updated to ${status}`,
-            data: order,
-        });
-    } catch (error) {
-        if (session) {
-            await session.abortTransaction();
-        }
-        console.error("Error updating order status:", error);
-        next(error);
-    } finally {
-        if (session) {
-            session.endSession();
-        }
+  let clientConnection;
+  let session;
+  try {
+    const { clientId, status, orderId, itemId } = req.body;
+    console.log("req.body", req.body);
+
+    // const { orderId } = req.params;
+    const userId = req.user ? req.user._id : null;
+    if (!clientId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Client ID is required",
+      });
     }
+    if (!userId) {
+      return res.status(httpStatusCode.Unauthorized).json({
+        success: false,
+        message: "User authentication required",
+      });
+    }
+
+    if (!itemId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Item id is required",
+      });
+    }
+    if (!status || !["APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"].includes(status)) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Invalid or missing status",
+      });
+    }
+    clientConnection = await getClientDatabaseConnection(clientId);
+    session = await clientConnection.startSession();
+    session.startTransaction();
+    const Order = clientConnection.model("Order", orderSchema);
+    const order = await Order.findById(orderId).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    if (order.items.length == 0) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "Order item not found.",
+      });
+    }
+
+    for (let index = 0; index < order.items.length; index++) {
+      const element = order.items[index];
+      if (element._id == itemId) {
+        if (element.status === "PENDING" && status === "PENDING") {
+          await session.abortTransaction();
+          return res.status(httpStatusCode.BadRequest).json({
+            success: false,
+            message: "Item is already in PENDING status",
+          });
+        }
+        element.status = status;
+        element.activities.push({
+          status,
+          updatedBy: userId,
+          timestamp: new Date(),
+          notes: req.body.notes || `Status updated to ${status}`,
+        });
+
+      }
+
+
+    }
+
+
+
+    // if (order.status === "PENDING" && status === "PENDING") {
+    //   await session.abortTransaction();
+    //   return res.status(httpStatusCode.BadRequest).json({
+    //     success: false,
+    //     message: "Order is already in PENDING status",
+    //   });
+    // }
+    // order.status = status;
+    // order.activities.push({
+    //   status,
+    //   updatedBy: userId,
+    //   timestamp: new Date(),
+    //   notes: req.body.notes || `Status updated to ${status}`,
+    // });
+    await order.save({ session });
+    await session.commitTransaction();
+    res.status(httpStatusCode.OK).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: order,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+    }
+    console.error("Error updating order status:", error);
+    next(error);
+  } finally {
+    if (session) {
+      session.endSession();
+    }
+  }
 };
 
 
@@ -243,7 +284,7 @@ exports.createOrder = async (req, res, next) => {
   let session;
 
   try {
-    const { clientId,customerId, productStockId, quantity, priceOption, addressId } = req.body;
+    const { clientId, customerId, productStockId, quantity, priceOption, addressId } = req.body;
     const userId = req.user ? req.user._id : null; // From auth middleware
 
     if (!clientId) {
@@ -384,7 +425,7 @@ exports.createOrder = async (req, res, next) => {
 
     // Create order (orderNumber will be generated by pre-save hook)
     const order = new Order({
-      orderNumber : orderNumber,
+      orderNumber: orderNumber,
       customer: customerId,
       items: [orderItem],
       address: addressId,
@@ -435,133 +476,133 @@ exports.createOrder = async (req, res, next) => {
 
 // create
 exports.create = async (req, res, next) => {
-    try {
-        const {
-            clientId,
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
+  try {
+    const {
+      clientId,
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
 
-        } = req.body;
-        const mainUser = req.user;
-        // Validate required fields
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
-        }
-        const requiredFields = [
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
-        ];
-
-        if (requiredFields.some((field) => !field)) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
-        }
-        // Base data object
-        const dataObject = {
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
-        };
-
-        // Create 
-        const created = await stockService.create(clientId, dataObject);
-        return res.status(statusCode.OK).send({
-            message: message.lblStockCreatedSuccess,
-            data: { empId: created._id },
-        });
-    } catch (error) {
-        next(error);
+    } = req.body;
+    const mainUser = req.user;
+    // Validate required fields
+    if (!clientId) {
+      return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
     }
+    const requiredFields = [
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
+    ];
+
+    if (requiredFields.some((field) => !field)) {
+      return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+    }
+    // Base data object
+    const dataObject = {
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
+    };
+
+    // Create 
+    const created = await stockService.create(clientId, dataObject);
+    return res.status(statusCode.OK).send({
+      message: message.lblStockCreatedSuccess,
+      data: { empId: created._id },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // update  
 exports.update = async (req, res, next) => {
 
-    try {
-        const {
-            clientId,
-            stockId,
+  try {
+    const {
+      clientId,
+      stockId,
 
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
-        } = req.body;
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
+    } = req.body;
 
-        const mainUser = req.user;
+    const mainUser = req.user;
 
-        // Validate required fields
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
-        }
-
-        const requiredFields = [
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
-        ];
-
-        if (requiredFields.some((field) => !field)) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
-        }
-        // Base data object
-        const dataObject = {
-            product,
-            businessUnit,
-            branch,
-            warehouse,
-            totalStock,
-            priceOptions,
-            onlineStock,
-            offlineStock,
-            lowStockThreshold,
-            restockQuantity,
-        };
-
-        // Create 
-        const updated = await stockService.update(clientId, stockId, dataObject);
-        return res.status(statusCode.OK).send({
-            message: message.lblStockUpdatedSuccess,
-            data: { empId: updated._id },
-        });
-    } catch (error) {
-        next(error);
+    // Validate required fields
+    if (!clientId) {
+      return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
     }
+
+    const requiredFields = [
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
+    ];
+
+    if (requiredFields.some((field) => !field)) {
+      return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+    }
+    // Base data object
+    const dataObject = {
+      product,
+      businessUnit,
+      branch,
+      warehouse,
+      totalStock,
+      priceOptions,
+      onlineStock,
+      offlineStock,
+      lowStockThreshold,
+      restockQuantity,
+    };
+
+    // Create 
+    const updated = await stockService.update(clientId, stockId, dataObject);
+    return res.status(statusCode.OK).send({
+      message: message.lblStockUpdatedSuccess,
+      data: { empId: updated._id },
+    });
+  } catch (error) {
+    next(error);
+  }
 
 };
 
@@ -569,46 +610,46 @@ exports.update = async (req, res, next) => {
 
 
 exports.activeinactive = async (req, res, next) => {
-    try {
-        const { keyword, page, perPage, id, status, clientId } = req.body;
-        req.query.clientId = clientId;
-        req.query.keyword = keyword;
-        req.query.page = page;
-        req.query.perPage = perPage;
-        if (!clientId || !id) {
-            return res.status(400).send({
-                message: message.lblRequiredFieldMissing,
-            });
-        }
-        const updated = await stockService.activeInactive(clientId, id, {
-            isActive: status == "1",
-        });
-        this.list(req, res, next)
-    } catch (error) {
-        next(error);
+  try {
+    const { keyword, page, perPage, id, status, clientId } = req.body;
+    req.query.clientId = clientId;
+    req.query.keyword = keyword;
+    req.query.page = page;
+    req.query.perPage = perPage;
+    if (!clientId || !id) {
+      return res.status(400).send({
+        message: message.lblRequiredFieldMissing,
+      });
     }
+    const updated = await stockService.activeInactive(clientId, id, {
+      isActive: status == "1",
+    });
+    this.list(req, res, next)
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Soft delete 
 exports.softDelete = async (req, res, next) => {
-    try {
-        const { keyword, page, perPage, stockId, clientId } = req.body;
-        console.log("req.body", req.body);
+  try {
+    const { keyword, page, perPage, stockId, clientId } = req.body;
+    console.log("req.body", req.body);
 
-        req.query.keyword = keyword;
-        req.query.page = page;
-        req.query.perPage = perPage;
-        req.query.clientId = clientId;
-        if (!clientId || !stockId) {
-            return res.status(400).send({
-                message: message.lblRequiredFieldMissing,
-            });
-        }
-        await stockService.deleted(clientId, stockId, softDelete = true)
-        this.list(req, res, next);
-    } catch (error) {
-        next(error);
+    req.query.keyword = keyword;
+    req.query.page = page;
+    req.query.perPage = perPage;
+    req.query.clientId = clientId;
+    if (!clientId || !stockId) {
+      return res.status(400).send({
+        message: message.lblRequiredFieldMissing,
+      });
     }
+    await stockService.deleted(clientId, stockId, softDelete = true)
+    this.list(req, res, next);
+  } catch (error) {
+    next(error);
+  }
 };
 
 

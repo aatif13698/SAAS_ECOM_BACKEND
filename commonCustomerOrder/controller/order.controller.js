@@ -6,6 +6,7 @@ const productMainStockSchema = require("../../client/model/productMainStock");
 const productRateSchema = require("../../client/model/productRate");
 const productStockSchema = require("../../client/model/productStock");
 const productVariantSchema = require("../../client/model/productVariant");
+const clinetUserSchema = require("../../client/model/user");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const { convertPricingTiers } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
@@ -345,7 +346,7 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
       productStock: productStockId,
       productMainStock: productMainStock,
       quantity,
-      priceOption:  JSON.parse(priceOption),
+      priceOption: JSON.parse(priceOption),
       customizationDetails: new Map(Object.entries(customizationDetails)),
       customizationFiles,
     };
@@ -437,7 +438,7 @@ exports.placeOrderFromCart = async (req, res, next) => {
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const Order = clientConnection.model("Order", orderSchema);
     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
-    
+
 
     // Fetch cart
     const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null }).session(session);
@@ -508,7 +509,7 @@ exports.placeOrderFromCart = async (req, res, next) => {
     const order = new Order({
       orderNumber: orderNumber,
       customer: userId,
-      items: orderItems, 
+      items: orderItems,
       address: addressId,
       paymentMethod: "COD",
       paymentStatus: "PENDING",
@@ -769,23 +770,55 @@ exports.getAllOrders = async (req, res, next) => {
     const Order = clientConnection.model("Order", orderSchema);
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const User = clientConnection.model("clientUsers", clinetUserSchema);
+    const Address = clientConnection.model('customerAddress', customerAddressSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
 
     // Fetch orders for the user
-    const orders = await Order.find({ customer: userId })
-      .populate({
-        path: "items.productStock",
-        model: ProductStock,
-        populate: {
-          path: "product", // Assuming productStock has a 'product' ref
-          model: ProductBluePrint,
-          select: "name images", // Only fetch necessary fields
-        },
-      })
-      .lean(); // Convert to plain JS objects for easier manipulation
+    // const orders = await Order.find({ customer: userId })
+    //   .populate({
+    //     path: "items.productStock",
+    //     model: ProductStock,
+    //     populate: {
+    //       path: "product", // Assuming productStock has a 'product' ref
+    //       model: ProductBluePrint,
+    //       select: "name images", // Only fetch necessary fields
+    //     },
+    //   })
+    //   .lean(); // Convert to plain JS objects for easier manipulation
 
-    // Transform data to match frontend expectations
+
+    const orders = await Order.find({ customer: userId }).populate({
+      path: 'customer',
+      model: User,
+      select: 'firstName lastName email phone _id'
+    }).populate({
+      path: 'address',
+      model: Address,
+    }).populate({
+      path: "items.productStock",
+      model: ProductStock,
+      populate: {
+        path: "product", // Assuming productStock has a 'product' ref
+        model: ProductBluePrint,
+        select: "name images isCustomizable _id", // Only fetch necessary fields
+      },
+    }).populate({
+      path: "items.productMainStock",
+      model: MainStock,
+      // populate: {
+      //   path: "product", // Assuming productStock has a 'product' ref
+      //   model: MainStock,
+      //   select: "name images isCustomizable _id", // Only fetch necessary fields
+      // },
+    })
+      .lean();
+
+    // Transform data to match frontend expectations  
     const formattedOrders = orders.flatMap((order) =>
       order.items.map((item) => ({
+        ...item,
         id: order._id.toString(), // Convert ObjectId to string
         productStock: {
           product: {
@@ -793,9 +826,9 @@ exports.getAllOrders = async (req, res, next) => {
             images: item.productStock?.product?.images || [],
           },
         },
+        productMainStock: item.productMainStock,
         priceOption: item.priceOption || {},
         quantity: item.quantity || 1,
-        status: order.status || "PENDING",
         deliveryDate: order.activities?.find((act) => act.status === "DELIVERED")?.timestamp || null, // Dynamic delivery date
       }))
     );
@@ -842,6 +875,8 @@ exports.getParticularOrder = async (req, res, next) => {
     const Order = clientConnection.model("Order", orderSchema);
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
     const customerAddress = clientConnection.model(
       "customerAddress",
       customerAddressSchema
@@ -856,6 +891,15 @@ exports.getParticularOrder = async (req, res, next) => {
           model: ProductBluePrint,
           select: "name images", // Only fetch necessary fields
         },
+      })
+      .populate({
+        path: "items.productMainStock",
+        model: MainStock,
+        // populate: {
+        //   path: "product", // Assuming productStock has a 'product' ref
+        //   model: ProductBluePrint,
+        //   select: "name images", // Only fetch necessary fields
+        // },
       }).
       populate({
         path: "address",

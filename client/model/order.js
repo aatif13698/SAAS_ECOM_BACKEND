@@ -192,30 +192,48 @@ const orderSchema = new Schema(
           },
         ],
         subtotal: { type: Number, required: true, default: 0 },
+        status: {
+          type: String,
+          enum: ["PENDING", "APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
+          default: "PENDING", 
+          index: true,
+        },
+        activities: [
+          {
+            status: {
+              type: String,
+              enum: ["PENDING", "APPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
+              required: true,
+            },
+            timestamp: { type: Date, default: Date.now, required: true },
+            updatedBy: { type: ObjectId, ref: "clientUsers", required: true },
+            notes: { type: String },
+          },
+        ],
       },
     ],
     totalAmount: { type: Number, required: true, default: 0 },
     paymentMethod: { type: String, enum: ["COD", "ONLINE"], default: "COD", required: true },
     paymentStatus: { type: String, enum: ["PENDING", "PAID", "FAILED"], default: "PENDING" },
     address: { type: ObjectId, ref: "customerAddress", required: true, index: true },
-    status: {
-      type: String,
-      enum: ["PENDING", "APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
-      default: "PENDING",
-      index: true,
-    },
-    activities: [
-      {
-        status: {
-          type: String,
-          enum: ["PENDING", "APPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
-          required: true,
-        },
-        timestamp: { type: Date, default: Date.now, required: true },
-        updatedBy: { type: ObjectId, ref: "clientUsers", required: true },
-        notes: { type: String },
-      },
-    ],
+    // status: {
+    //   type: String,
+    //   enum: ["PENDING", "APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
+    //   default: "PENDING",
+    //   index: true,
+    // },
+    // activities: [
+    //   {
+    //     status: {
+    //       type: String,
+    //       enum: ["PENDING", "APPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],
+    //       required: true,
+    //     },
+    //     timestamp: { type: Date, default: Date.now, required: true },
+    //     updatedBy: { type: ObjectId, ref: "clientUsers", required: true },
+    //     notes: { type: String },
+    //   },
+    // ],
     createdBy: { type: ObjectId, ref: "clientUsers", required: true, index: true },
     deletedAt: { type: Date, default: null, index: true },
   },
