@@ -29,7 +29,9 @@ exports.create = async (req, res, next) => {
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
+
 
         } = req.body;
         const mainUser = req.user;
@@ -50,7 +52,8 @@ exports.create = async (req, res, next) => {
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -70,7 +73,8 @@ exports.create = async (req, res, next) => {
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
         };
 
         let attachments = [];
@@ -105,14 +109,17 @@ exports.update = async (req, res, next) => {
             branch,
             warehouse,
             totalStock,
-            priceOptions,
+            // priceOptions,
             onlineStock,
             offlineStock,
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
         } = req.body;
+
+        
 
         const mainUser = req.user;
 
@@ -127,13 +134,14 @@ exports.update = async (req, res, next) => {
             branch,
             warehouse,
             totalStock,
-            priceOptions,
+            // priceOptions,
             onlineStock,
             offlineStock,
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -146,13 +154,14 @@ exports.update = async (req, res, next) => {
             branch,
             warehouse,
             totalStock,
-            priceOptions,
+            // priceOptions,
             onlineStock,
             offlineStock,
             lowStockThreshold,
             restockQuantity,
             name,
-            description
+            description,
+            specification
         };
 
 

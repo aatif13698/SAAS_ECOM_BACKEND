@@ -48,6 +48,7 @@ const create = async (clientId, data) => {
             warehouse: data?.warehouse,
             variant: data?.variant,
             varianValue: JSON.parse(data.varianValue),
+            specification: JSON.parse(data.specification),
             totalStock: data?.totalStock,
             images: data?.images,
             defaultImage: data?.images[0],
@@ -96,7 +97,8 @@ const update = async (clientId, stockId, updateData) => {
         mainStock.branch = updateData.branch;
         mainStock.warehouse = updateData.warehouse;
         mainStock.totalStock = updateData.totalStock;
-        mainStock.priceOptions = JSON.parse(updateData.priceOptions);
+        // mainStock.priceOptions = JSON.parse(updateData.priceOptions);
+        mainStock.specification = JSON.parse(updateData.specification);
         mainStock.onlineStock = updateData.onlineStock;
         mainStock.offlineStock = updateData.offlineStock;
         mainStock.lowStockThreshold = updateData.lowStockThreshold;
