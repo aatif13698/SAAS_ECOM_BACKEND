@@ -6,6 +6,7 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clinetUserSchema = require("../../client/model/user");
+const clientRoleSchema = require("../../client/model/role");
 
 
 const create = async (clientId, data) => {
@@ -90,11 +91,17 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const User = clientConnection.model('clientUsers', clinetUserSchema);
+        const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
+        
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [employees, total] = await Promise.all([
-            User.find(filters).skip(skip).limit(limit).sort({ _id: -1 }),
+            User.find(filters).skip(skip).populate({
+                path: "role",
+                model: clientRole,
+                select: "id _id name"
+            }).limit(limit).sort({ _id: -1 }),
             User.countDocuments(filters),
         ]);
         return { count: total, employees };

@@ -200,16 +200,14 @@ exports.list = async (req, res, next) => {
     try {
 
         const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
-
-        console.log("req.query", req.query);
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
 
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        const filters = {
+        let filters = {
             deletedAt: null,
             ...(keyword && {
                 $or: [
@@ -220,6 +218,12 @@ exports.list = async (req, res, next) => {
                 ],
             }),
         };
+        if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                warehouse: levelId
+            }
+        }
         const result = await stockService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
             message: message.lblStockFoundSuccessfully,
