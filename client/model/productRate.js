@@ -12,6 +12,8 @@ const productRateSchema = new Schema(
         price: [{
             quantity: {type: Number},
             unitPrice: {type: Number},
+            hasDiscount: {type: Boolean, default: false},
+            discountPercent: {type: Number, default: 0}
         }],
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         deletedAt: { type: Date, default: null, index: true },
