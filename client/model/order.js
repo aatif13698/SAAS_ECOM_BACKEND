@@ -217,6 +217,29 @@ const orderSchema = new Schema(
     paymentMethod: { type: String, enum: ["COD", "ONLINE"], default: "COD", required: true },
     paymentStatus: { type: String, enum: ["PENDING", "PAID", "FAILED"], default: "PENDING" },
     address: { type: ObjectId, ref: "customerAddress", required: true, index: true },
+
+
+    // new code
+    // currency: { type: String, required: true, default: "INR" }, // Added for multi-currency
+    // paymentMethod: {
+    //   type: String,
+    //   enum: ["cod", "stripe_card", "razorpay_upi", "razorpay_bank", "stripe_bank"],
+    //   required: true,
+    // },
+    // paymentStatus: {
+    //   type: String,
+    //   enum: ["PENDING", "PARTIALLY_PAID", "PAID", "FAILED"],
+    //   default: "PENDING",
+    //   index: true,
+    // },
+    // orderPayment: { type: ObjectId, ref: "OrderPayment", required: true }, // Reference to OrderPayment
+
+
+
+
+
+
+
     // status: {
     //   type: String,
     //   enum: ["PENDING", "APPROVED", "DISAPPROVED", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"],

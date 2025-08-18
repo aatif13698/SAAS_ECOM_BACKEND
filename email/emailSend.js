@@ -19,7 +19,7 @@ const handlebarsOptions = {
     port: 587,
     auth: {
       user: "aatif13698@gmail.com",
-      pass: "rnklewuogajnhsgt",
+      pass: "eipk htri oycv ibik",
     },
   });
   

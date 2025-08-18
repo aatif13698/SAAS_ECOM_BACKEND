@@ -7,28 +7,42 @@ const ObjectId = Schema.ObjectId;
 
 const productMainStockSchema = new Schema(
     {
-        product: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true }, 
-        businessUnit: { type: ObjectId, ref: "businessUnit", default:null, index: true }, 
-        branch: { type: ObjectId, ref: "branch", default:null, index: true },
-        warehouse: { type: ObjectId, ref: "warehouse", default:null, index: true },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true },
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
+        branch: { type: ObjectId, ref: "branch", default: null, index: true },
+        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
         variant: { type: mongoose.Schema.Types.ObjectId, ref: 'productVariant', required: true },
         varianValue: {},
-        
-        name:  {type: String, default: null},
-        description:  {type: String, default: null},
-        totalStock: { type: Number, required: true }, 
-        priceOptions:{}, 
+
+        name: { type: String, default: null },
+        description: { type: String, default: null },
+        totalStock: { type: Number, required: true },
+        priceOptions: {},
         specification: [{
-            title: {type: String},
-            items: [{name: {type: String}, description: {type: String}}]
-        }],   
+            title: { type: String },
+            items: [{ name: { type: String }, description: { type: String } }]
+        }],
+
+        paymentOPtions: {
+            cod: { type: Boolean, default: false },
+            fullPayment: { type: Boolean, default: false },
+            multiStep: { type: Boolean, default: false },
+            wallet: { type: Boolean, default: false },
+            bnpl: { type: Boolean, default: false },
+            upi: { type: Boolean, default: false },
+            paymentSteps: [{
+                name: { type: String, required: function () { this.paymentOPtions.multiStep } },
+                percentage: { type: Number, required: function () { this.paymentOPtions.multiStep } },
+            }]
+        },
+
         images: [{ type: String }],
-        defaultImage: {type: String, default: null},
-        onlineStock: { type: Number, required: true }, 
-        offlineStock: { type: Number, required: true }, 
-        lowStockThreshold: { type: Number, default: 10 }, 
-        restockQuantity: { type: Number }, 
-        lastRestockedAt: { type: Date }, 
+        defaultImage: { type: String, default: null },
+        onlineStock: { type: Number, required: true },
+        offlineStock: { type: Number, required: true },
+        lowStockThreshold: { type: Number, default: 10 },
+        restockQuantity: { type: Number },
+        lastRestockedAt: { type: Date },
         isBulkType: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
