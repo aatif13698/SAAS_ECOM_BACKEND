@@ -30,7 +30,8 @@ exports.create = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
 
 
         } = req.body;
@@ -53,7 +54,8 @@ exports.create = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -74,7 +76,8 @@ exports.create = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
         };
 
         let attachments = [];
@@ -116,7 +119,9 @@ exports.update = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
+
         } = req.body;
 
         
@@ -141,7 +146,8 @@ exports.update = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -161,7 +167,8 @@ exports.update = async (req, res, next) => {
             restockQuantity,
             name,
             description,
-            specification
+            specification,
+            paymentOPtions
         };
 
 

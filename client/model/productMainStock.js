@@ -31,8 +31,8 @@ const productMainStockSchema = new Schema(
             bnpl: { type: Boolean, default: false },
             upi: { type: Boolean, default: false },
             paymentSteps: [{
-                name: { type: String, required: function () { this.paymentOPtions.multiStep } },
-                percentage: { type: Number, required: function () { this.paymentOPtions.multiStep } },
+                name: { type: String },
+                percentage: { type: Number },
             }]
         },
 
