@@ -9,22 +9,26 @@ const productBlueprintSchema = new Schema(
     {
         categoryId: { type: ObjectId, ref: "clientCategory", index: true },
         subCategoryId: { type: ObjectId, ref: "clientSubCategory", index: true },
-        name: { type: String, unique: true, required: true }, 
-        description: { type: String }, 
-        brandId: { type: ObjectId, ref: 'brand' }, 
-        manufacturerId: { type: ObjectId, ref: 'manufacturer' }, 
+        name: { type: String, unique: true, required: true },
+        description: { type: String },
+        brandId: { type: ObjectId, ref: 'brand' },
+        manufacturerId: { type: ObjectId, ref: 'manufacturer' },
         // attributeId: { type: ObjectId, ref: 'attribute' }, 
-        images: [{ type: String }], 
+        images: [{ type: String }],
         taxRate: { type: Number, default: 0 },
-        sku: { type: String, unique: true }, 
-        isCustomizable: { type: Boolean, default: false }, 
-        customizableOptions: [ 
+        sku: { type: String, unique: true },
+        isCustomizable: { type: Boolean, default: false },
+        customizableOptions: [
             {
-                selectedField: { type: String }, 
-                labelName: { type: String , default: null}, 
-                selectOptions : [{
-                    valueName : {type : String}
+                selectedField: { type: String },
+                labelName: { type: String, default: null },
+                selectOptions: [{
+                    valueName: { type: String }
                 }],
+                validation: {
+                    fileTypes: [{ type: String }],
+                    maxSize: Number
+                },
             },
         ],
 

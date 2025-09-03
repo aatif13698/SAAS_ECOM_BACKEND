@@ -190,6 +190,7 @@ const orderSchema = new Schema(
             originalName: { type: String },
             mimeType: { type: String },
             size: { type: Number },
+            key: { type: String }
           },
         ],
         subtotal: { type: Number, required: true, default: 0 },
