@@ -246,6 +246,16 @@ module.exports = {
   lblShiftIdIdAndClientIdRequired: "Shift Id and Client Id are required!",
   lblShiftIdIdRequired: "Shift Id id required!",
 
+  // working department
+  lblWorkingDepaermentAlreadyExists: "WorkingDepaerment already exists with this email or phone!",
+  lblWorkingDepaermentCreatedSuccess: "WorkingDepaerment created successfully!",
+  lblWorkingDepaermentUpdatedSuccess: "Business unit updated successfully!",
+  lblWorkingDepaermentIdAndClientIdRequired: " WorkingDepaerment Id and Client Id are required!",
+  lblWorkingDepaermentNotFound: "WorkingDepaerment not found!",
+  lblWorkingDepaermentFoundSucessfully: "WorkingDepaerment found successfully!",
+  lblWorkingDepaermentIdIdAndClientIdRequired: "WorkingDepaerment Id and Client Id are required!",
+  lblWorkingDepaermentIdIdRequired: "WorkingDepaerment Id id required!",
+
 
 
 

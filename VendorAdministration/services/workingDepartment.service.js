@@ -8,16 +8,16 @@ const CustomError = require("../../utils/customeError");
 const clinetUserSchema = require("../../client/model/user");
 const clientRoleSchema = require("../../client/model/role");
 
-const clientShiftSchema = require("../../client/model/shift")
+const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment")
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        return await Shift.create(data);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        return await WorkingDepartment.create(data);
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error creating shift : ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error creating working deparment : ${error.message}`);
     }
 };
 
@@ -25,17 +25,17 @@ const update = async (clientId, shiftId, updateData) => {
 
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        const shift = await Shift.findById(shiftId);
-        if (!shift) {
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const workingDepartment = await WorkingDepartment.findById(shiftId);
+        if (!workingDepartment) {
             throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-        Object.assign(shift, updateData);
-        await shift.save();
-        return shift
+        Object.assign(workingDepartment, updateData);
+        await workingDepartment.save();
+        return workingDepartment
 
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error updating shift: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error updating working deparment: ${error.message}`);
     }
 };
 
@@ -44,14 +44,14 @@ const update = async (clientId, shiftId, updateData) => {
 const getById = async (clientId, shiftId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        const shift = await Shift.findById(shiftId);
-        if (!shift) {
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const workingDepartment = await WorkingDepartment.findById(shiftId);
+        if (!workingDepartment) {
             throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-        return shift;
+        return workingDepartment;
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error getting shift: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error getting working deparment: ${error.message}`);
     }
 };
 
@@ -59,16 +59,16 @@ const getById = async (clientId, shiftId) => {
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
-        const [employees, total] = await Promise.all([
-            Shift.find(filters).skip(skip),
-            Shift.countDocuments(filters),
+        const [department, total] = await Promise.all([
+            WorkingDepartment.find(filters).skip(skip),
+            WorkingDepartment.countDocuments(filters),
         ]);
-        return { count: total, employees };
+        return { count: total, department };
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error listing shift: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error listing working deparment: ${error.message}`);
     }
 };
 
@@ -76,13 +76,13 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 const activeInactive = async (clientId, shiftId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        const shift = await Shift.findById(shiftId);
-        if (!shift) {
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const workingDepartment = await WorkingDepartment.findById(shiftId);
+        if (!workingDepartment) {
             throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-        Object.assign(shift, data);
-        return await shift.save();
+        Object.assign(workingDepartment, data);
+        return await workingDepartment.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
     }
