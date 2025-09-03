@@ -236,6 +236,16 @@ module.exports = {
   lblEmployeeIdIdAndClientIdRequired: "Employee Id and Client Id are required!",
   lblEmployeeIdIdRequired: "Employee Id id required!",
 
+  // shift
+  lblShiftAlreadyExists: "Shift already exists with this email or phone!",
+  lblShiftCreatedSuccess: "Shift created successfully!",
+  lblShiftUpdatedSuccess: "Business unit updated successfully!",
+  lblShiftIdAndClientIdRequired: " Shift Id and Client Id are required!",
+  lblShiftNotFound: "Shift not found!",
+  lblShiftFoundSucessfully: "Shift found successfully!",
+  lblShiftIdIdAndClientIdRequired: "Shift Id and Client Id are required!",
+  lblShiftIdIdRequired: "Shift Id id required!",
+
 
 
 
