@@ -29,7 +29,7 @@ const clientShiftSchema = new Schema(
             frequency: { type: String, enum: ['daily', 'weekly', 'monthly'] },
             days: [{ type: String, enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }]
         },
-        isApproved: { type: Boolean, default: false },
+        isActive: { type: Boolean, default: false },
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
         updatedAt: { type: Date, default: null, index: true },

@@ -112,89 +112,27 @@ exports.create = async (req, res, next) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // update  
 exports.update = async (req, res, next) => {
 
     try {
         const {
             clientId,
-            employeeId,
+            shiftId,
             level,
             businessUnit,
             branch,
             warehouse,
-            roleId,
-            firstName,
-            lastName,
-            email,
-            phone,
-            password,
-            gender,
-            city,
-            state,
-            country,
-            ZipCode,
-            address,
+
+            shiftName,
+            startTime,
+            endTime,
+            shiftType,
+            status,
+            requiredEmployees,
+            notes,
+            recurring,
+            isApproved,
         } = req.body;
 
         console.log("warehouse", warehouse);
@@ -207,43 +145,34 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [firstName, lastName, email, phone, gender, level, roleId];
+        const requiredFields = [
+            shiftName,
+            startTime,
+            endTime,
+            shiftType,
+            status,
+            requiredEmployees,
+            notes,
+            recurring];
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const Role = clientConnection.model('clientRoles', clientRoleSchema);
-        const role = await Role.findById(roleId);
-        if (!role) {
-            throw new CustomError(statusCode.Conflict, message.lblRoleNotFound);
-        }
-
+        
         // Base data object
         const dataObject = {
-            firstName,
-            lastName,
-            email,
-            phone,
-            gender,
-            role: roleId,
-            roleId: role.id,
-            city,
-            state,
-            country,
-            ZipCode,
-            address,
+            shiftName,
+            startTime,
+            endTime,
+            shiftType,
+            status,
+            requiredEmployees,
+            notes,
+            recurring,
+            isApproved,
             createdBy: mainUser._id,
         };
-
-        let hashedPassword = "";
-        if (password) {
-            // Hash password
-            hashedPassword = await bcrypt.hash(password, 10);
-            dataObject.password = hashedPassword;
-        }
-        // Level-specific validation and assignment
+        
         const levelConfig = {
             vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
             business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
@@ -283,26 +212,12 @@ exports.update = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        // Add file icon if present
-        if (req.file?.filename) {
-            dataObject.icon = req.file.filename;
-        }
-
         // update 
-        const updated = await employeeService.update(clientId, employeeId, dataObject);
-
-        const existingStaff = await userModel.findOne({
-            $or: [{ email: updated?.email.toLowerCase() }, { phone: updated?.phone }],
-        });
-
-        existingStaff.email = email;
-        existingStaff.phone = phone;
-        if (password) {
-            existingStaff.password = hashedPassword;
-        }
+        const updated = await shiftService.update(clientId, shiftId, dataObject);
+       
         await existingStaff.save();
         return res.status(statusCode.OK).send({
-            message: message.lblEmployeeUpdatedSuccess,
+            message: message.lblShiftUpdatedSuccess,
         });
 
     } catch (error) {
@@ -314,21 +229,153 @@ exports.update = async (req, res, next) => {
 // get particular 
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, employeeId } = req.params;
-        if (!clientId || !employeeId) {
+        const { clientId, shiftId } = req.params;
+        if (!clientId || !shiftId) {
             return res.status(400).send({
-                message: message.lblEmployeeIdAndClientIdRequired,
+                message: message.lblShiftIdAndClientIdRequired,
             });
         }
-        const employee = await employeeService.getById(clientId, employeeId);
+        const shift = await shiftService.getById(clientId, shiftId);
         return res.status(200).send({
-            message: message.lblEmployeeFoundSucessfully,
+            message: message.lblShiftFoundSucessfully,
             data: employee,
         });
     } catch (error) {
         next(error)
     }
 };
+
+
+// list
+exports.list = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            _id: { $ne: mainUser?._id },
+            roleId: { $gt: 1, $ne: 0 },
+            ...(keyword && {
+                $or: [
+                    { shiftName: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                // isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                isWarehouseLevel: levelId
+            }
+        }
+
+        const result = await shiftService.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblShiftFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// active inactive
+exports.activeinactive = async (req, res, next) => {
+    try {
+        const { keyword, page, perPage, id, status, clientId } = req.body;
+        req.query.clientId = clientId;
+        req.query.keyword = keyword;
+        req.query.page = page;
+        req.query.perPage = perPage;
+        if (!clientId || !id) {
+            return res.status(400).send({
+                message: message.lblEmployeeIdIdAndClientIdRequired,
+            });
+        }
+        const updated = await shiftService.activeInactive(clientId, id, {
+            isActive: status == "1",
+        });
+        this.list(req, res, next)
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // list 
@@ -367,84 +414,8 @@ exports.getParticular = async (req, res, next) => {
 // };
 
 // new
-exports.list = async (req, res, next) => {
-    try {
 
-        const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblClinetIdIsRequired,
-            });
-        }
-        let filters = {
-            deletedAt: null,
-            _id: { $ne: mainUser?._id },
-            roleId: { $gt: 1, $ne: 0 },
-            ...(keyword && {
-                $or: [
-                    { firstName: { $regex: keyword.trim(), $options: "i" } },
-                    { lastName: { $regex: keyword.trim(), $options: "i" } },
-                    { email: { $regex: keyword.trim(), $options: "i" } },
-                    { phone: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
-        };
 
-        if (level == "vendor") {
-
-        } else if (level == "business" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                businessUnit: levelId
-            }
-        } else if (level == "branch" && levelId) {
-            filters = {
-                ...filters,
-                // isBranchLevel: true,
-                branch: levelId
-            }
-        } else if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
-            }
-        }
-
-        console.log("filters", filters);
-
-        const result = await employeeService.list(clientId, filters, { page, limit: perPage });
-        return res.status(statusCode.OK).send({
-            message: message.lblBranchFoundSucessfully,
-            data: result,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-exports.activeinactive = async (req, res, next) => {
-    try {
-        const { keyword, page, perPage, id, status, clientId } = req.body;
-        req.query.clientId = clientId;
-        req.query.keyword = keyword;
-        req.query.page = page;
-        req.query.perPage = perPage;
-        if (!clientId || !id) {
-            return res.status(400).send({
-                message: message.lblEmployeeIdIdAndClientIdRequired,
-            });
-        }
-        const updated = await employeeService.activeInactive(clientId, id, {
-            isActive: status == "1",
-        });
-        this.list(req, res, next)
-    } catch (error) {
-        next(error);
-    }
-};
 
 
 

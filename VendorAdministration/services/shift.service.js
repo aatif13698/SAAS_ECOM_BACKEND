@@ -17,105 +17,91 @@ const create = async (clientId, data) => {
         const Shift = clientConnection.model('clientShift', clientShiftSchema);
         return await Shift.create(data);
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error creating employee : ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error creating shift : ${error.message}`);
     }
 };
 
-const update = async (clientId, employeeId, updateData) => {
+const update = async (clientId, shiftId, updateData) => {
 
-    console.log("updateData",updateData);
-    
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const User = clientConnection.model('clientUsers', clinetUserSchema);
-
-        const employee = await User.findById(employeeId);
-
-        if (!employee) {
-            throw new CustomError(statusCode.NotFound, message.lblEmployeeNotFound);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const shift = await Shift.findById(shiftId);
+        if (!shift) {
+            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-
-
-        const existingEmployee = await User.findOne({
-            $and: [
-                { _id: { $ne: employeeId } },
-                {
-                    $or: [{ email: updateData.email },
-                    { phone: updateData?.phone }
-                    ],
-                },
-            ],
-        });
-
-        if (existingEmployee) {
-            throw new CustomError(statusCode.Conflict, message.lblEmployeeAlreadyExists);
-        }
-        const prevEmailAndPhone = { email: employee.email, phone: employee.phone }
-
-        // Update chair properties
-        Object.assign(employee, updateData);
-        await employee.save();
-        return prevEmailAndPhone
+        Object.assign(shift, updateData);
+        await shift.save();
+        return shift
 
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error updating employee: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error updating shift: ${error.message}`);
     }
 };
 
-const getById = async (clientId, branchId) => {
+
+
+const getById = async (clientId, shiftId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Branch = clientConnection.model('branch', clinetBranchSchema);
-        const User = clientConnection.model('clientUsers', clinetUserSchema);
-
-        const user = await User.findById(branchId);
-        if (!user) {
-            throw new CustomError(statusCode.NotFound, message.lblEmployeeNotFound);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const shift = await Shift.findById(shiftId);
+        if (!shift) {
+            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-        return user;
+        return shift;
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error getting branch: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error getting shift: ${error.message}`);
     }
 };
+
 
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Branch = clientConnection.model('branch', clinetBranchSchema);
-        const User = clientConnection.model('clientUsers', clinetUserSchema);
-        const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
-        
-
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [employees, total] = await Promise.all([
-            User.find(filters).skip(skip).populate({
-                path: "role",
-                model: clientRole,
-                select: "id _id name"
-            }).limit(limit).sort({ _id: -1 }),
-            User.countDocuments(filters),
+            Shift.find(filters).skip(skip),
+            Shift.countDocuments(filters),
         ]);
         return { count: total, employees };
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error listing employee: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error listing shift: ${error.message}`);
     }
 };
 
-const activeInactive = async (clientId, employeeId, data) => {
+
+const activeInactive = async (clientId, shiftId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const User = clientConnection.model('clientUsers', clinetUserSchema);
-        const employee = await User.findById(employeeId);
-        if (!employee) {
-            throw new CustomError(statusCode.NotFound, message.lblEmployeeNotFound);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const shift = await Shift.findById(shiftId);
+        if (!shift) {
+            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
         }
-        Object.assign(employee, data);
-        return await employee.save();
+        Object.assign(shift, data);
+        return await shift.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const deleted = async (clientId, employeeId, softDelete = true) => {
     try {
