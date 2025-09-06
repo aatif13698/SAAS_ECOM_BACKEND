@@ -58,6 +58,8 @@ const cartSchema = new Schema(
           quantity: { type: Number, required: true },
           unitPrice: { type: String, required: true },
           price: { type: Number, required: true },
+          hasDiscount: { type: Boolean, default: false },
+          discountPercent: { type: Number, default: 0 }
         },
         subtotal: {
           type: Number,

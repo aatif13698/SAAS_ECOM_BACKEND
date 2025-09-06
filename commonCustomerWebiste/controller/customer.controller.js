@@ -610,6 +610,11 @@ exports.addToCartNew = async (req, res, next) => {
       quantity >= item.minQuantity &&
       (item.maxQuantity === null || quantity <= item.maxQuantity)
     ) || null;
+
+    console.log("priceObject", priceObject);
+
+
+
     const calculatedPrice = priceObject?.unitPrice * quantity;
     if (calculatedPrice !== JSON.parse(priceOption)?.price) {
       return res.status(httpStatusCode.Conflict).json({
@@ -617,9 +622,26 @@ exports.addToCartNew = async (req, res, next) => {
         message: "Invalid price calculation occured.",
       });
     }
-    
 
-    
+
+    let finalPriceOption = JSON.parse(priceOption);
+
+
+    const pasrsedPriceOption = JSON.parse(priceOption);
+
+    if (pasrsedPriceOption?.hasDiscount) {
+
+      finalPriceOption.price = finalPriceOption?.price - finalPriceOption?.price * (finalPriceOption?.discountPercent / 100);
+
+    }
+
+    console.log("pasrsedPriceOption", pasrsedPriceOption);
+    console.log("finalPriceOption", finalPriceOption);
+
+
+
+
+
 
 
     // Validate price option
@@ -676,7 +698,7 @@ exports.addToCartNew = async (req, res, next) => {
         productStock: productStockId,
         productMainStock: productMainStockId,
         quantity,
-        priceOption: JSON.parse(priceOption),
+        priceOption: finalPriceOption,
         customizationDetails: new Map(Object.entries(customizationDetails)),
         customizationFiles,
       });
@@ -895,6 +917,12 @@ exports.getCart = async (req, res, next) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
     const Cart = clientConnection.model("cart", cartSchema);
     const Stock = clientConnection.model("productStock", productStockSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+
+
+
     const ProductBluePrint = clientConnection.model(
       "productBlueprint",
       productBlueprintSchema
@@ -918,7 +946,25 @@ exports.getCart = async (req, res, next) => {
             path: "product",
             model: ProductBluePrint,
             select: "name description images sku categoryId subCategoryId brandId",
+
           },
+        })
+        .populate({
+          path: "items.productMainStock",
+          model: MainStock,
+          populate: [
+            {
+              path: 'variant',
+              model: ProductVariant,
+              select: "priceId ", 
+              populate: {
+                path: 'priceId',
+                model: ProductRate,
+                select : "price product variant"
+              }
+            }
+          ],
+          select: "name priceId description totalStock images onlineStock"
         })
         .lean(); // Return plain JS object for performance
     } else if (sessionId) {
@@ -936,6 +982,9 @@ exports.getCart = async (req, res, next) => {
           model: ProductBluePrint,
           select: "name description images sku categoryId subCategoryId brandId",
         },
+      }).populate({
+        path: "items.productMainStock",
+        model: MainStock,
       })
         .lean();
     }
