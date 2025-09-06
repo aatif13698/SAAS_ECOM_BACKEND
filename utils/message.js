@@ -256,6 +256,16 @@ module.exports = {
   lblWorkingDepaermentIdIdAndClientIdRequired: "WorkingDepaerment Id and Client Id are required!",
   lblWorkingDepaermentIdIdRequired: "WorkingDepaerment Id id required!",
 
+  // asset
+  lblAssetAlreadyExists: "Asset already exists with this email or phone!",
+  lblAssetCreatedSuccess: "Asset created successfully!",
+  lblAssetUpdatedSuccess: "Business unit updated successfully!",
+  lblAssetIdAndClientIdRequired: " Asset Id and Client Id are required!",
+  lblAssetNotFound: "Asset not found!",
+  lblAssetFoundSucessfully: "Asset found successfully!",
+  lblAssetIdIdAndClientIdRequired: "Asset Id and Client Id are required!",
+  lblAssetIdIdRequired: "Asset Id id required!",
+
 
 
 
