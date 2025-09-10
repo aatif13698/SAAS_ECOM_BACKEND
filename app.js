@@ -92,7 +92,7 @@ const {vendorPersmissionsList} = require("./utils/constant.js");
 // app.use(cors());
 
 app.use(cors({
-  origin: ['http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app'], // Allow Vite dev server
+  origin: ['http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app', 'https://seal-app-qjy6w.ondigitalocean.app'], // Allow Vite dev server
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // If your app uses cookies or auth
