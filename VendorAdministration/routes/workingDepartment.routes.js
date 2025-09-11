@@ -12,15 +12,15 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // # create, update, view, list, activate/inactive woring department
 
-router.post('/create/workingDepartment', entityAuth.authorizeEntity("Administration", "Employee", "create"), workingDepartmentController.create);
+router.post('/create/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.create);
 
-router.put('/update/workingDepartment', entityAuth.authorizeEntity("Administration", "Employee", "update"), workingDepartmentController.update);
+router.put('/update/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "update"), workingDepartmentController.update);
 
-router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Administration", "Employee", "create"), workingDepartmentController.getParticular);
+router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.getParticular);
 
-router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Employee", "create"), workingDepartmentController.list);
+router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.list);
 
-router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Employee", "create"), workingDepartmentController.activeinactive);
+router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.activeinactive);
 
 // # create, update, view, list, activate/inactive  woring department
 
