@@ -18,6 +18,7 @@ const clinetSubCategorySchema = new Schema(
     slug: { type: String,  required: true, sparse: true, trim: true, index: true }, 
     isActive: { type: Boolean, default: true },
     icon: { type: String, default: null },
+    iconKey: { type: String, default: null },
     createdBy: { type: ObjectId, ref: "clientUsers", default : null, index: true }, 
     isCreatedBySuperAdmin: { type: Boolean, default: false ,  index: true},
     isCreatedByClinet: { type: Boolean, default: true ,  index: true},

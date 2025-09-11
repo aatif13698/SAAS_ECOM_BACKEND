@@ -13,6 +13,7 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 const {
     uploadCategorySubCategoryIcon,
+    uploadCategorySubCategoryIconToS3
 } = require('../../utils/multer');
 
 
@@ -21,47 +22,105 @@ const {
 
 router.get('/activeCategory/:clientId', entityAuth.authorizeEntity("Product", "SubCategory", "view"), subCategoryContrller.getAllActiveCategory);
 
+// old
+// router.post('/createSubCategory', entityAuth.authorizeEntity("Product", "SubCategory", "create"), (req, res, next) => {
+//     uploadCategorySubCategoryIcon.single("icon")(req, res, (err) => {
+//         if (err) {
+//             if (err instanceof multer.MulterError) {
+//                 // MulterError: File too large
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: 'File too large. Maximum file size allowed is 1 MB.'
+//                 });
+//             } else {
+//                 // Other errors
+//                 console.error('Multer Error:', err.message);
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: err.message
+//                 });
+//             }
+//         }
+//         next();
+//     });
+// }, subCategoryContrller.createSubCategory);
 
-router.post('/createSubCategory', entityAuth.authorizeEntity("Product", "SubCategory", "create"), (req, res, next) => {
-    uploadCategorySubCategoryIcon.single("icon")(req, res, (err) => {
-        if (err) {
-            if (err instanceof multer.MulterError) {
-                // MulterError: File too large
-                return res.status(statusCode.BadRequest).send({
-                    message: 'File too large. Maximum file size allowed is 1 MB.'
-                });
-            } else {
-                // Other errors
-                console.error('Multer Error:', err.message);
-                return res.status(statusCode.BadRequest).send({
-                    message: err.message
-                });
+// new
+router.post(
+    '/createSubCategory',
+    entityAuth.authorizeEntity("Product", "SubCategory", "create"),
+    uploadCategorySubCategoryIconToS3.single("icon"),
+    async (req, res, next) => {
+        try {
+            // Validate file upload
+            if (req.file) {
+                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedMimetypes.includes(req.file.mimetype)) {
+                    return res.status(400).send({
+                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                    });
+                }
             }
+
+            // Process the request
+            await subCategoryContrller.createSubCategory(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
         }
-        next();
-    });
-}, subCategoryContrller.createSubCategory);
+    }
+);
 
 
-router.post('/updateSubCategory', entityAuth.authorizeEntity("Product", "SubCategory", "update"), (req, res, next) => {
-    uploadCategorySubCategoryIcon.single("icon")(req, res, (err) => {
-        if (err) {
-            if (err instanceof multer.MulterError) {
-                // MulterError: File too large
-                return res.status(statusCode.BadRequest).send({
-                    message: 'File too large. Maximum file size allowed is 1 MB.'
-                });
-            } else {
-                // Other errors
-                console.error('Multer Error:', err.message);
-                return res.status(statusCode.BadRequest).send({
-                    message: err.message
-                });
+
+// router.post('/updateSubCategory', entityAuth.authorizeEntity("Product", "SubCategory", "update"), (req, res, next) => {
+//     uploadCategorySubCategoryIcon.single("icon")(req, res, (err) => {
+//         if (err) {
+//             if (err instanceof multer.MulterError) {
+//                 // MulterError: File too large
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: 'File too large. Maximum file size allowed is 1 MB.'
+//                 });
+//             } else {
+//                 // Other errors
+//                 console.error('Multer Error:', err.message);
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: err.message
+//                 });
+//             }
+//         }
+//         next();
+//     });
+// }, subCategoryContrller.updateSubCategory);
+
+
+router.post(
+    '/updateSubCategory',
+    entityAuth.authorizeEntity("Product", "SubCategory", "create"),
+    uploadCategorySubCategoryIconToS3.single("icon"),
+    async (req, res, next) => {
+        try {
+            // Validate file upload
+            if (req.file) {
+                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedMimetypes.includes(req.file.mimetype)) {
+                    return res.status(400).send({
+                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                    });
+                }
             }
+
+            // Process the request
+            await subCategoryContrller.updateSubCategory(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
         }
-        next();
-    });
-}, subCategoryContrller.updateSubCategory);
+    }
+);
+
 
 
 router.get('/subCategory/:subCategoryId', entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.getParticularSubCategory);

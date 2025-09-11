@@ -125,6 +125,25 @@ const uploadCategorySubCategoryIcon = multer({
     fileFilter: imageFilter
 });
 
+const uploadCategorySubCategoryIconToS3 = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 1024 * 1024, // 1MB limit
+        files: 1
+    },
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp/;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images (jpeg, jpg, png, gif, webp) are allowed'));
+        }
+    }
+});
+
 
 const imagesStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -339,3 +358,4 @@ exports.uploadBranchIcon = uploadBranchIcon;
 exports.uploadWarehouseIcon = uploadWarehouseIcon;
 exports.uploadProductBlueprint = uploadProductBlueprint;
 exports.uploadCustomizable = uploadCustomizable;
+exports.uploadCategorySubCategoryIconToS3 = uploadCategorySubCategoryIconToS3;
