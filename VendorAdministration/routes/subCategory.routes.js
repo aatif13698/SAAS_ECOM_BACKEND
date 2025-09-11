@@ -13,7 +13,7 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 const {
     uploadCategorySubCategoryIcon,
-    uploadCategorySubCategoryIconToS3
+    uploadIconToS3
 } = require('../../utils/multer');
 
 
@@ -47,7 +47,7 @@ router.get('/activeCategory/:clientId', entityAuth.authorizeEntity("Product", "S
 router.post(
     '/createSubCategory',
     entityAuth.authorizeEntity("Product", "SubCategory", "create"),
-    uploadCategorySubCategoryIconToS3.single("icon"),
+    uploadIconToS3.single("icon"),
     async (req, res, next) => {
         try {
             // Validate file upload
@@ -97,7 +97,7 @@ router.post(
 router.post(
     '/updateSubCategory',
     entityAuth.authorizeEntity("Product", "SubCategory", "create"),
-    uploadCategorySubCategoryIconToS3.single("icon"),
+    uploadIconToS3.single("icon"),
     async (req, res, next) => {
         try {
             // Validate file upload

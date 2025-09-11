@@ -4,14 +4,10 @@
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const subCategoryService = require("../services/subCategory.service");
+
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
-
-
-
 const AWS = require('aws-sdk');
-
-
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({

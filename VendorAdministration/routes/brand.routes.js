@@ -10,52 +10,107 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 const {
     uploadBrandIcon,
+    uploadIconToS3
 } = require('../../utils/multer');
 
 
 
 // # create, update, view, list, activate/inactive, delete brand by vendor routes starts here
 
-router.post('/createBrand', entityAuth.authorizeEntity("Product", "Brand", "create"), (req, res, next) => {
-    uploadBrandIcon.single("icon")(req, res, (err) => {
-        if (err) {
-            if (err instanceof multer.MulterError) {
-                // MulterError: File too large
-                return res.status(statusCode.BadRequest).send({
-                    message: 'File too large. Maximum file size allowed is 1 MB.'
-                });
-            } else {
-                // Other errors
-                console.error('Multer Error:', err.message);
-                return res.status(statusCode.BadRequest).send({
-                    message: err.message
-                });
+// router.post('/createBrand', entityAuth.authorizeEntity("Product", "Brand", "create"), (req, res, next) => {
+//     uploadBrandIcon.single("icon")(req, res, (err) => {
+//         if (err) {
+//             if (err instanceof multer.MulterError) {
+//                 // MulterError: File too large
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: 'File too large. Maximum file size allowed is 1 MB.'
+//                 });
+//             } else {
+//                 // Other errors
+//                 console.error('Multer Error:', err.message);
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: err.message
+//                 });
+//             }
+//         }
+//         next();
+//     });
+// }, brandContrller.create);
+
+router.post(
+    '/createBrand',
+    entityAuth.authorizeEntity("Product", "Brand", "create"),
+    uploadIconToS3.single("icon"),
+    async (req, res, next) => {
+        try {
+            // Validate file upload
+            if (req.file) {
+                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedMimetypes.includes(req.file.mimetype)) {
+                    return res.status(400).send({
+                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                    });
+                }
             }
+            // Process the request
+            await brandContrller.create(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
         }
-        next();
-    });
-}, brandContrller.create);
+    }
+);
 
 
-router.post('/updateBrand', entityAuth.authorizeEntity("Product", "Brand", "update"), (req, res, next) => {
-    uploadBrandIcon.single("icon")(req, res, (err) => {
-        if (err) {
-            if (err instanceof multer.MulterError) {
-                // MulterError: File too large
-                return res.status(statusCode.BadRequest).send({
-                    message: 'File too large. Maximum file size allowed is 1 MB.'
-                });
-            } else {
-                // Other errors
-                console.error('Multer Error:', err.message);
-                return res.status(statusCode.BadRequest).send({
-                    message: err.message
-                });
+// router.post('/updateBrand', entityAuth.authorizeEntity("Product", "Brand", "update"), (req, res, next) => {
+//     uploadBrandIcon.single("icon")(req, res, (err) => {
+//         if (err) {
+//             if (err instanceof multer.MulterError) {
+//                 // MulterError: File too large
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: 'File too large. Maximum file size allowed is 1 MB.'
+//                 });
+//             } else {
+//                 // Other errors
+//                 console.error('Multer Error:', err.message);
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: err.message
+//                 });
+//             }
+//         }
+//         next();
+//     });
+// }, brandContrller.update);
+
+
+router.post(
+    '/updateBrand',
+    entityAuth.authorizeEntity("Product", "Brand", "create"),
+    uploadIconToS3.single("icon"),
+    async (req, res, next) => {
+        try {
+            // Validate file upload
+            if (req.file) {
+                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedMimetypes.includes(req.file.mimetype)) {
+                    return res.status(400).send({
+                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                    });
+                }
             }
+            // Process the request
+            await brandContrller.update(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
         }
-        next();
-    });
-}, brandContrller.update);
+    }
+);
+
 
 
 router.get('/brand/:brandId', entityAuth.authorizeEntity("Product", "Brand", "view"), brandContrller.getParticulae);

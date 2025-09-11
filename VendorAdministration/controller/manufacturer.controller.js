@@ -3,7 +3,51 @@
 
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const manufacturerService = require("../services/manufactuer.service")
+const manufacturerService = require("../services/manufactuer.service");
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadIconToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/manufacturers/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname
+        }
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName
+        };
+    } catch (error) {
+        console.log("error in s3", error);
+
+        throw new Error(`Failed to upload to S3: ${error.message}`);
+    }
+};
+
 
 // create manufacturer by vendor
 exports.create = async (req, res, next) => {
@@ -21,11 +65,16 @@ exports.create = async (req, res, next) => {
             email, phone, url, country,
             createdBy: mainUser._id,
         }
-        if (req.file && req.file.filename) {
-            dataObject = {
-                ...dataObject,
-                icon: req.file.filename
-            }
+        // if (req.file && req.file.filename) {
+        //     dataObject = {
+        //         ...dataObject,
+        //         icon: req.file.filename
+        //     }
+        // }
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.icon = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
         const newdata = await manufacturerService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
@@ -54,11 +103,16 @@ exports.update = async (req, res, next) => {
         let dataObject = {
             name, description, slug, email, phone, url, country,
         }
-        if (req.file && req.file.filename) {
-            dataObject = {
-                ...dataObject,
-                icon: req.file.filename
-            }
+        // if (req.file && req.file.filename) {
+        //     dataObject = {
+        //         ...dataObject,
+        //         icon: req.file.filename
+        //     }
+        // }
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.icon = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
         const updated = await manufacturerService.update(clientId, manufacturerId, { ...dataObject });
         return res.status(statusCode.OK).send({

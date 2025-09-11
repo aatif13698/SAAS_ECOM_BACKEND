@@ -22,6 +22,7 @@ const clinetManufacturerSchema = new Schema(
     country : {type :  String, default:  null},
     isActive: { type: Boolean, default: true },
     icon: { type: String, default: null },
+    iconKey: { type: String, default: null },
     createdBy: { type: ObjectId, ref: "clientUsers", index: true },
     deletedAt: { type: Date, default: null, index: true },
     updatedAt: { type: Date, default: null, index: true },

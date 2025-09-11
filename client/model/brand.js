@@ -15,6 +15,7 @@ const clinetBrandSchema = new Schema(
     slug: { type: String,  required: true, sparse: true, trim: true, index: true }, 
     isActive: { type: Boolean, default: true },
     icon: { type: String, default: null },
+    iconKey: { type: String, default: null },
     createdBy: { type: ObjectId, ref: "clientUsers", index: true }, 
     deletedAt: { type: Date, default: null, index: true }, 
     updatedAt: { type: Date, default: null, index: true }, 

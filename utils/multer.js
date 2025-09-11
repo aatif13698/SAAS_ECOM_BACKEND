@@ -125,7 +125,7 @@ const uploadCategorySubCategoryIcon = multer({
     fileFilter: imageFilter
 });
 
-const uploadCategorySubCategoryIconToS3 = multer({
+const uploadIconToS3 = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: 1024 * 1024, // 1MB limit
@@ -358,4 +358,4 @@ exports.uploadBranchIcon = uploadBranchIcon;
 exports.uploadWarehouseIcon = uploadWarehouseIcon;
 exports.uploadProductBlueprint = uploadProductBlueprint;
 exports.uploadCustomizable = uploadCustomizable;
-exports.uploadCategorySubCategoryIconToS3 = uploadCategorySubCategoryIconToS3;
+exports.uploadIconToS3 = uploadIconToS3;
