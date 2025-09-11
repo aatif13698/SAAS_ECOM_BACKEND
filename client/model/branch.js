@@ -14,6 +14,7 @@ const clinetBranchSchema = new Schema(
         name: { type: String, required: true },
         incorporationName: { type: String, required: true },
         icon :{ type: String, default : null },
+        iconKey: { type: String, default : null },
 
         emailContact: {
             type: String,
