@@ -12,6 +12,7 @@ const clinetBusinessUnitSchema = new Schema(
 
         name: { type: String, required: true },
         icon :{ type: String, default : null },
+        iconKey: { type: String, default : null },
         tinNumber :{ type: String, default : null },
         businessLicenseNumber :{ type: String, default : null },
         emailContact: {

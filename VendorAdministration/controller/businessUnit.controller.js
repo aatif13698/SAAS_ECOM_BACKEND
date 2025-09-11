@@ -4,7 +4,53 @@
 
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const businessUnitService = require("../../client/service/businessUnit.service")
+const businessUnitService = require("../../client/service/businessUnit.service");
+
+
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadIconToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/business/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname
+        }
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName
+        };
+    } catch (error) {
+        console.log("error in s3", error);
+
+        throw new Error(`Failed to upload to S3: ${error.message}`);
+    }
+};
+
 
 
 // create business unit by vendor
@@ -31,13 +77,20 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
             createdBy: mainUser._id,
         }
 
-        if (req.file && req.file.filename) {
-            dataObject = {
-                ...dataObject,
-                icon: req.file.filename
+        // if (req.file && req.file.filename) {
+        //     dataObject = {
+        //         ...dataObject,
+        //         icon: req.file.filename
 
-            }
+        //     }
+        // }
+
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.icon = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
+
 
         const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
@@ -68,11 +121,17 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
             name, emailContact, contactNumber, tinNumber, businessLicenseNumber, city, state, country, ZipCode, address
         }
 
-        if (req.file && req.file.filename) {
-            dataObject = {
-                ...dataObject,
-                icon: req.file.filename
-            }
+        // if (req.file && req.file.filename) {
+        //     dataObject = {
+        //         ...dataObject,
+        //         icon: req.file.filename
+        //     }
+        // }
+
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.icon = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
 
         const updated = await businessUnitService.update(clientId, businessUnitId, { ...dataObject });
@@ -181,7 +240,7 @@ exports.activeinactiveBusinessUnitByVendor = async (req, res, next) => {
 exports.softDeleteBusinesssUnitByVendor = async (req, res, next) => {
     try {
         const { keyword, page, perPage, businessUnitId, clientId } = req.body;
-        console.log("req.body",req.body);
+        console.log("req.body", req.body);
         req.query.keyword = keyword;
         req.query.page = page;
         req.query.perPage = perPage;
