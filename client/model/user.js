@@ -104,6 +104,7 @@ const clinetUserSchema = new Schema(
         },
 
         profileImage: { type: String, default: null },
+        iconKey: { type: String, default: null },
         profileCreated: { type: Boolean, default: false },
 
         verificationOtp: { type: String },

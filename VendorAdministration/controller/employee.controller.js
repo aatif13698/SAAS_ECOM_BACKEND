@@ -10,7 +10,51 @@ const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const employeeService = require("../services/employee.service");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadIconToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/employee/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname
+        }
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName
+        };
+    } catch (error) {
+        console.log("error in s3", error);
+
+        throw new Error(`Failed to upload to S3: ${error.message}`);
+    }
+};
 
 
 // create 
@@ -229,8 +273,13 @@ exports.create = async (req, res, next) => {
         }
 
         // Add file icon if present
-        if (req.file?.filename) {
-            dataObject.profileImage = req.file.filename;
+        // if (req.file?.filename) {
+        //     dataObject.profileImage = req.file.filename;
+        // }
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.profileImage = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
 
         // Create 
@@ -321,8 +370,7 @@ exports.update = async (req, res, next) => {
             address,
         } = req.body;
 
-        console.log("warehouse",warehouse);
-        
+
 
         const mainUser = req.user;
 
@@ -401,15 +449,21 @@ exports.update = async (req, res, next) => {
             dataObject.businessUnit = businessUnit;
             dataObject.branch = branch;
         }
-        if (warehouse &&  warehouse !== "null") {
+        if (warehouse && warehouse !== "null") {
             dataObject.businessUnit = businessUnit;
             dataObject.branch = branch;
             dataObject.warehouse = warehouse;
         }
 
         // Add file icon if present
-        if (req.file?.filename) {
-            dataObject.icon = req.file.filename;
+        // if (req.file?.filename) {
+        //     dataObject.icon = req.file.filename;
+        // }
+
+        if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.profileImage = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
 
         // update 
@@ -537,7 +591,7 @@ exports.list = async (req, res, next) => {
             }
         }
 
-        console.log("filters",filters);
+        console.log("filters", filters);
 
         const result = await employeeService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
