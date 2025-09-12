@@ -33,7 +33,48 @@ const clinetSubCategorySchema = require("../../client/model/subCategory");
 dotnev.config();
 const PRIVATEKEY = process.env.PRIVATEKEY;
 
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET,
+  s3ForcePathStyle: true,
+  maxRetries: 5,
+  retryDelayOptions: { base: 500 },
+  httpOptions: { timeout: 60000 },
+});
 
+// Helper function to upload file to DigitalOcean Spaces
+const uploadVendorImageToS3 = async (file) => {
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  const fileName = `saasEcommerce/vendors/${uuidv4()}${fileExtension}`;
+  const params = {
+    Bucket: process.env.DO_SPACES_BUCKET,
+    Key: fileName,
+    Body: file.buffer,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+    Metadata: {
+      'original-filename': file.originalname
+    }
+  };
+  try {
+    const { Location } = await s3.upload(params).promise();
+    return {
+      success: true,
+      url: Location,
+      key: fileName
+    };
+  } catch (error) {
+    console.log("error in s3", error);
+
+    throw new Error(`Failed to upload to S3: ${error.message}`);
+  }
+};
 
 
 
@@ -82,18 +123,26 @@ exports.createVendor = async (req, res) => {
 
     }
 
-    const imgs = [];
+    // const imgs = [];
+    // if (req.files && req.files.length > 0) {
+    //   for (let i = 0; i < req.files.length; i++) {
+    //     const element = req.files[i];
+    //     imgs.push(element?.filename)
+    //   }
+    // }
+
     if (req.files && req.files.length > 0) {
-      for (let i = 0; i < req.files.length; i++) {
-        const element = req.files[i];
-        imgs.push(element?.filename)
+      for (const file of req.files) {
+        const uploadResult = await uploadVendorImageToS3(file);
+        imgs.push(uploadResult.url);
       }
     }
-    if(imgs?.length > 0){
-      vandeorData ={
+
+    if (imgs?.length > 0) {
+      vandeorData = {
         ...vandeorData,
-        profileImage : imgs[0],
-        tradeLicense : imgs[1]
+        profileImage: imgs[0],
+        tradeLicense: imgs[1]
       }
     }
     const newUser = await User.create(
@@ -127,10 +176,10 @@ exports.createVendor = async (req, res) => {
     const mainCategoryList = await MainCategory.find({});
     const categoryData = mainCategoryList.map((item) => {
       return {
-        name: item?.name ,
-        description: item?.description ,
+        name: item?.name,
+        description: item?.description,
         slug: item?.slug,
-        icon: item?.icon ,
+        icon: item?.icon,
       }
     });
     const Category = clientConnection.model('clientCategory', clinetCategorySchema);
@@ -255,7 +304,7 @@ exports.getVendor = async (req, res) => {
     session.endSession();
     return res.status(statusCode.OK).send({
       message: message.lblVendorFoundSuccessfully,
-      data: vendor, 
+      data: vendor,
     });
 
   } catch (error) {
@@ -280,7 +329,7 @@ exports.listVendor = async (req, res) => {
 
     let whereCondition = {
       deletedAt: null,
-      roleId : 3
+      roleId: 3
     };
 
     if (searchText) {
