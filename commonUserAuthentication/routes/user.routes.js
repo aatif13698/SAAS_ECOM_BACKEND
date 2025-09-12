@@ -8,7 +8,8 @@ const auth = require('../../middleware/authorization/superAdmin');
 const statusCode = require("../../utils/http-status-code")
 
 const {
-    uploadProfile, 
+    uploadProfile,
+    uploadProfileToS3, 
 } = require('../../utils/multer');
 
 const userAuthController = require("../controller/user.controller");
@@ -32,25 +33,54 @@ router.post('/forgetpassword', userAuthController.forgetPassword );
 
 router.post('/resetpassword', userAuthController.resetPassword );
 
-router.post('/editProfile',  customerAuth.customer, (req, res, next) => {
-    uploadProfile.single("profileImage")(req, res, (err) => {
-        if (err) {
-            if (err instanceof multer.MulterError) {
-                // MulterError: File too large
-                return res.status(statusCode.BadRequest).send({
-                    message: 'File too large. Maximum file size allowed is 1 MB.'
-                });
-            } else {
-                // Other errors
-                console.error('Multer Error:', err.message);
-                return res.status(statusCode.BadRequest).send({
-                    message: err.message
-                });
+// router.post('/editProfile',  customerAuth.customer, (req, res, next) => {
+//     uploadProfile.single("profileImage")(req, res, (err) => {
+//         if (err) {
+//             if (err instanceof multer.MulterError) {
+//                 // MulterError: File too large
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: 'File too large. Maximum file size allowed is 1 MB.'
+//                 });
+//             } else {
+//                 // Other errors
+//                 console.error('Multer Error:', err.message);
+//                 return res.status(statusCode.BadRequest).send({
+//                     message: err.message
+//                 });
+//             }
+//         }
+//         next();
+//     });
+// }, userAuthController.editProfile);
+
+
+
+router.post(
+    '/editProfile',
+   customerAuth.customer,
+    uploadProfileToS3.single("profileImage"),
+    async (req, res, next) => {
+        try {
+            // Validate file upload
+            if (req.file) {
+                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedMimetypes.includes(req.file.mimetype)) {
+                    return res.status(400).send({
+                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                    });
+                }
             }
+            // Process the request
+            await userAuthController.editProfile(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
         }
-        next();
-    });
-}, userAuthController.editProfile);
+    }
+);
+
 
 // get  profile
 router.get('/getProfile/:clientId/:customerId', customerAuth.customer, userAuthController.getProfile);

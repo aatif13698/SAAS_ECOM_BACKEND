@@ -103,6 +103,26 @@ const uploadProfile = multer({
 });
 
 
+const uploadProfileToS3 = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 1024 * 1024,
+        files: 1
+    },
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp/;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images (jpeg, jpg, png, gif, webp) are allowed'));
+        }
+    }
+});
+
+
 
 // upload category and subcategory
 
@@ -398,3 +418,4 @@ exports.uploadCustomizable = uploadCustomizable;
 exports.uploadIconToS3 = uploadIconToS3;
 exports.uploadProductBlueprintToS3 = uploadProductBlueprintToS3;
 exports.uploadImagesToS3 = uploadImagesToS3;
+exports.uploadProfileToS3 = uploadProfileToS3;
