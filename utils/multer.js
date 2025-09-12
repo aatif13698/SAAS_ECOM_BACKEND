@@ -291,6 +291,25 @@ const uploadProductBlueprint = multer({
     fileFilter: imageFilter
 });
 
+const uploadProductBlueprintToS3 = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB limit
+        files: 5 // Max 5 files
+    },
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp/;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images (jpeg, jpg, png, gif, webp) are allowed'));
+        }
+    }
+});
+
 
 // add to cart
 // const customoseableDetailstorage = multer.diskStorage({
@@ -359,3 +378,4 @@ exports.uploadWarehouseIcon = uploadWarehouseIcon;
 exports.uploadProductBlueprint = uploadProductBlueprint;
 exports.uploadCustomizable = uploadCustomizable;
 exports.uploadIconToS3 = uploadIconToS3;
+exports.uploadProductBlueprintToS3 = uploadProductBlueprintToS3;
