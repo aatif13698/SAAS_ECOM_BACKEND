@@ -10,7 +10,50 @@ const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const stockService = require("../services/stock.service");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadProductImageToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/stocks/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname
+        }
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName
+        };
+    } catch (error) {
+        console.log("error in s3", error);
+
+        throw new Error(`Failed to upload to S3: ${error.message}`);
+    }
+};
 
 // create
 exports.create = async (req, res, next) => {
@@ -80,11 +123,20 @@ exports.create = async (req, res, next) => {
             paymentOPtions
         };
 
+        // let attachments = [];
+        // if (req.files && req.files.length > 0) {
+        //     for (let index = 0; index < req.files.length; index++) {
+        //         const element = req.files[index];
+        //         attachments.push(element.filename)
+        //     }
+        //     dataObject.images = attachments;
+        // }
+
         let attachments = [];
         if (req.files && req.files.length > 0) {
-            for (let index = 0; index < req.files.length; index++) {
-                const element = req.files[index];
-                attachments.push(element.filename)
+            for (const file of req.files) {
+                const uploadResult = await uploadProductImageToS3(file, clientId);
+                attachments.push(uploadResult.url);
             }
             dataObject.images = attachments;
         }
@@ -171,12 +223,20 @@ exports.update = async (req, res, next) => {
             paymentOPtions
         };
 
+        // let attachments = [];
+        // if (req.files && req.files.length > 0) {
+        //     for (let index = 0; index < req.files.length; index++) {
+        //         const element = req.files[index];
+        //         attachments.push(element.filename)
+        //     }
+        //     dataObject.images = attachments;
+        // }
 
         let attachments = [];
         if (req.files && req.files.length > 0) {
-            for (let index = 0; index < req.files.length; index++) {
-                const element = req.files[index];
-                attachments.push(element.filename)
+            for (const file of req.files) {
+                const uploadResult = await uploadProductImageToS3(file, clientId);
+                attachments.push(uploadResult.url);
             }
             dataObject.images = attachments;
         }

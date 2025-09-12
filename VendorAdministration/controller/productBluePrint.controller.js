@@ -100,7 +100,7 @@ exports.create = async (req, res, next) => {
         let attachments = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                const uploadResult = await uploadProductImageToS3(file);
+                const uploadResult = await uploadProductImageToS3(file, clientId);
                 attachments.push(uploadResult.url);
             }
             dataObject.images = attachments;
@@ -162,7 +162,7 @@ exports.update = async (req, res, next) => {
         let attachments = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                const uploadResult = await uploadProductImageToS3(file);
+                const uploadResult = await uploadProductImageToS3(file, clientId);
                 attachments.push(uploadResult.url);
             }
             dataObject.images = attachments;
