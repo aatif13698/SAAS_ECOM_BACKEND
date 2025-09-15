@@ -246,11 +246,9 @@ exports.list = async (req, res, next) => {
         }
         let filters = {
             deletedAt: null,
-            _id: { $ne: mainUser?._id },
-            roleId: { $gt: 1, $ne: 0 },
             ...(keyword && {
                 $or: [
-                    { shiftName: { $regex: keyword.trim(), $options: "i" } },
+                    { departmentName: { $regex: keyword.trim(), $options: "i" } },
                 ],
             }),
         };
