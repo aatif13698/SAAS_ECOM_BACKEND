@@ -267,6 +267,17 @@ module.exports = {
   lblAssetIdIdRequired: "Asset Id id required!",
 
 
+  // ledger group
+  lblLedgerGroupAlreadyExists: "LedgerGroup already exists with this email or phone!",
+  lblLedgerGroupCreatedSuccess: "LedgerGroup created successfully!",
+  lblLedgerGroupUpdatedSuccess: "LedgerGroup updated successfully!",
+  lblLedgerGroupIdAndClientIdRequired: " LedgerGroup Id and Client Id are required!",
+  lblLedgerGroupNotFound: "LedgerGroup not found!",
+  lblLedgerGroupFoundSucessfully: "LedgerGroup found successfully!",
+  lblLedgerGroupIdIdAndClientIdRequired: "LedgerGroup Id and Client Id are required!",
+  lblLedgerGroupIdIdRequired: "LedgerGroup Id id required!",
+
+
 
 
   // branch

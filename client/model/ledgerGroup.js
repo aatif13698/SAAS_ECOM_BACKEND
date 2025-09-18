@@ -16,12 +16,13 @@ const clientLedgerGroupSchema = new Schema(
         isBranchLevel: { type: Boolean, default: false },
         isWarehouseLevel: { type: Boolean, default: false },
 
-        name: { type: String, required: true, unique: true },
+        groupName: { type: String, required: true, unique: true },
+        hasParent: { type: Boolean, default: false },
         parentGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'ledgerGroup', default: null }, // For sub-groups
+        isActive: { type: Boolean, default: true },
+
         requiredFields: [{
-            field: { type: String, required: true },
-            type: { type: String, enum: ['string', 'number', 'date', 'array'], required: true },
-            required: { type: Boolean, default: true }
+            fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'customField', default: null },
         }],
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },

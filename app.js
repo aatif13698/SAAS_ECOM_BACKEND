@@ -63,7 +63,9 @@ const vendorProductVariant = require("./VendorAdministration/routes/variant.rout
 const vendorProductPrice = require("./VendorAdministration/routes/productRate.routes.js");
 const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
 const vendorStock = require("./VendorInventory/routes/stock.routes.js");
-const vendorOrder = require("./VendorInventory/routes/orders.routes.js")
+const vendorOrder = require("./VendorInventory/routes/orders.routes.js");
+
+const vendorLedgerGroup = require("./VendorAccount/routes/ledgerGroup.routes.js")
 
 
 
@@ -146,6 +148,11 @@ app.use("/api/vendor/price", vendorProductPrice.router);
 app.use("/api/vendor/supplier", vendorSupplier.router);
 app.use("/api/vendor/stock", vendorStock.router);
 app.use("/api/vendor/order", vendorOrder.router);
+
+// route setup for accounting master
+app.use("/api/vendor/accounts/lg", vendorLedgerGroup.router);
+
+
 
 
 

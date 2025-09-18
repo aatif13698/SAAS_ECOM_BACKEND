@@ -487,7 +487,25 @@ const defaultPersmissionsList = [
                 }
             }
         ]
-    }
+    },
+    {
+        name: "Accounting Master",
+        access: false,
+        menu: [
+            {
+                name: "Group",
+                displayName: "All Group",
+                access: false,
+                subMenus: {
+                    create: { id: 91, access: false, api: "/demo/path" },
+                    view: { id: 92, access: false, api: "/demo/path" },
+                    update: { id: 93, access: false, api: "/demo/path" },
+                    softDelete: { id: 94, access: false, api: "/demo/path" },
+                    activeActive: { id: 95, access: false, api: "/demo/path" },
+                }
+            },
+        ]
+    },
 ];
 
 // vendor Permission list
@@ -725,7 +743,25 @@ const vendorPersmissionsList = [
                 }
             }
         ]
-    }
+    },
+    {
+        name: "Accounting Master",
+        access: true,
+        menu: [
+            {
+                name: "Group",
+                displayName: "All Group",
+                access: true,
+                subMenus: {
+                    create: { id: 91, access: true, api: "/demo/path" },
+                    view: { id: 92, access: true, api: "/demo/path" },
+                    update: { id: 93, access: true, api: "/demo/path" },
+                    softDelete: { id: 94, access: true, api: "/demo/path" },
+                    activeActive: { id: 95, access: true, api: "/demo/path" },
+                }
+            },
+        ]
+    },
 ];
 
 
