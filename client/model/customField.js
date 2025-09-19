@@ -37,6 +37,4 @@ const customFieldSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers' },
 }, { timestamps: true });
 
-const customFormModel = mongoose.model("customField", customFieldSchema);
-
-module.exports = customFormModel;
+module.exports = customFieldSchema;

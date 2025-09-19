@@ -5,16 +5,38 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
+const clientCustomFieldSchema = require("../../client/model/customField");
 
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        console.log("clientId aad", clientId);
-
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
-        return await LedgerGroup.create(data);
+        const CustomField = clientConnection.model("customField", clientCustomFieldSchema)
+        const ledgerGruop = await LedgerGroup.create(data);
+        const group = await LedgerGroup.findById(ledgerGruop._id).populate({
+            path: 'parentGroup',
+            model: LedgerGroup,
+        })
+        const fieldArray = [
+            {
+                name: "name",
+                label: "Name",
+                type: "text",
+                isRequired: true,
+                placeholder: "Enter Name.",
+                gridConfig: {
+                    span: 12,
+                    order: 1
+                },
+                isDeleteAble: false,
+                groupId: ledgerGruop._id,
+                createdBy: mainUser?._id,
+            },
+        ]
+        await CustomField.insertMany(fieldArray);
+        return group
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating ledger group : ${error.message}`);
     }
@@ -30,6 +52,19 @@ const all = async (clientId, filters = {}) => {
         return { ledgerGroup };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing ledger group: ${error.message}`);
+    }
+};
+
+const allField = async (clientId, groupId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CustomField = clientConnection.model("customField", clientCustomFieldSchema)
+        const [fields] = await Promise.all([
+            CustomField.find({ groupId: groupId }),
+        ]);
+        return { fields };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing ledger group fields: ${error.message}`);
     }
 };
 
@@ -120,6 +155,7 @@ module.exports = {
     create,
     list,
     all,
+    allField,
 
 
     update,

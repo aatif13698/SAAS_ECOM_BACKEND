@@ -22,6 +22,15 @@ router.post("/activeInactive/ledgerGroup", entityAuth.authorizeEntity("Accountin
 
 router.put('/update/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), ledgerGroupController.update);
 
+router.get('/all/field/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.allField);
+
+router.post("/create/field", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.createField);
+
+router.delete('/delete/field/:groupId/:clientId/:fieldId', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.deleteField);
+
+
+
+
 
 
 
