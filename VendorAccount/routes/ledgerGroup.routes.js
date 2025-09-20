@@ -28,6 +28,9 @@ router.post("/create/field", entityAuth.authorizeEntity("Accounting Master", "Gr
 
 router.delete('/delete/field/:groupId/:clientId/:fieldId', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.deleteField);
 
+router.post("/update/order/field/:groupId/:clientId", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.updateFieldOrder);
+
+
 
 
 

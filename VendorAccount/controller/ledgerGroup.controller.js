@@ -457,7 +457,7 @@ exports.createField = async (req, res, next) => {
 exports.deleteField = async (req, res, next) => {
     try {
         const user = req.user;
-        const { groupId,clientId, fieldId } = req.params;
+        const { groupId, clientId, fieldId } = req.params;
         if (!groupId || !fieldId) {
             return res.status(httpStatusCode.BadRequest).json({
                 success: false,
@@ -501,6 +501,100 @@ exports.deleteField = async (req, res, next) => {
             success: false,
             message: message.lblInternalServerError,
             errorCode: "SERVER_ERROR",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
+    }
+};
+
+exports.updateFieldOrder = async (req, res, next) => {
+    try {
+        const { clientId, groupId } = req.params;
+        const { fields } = req.body;
+        const user = req.user;
+
+        if (!groupId || !clientId) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: message.lblRequiredFieldMissing,
+                errorCode: "FIELD_MISSING",
+            });
+        }
+
+        if (!clientId || !groupId || !fields || !Array.isArray(fields) || fields.length === 0) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: message?.lblRequiredFieldMissing,
+                errorCode: "FIELD_MISSING",
+            });
+        }
+
+        if (
+            !mongoose.Types.ObjectId.isValid(groupId) ||
+            !fields.every((f) => mongoose.Types.ObjectId.isValid(f.fieldId))
+        ) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Invalid ID format",
+                errorCode: "INVALID_ID",
+            });
+        }
+
+        if (
+            !fields.every((f) => typeof f.order === "number" && f.order >= 1 && Number.isInteger(f.order))
+        ) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Invalid fields data",
+                errorCode: "INVALID_FIELDS",
+            });
+        }
+
+        const orders = fields.map((f) => f.order);
+        if (new Set(orders).size !== orders.length) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "DUPLICATE_ORDERS",
+                errorCode: "DUPLICATE_ORDERS",
+            });
+        }
+
+        const fieldIds = fields.map((f) => f.fieldId);
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CustomField = clientConnection.model("customField", clientCustomFieldSchema)
+
+
+        const existingFields = await CustomField.find({
+            _id: { $in: fieldIds },
+            groupId: groupId
+        });
+
+        if (existingFields.length !== fields.length) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Some fields do not belong to this ledger group",
+                errorCode: "NOT_FOUND",
+            });
+        }
+
+        const updatePromises = fields.map(({ fieldId, order }) =>
+            CustomField.updateOne(
+                { _id: fieldId, groupId  },
+                { $set: { "gridConfig.order": order } }
+            )
+        );
+        await Promise.all(updatePromises);
+
+        return res.status(httpStatusCode.OK).json({
+            success: true,
+            message: "Field order updated successfully",
+        });
+    } catch (error) {
+        console.error("Error updating field order:", error);
+        return res.status(httpStatusCode.InternalServerError).json({
+            success: false,
+            message: message.lblInternalServerError,
+            errorCode: SERVER_ERROR,
             error: process.env.NODE_ENV === "development" ? error.message : undefined,
         });
     }

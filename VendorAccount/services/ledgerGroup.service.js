@@ -34,6 +34,48 @@ const create = async (clientId, data, mainUser) => {
                 groupId: ledgerGruop._id,
                 createdBy: mainUser?._id,
             },
+            {
+                name: "openingBalance",
+                label: "Opening Balance",
+                type: "number",
+                isRequired: true,
+                placeholder: "Enter balance.",
+                gridConfig: {
+                    span: 12,
+                    order: 1
+                },
+                isDeleteAble: false,
+                groupId: ledgerGruop._id,
+                createdBy: mainUser?._id,
+            },
+            {
+                name: "openingDate",
+                label: "Opening Date",
+                type: "date",
+                isRequired: true,
+                placeholder: "pick date.",
+                gridConfig: {
+                    span: 12,
+                    order: 1
+                },
+                isDeleteAble: false,
+                groupId: ledgerGruop._id,
+                createdBy: mainUser?._id,
+            },
+            {
+                name: "balance",
+                label: "Balance",
+                type: "number",
+                isRequired: true,
+                placeholder: "Enter balance.",
+                gridConfig: {
+                    span: 12,
+                    order: 1
+                },
+                isDeleteAble: false,
+                groupId: ledgerGruop._id,
+                createdBy: mainUser?._id,
+            }
         ]
         await CustomField.insertMany(fieldArray);
         return group
@@ -73,9 +115,13 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
         const { page, limit } = options;
-        const skip = (page - 1) * limit;
+        console.log("options",options);
+        
+        const skip = (Number(page) - 1) * Number(limit);
+        console.log("skip", skip);
+        
         const [ledgerGroup, total] = await Promise.all([
-            LedgerGroup.find(filters).skip(skip)
+            LedgerGroup.find(filters).skip(skip).limit(limit)
                 .populate({
                     path: 'parentGroup',
                     model: LedgerGroup,
