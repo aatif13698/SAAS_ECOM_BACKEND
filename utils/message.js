@@ -289,6 +289,17 @@ module.exports = {
   lblFinancialYearIdIdRequired: "FinancialYear Id id required!",
 
 
+  // Currency
+  lblCurrencyAlreadyExists: "Currency already exists with this email or phone!",
+  lblCurrencyCreatedSuccess: "Currency created successfully!",
+  lblCurrencyUpdatedSuccess: "Currency updated successfully!",
+  lblCurrencyIdAndClientIdRequired: " Currency Id and Client Id are required!",
+  lblCurrencyNotFound: "Currency not found!",
+  lblCurrencyFoundSucessfully: "Currency found successfully!",
+  lblCurrencyIdIdAndClientIdRequired: "Currency Id and Client Id are required!",
+  lblCurrencyIdIdRequired: "Currency Id id required!",
+
+
 
 
 
