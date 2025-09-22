@@ -22,11 +22,6 @@ exports.create = async (req, res, next) => {
     try {
         const {
             clientId,
-            level,
-            businessUnit,
-            branch,
-            warehouse,
-
             startDate,
             endDate,
             notes,
@@ -47,9 +42,6 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        if (hasParent == true && parentGroup == "") {
-            return res.status(statusCode.BadRequest).send({ message: "Parent group is required." });
-        }
 
         // Base data object
         const dataObject = {
@@ -57,51 +49,11 @@ exports.create = async (req, res, next) => {
             createdBy: mainUser._id,
         };
 
-        // Level-specific validation and assignment
-        const levelConfig = {
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
-        };
-
-        if (!levelConfig[level]) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
-        }
-
-        Object.assign(dataObject, levelConfig[level]);
-
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
-        }
-
-        if (['branch', 'warehouse'].includes(level) && !branch) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
-        }
-
-        if (level === 'warehouse' && !warehouse) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
-        }
-
-        // Add optional fields based on level
-        if (businessUnit) {
-            dataObject.businessUnit = businessUnit;
-        }
-        if (branch) {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-        }
-        if (warehouse) {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-            dataObject.warehouse = warehouse;
-        }
-
         const newFinancialYear = await financialYearService.create(clientId, dataObject, mainUser);
 
         return res.status(statusCode.OK).send({
             message: message.lblFinancialYearCreatedSuccess,
-            data: { group: newFinancialYear },
+            data: { year: newFinancialYear },
         });
     } catch (error) {
         next(error);
@@ -111,9 +63,9 @@ exports.create = async (req, res, next) => {
 // list
 exports.list = async (req, res, next) => {
     try {
-
         const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
+        console.log("req.query", req.query);
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
@@ -121,29 +73,6 @@ exports.list = async (req, res, next) => {
         }
         let filters = {
         };
-
-        if (level == "vendor") {
-
-        } else if (level == "business" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                businessUnit: levelId
-            }
-        } else if (level == "branch" && levelId) {
-            filters = {
-                ...filters,
-                // isBranchLevel: true,
-                branch: levelId
-            }
-        } else if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
-            }
-        }
-
         const result = await financialYearService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
             message: message.lblFinancialYearFoundSucessfully,
@@ -181,18 +110,13 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            groupId,
-            level,
-            businessUnit,
-            branch,
-            warehouse,
-
+            financialYearId,
             startDate,
             endDate,
             notes,
         } = req.body;
 
-        console.log("req.body", req.body);
+      
 
 
         const mainUser = req.user;
@@ -211,10 +135,6 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        if (hasParent == true && parentGroup == "") {
-            return res.status(statusCode.BadRequest).send({ message: "Parent group is required." });
-        }
-
         // Base data object
         const dataObject = {
             startDate,
@@ -223,52 +143,11 @@ exports.update = async (req, res, next) => {
             createdBy: mainUser._id,
         };
 
-        const levelConfig = {
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
-        };
-
-        if (!levelConfig[level]) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
-        }
-
-        Object.assign(dataObject, levelConfig[level]);
-
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
-        }
-
-        if (['branch', 'warehouse'].includes(level) && !branch) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
-        }
-
-        if (level === 'warehouse' && !warehouse) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
-        }
-
-        // Add optional fields based on level
-        if (businessUnit && businessUnit !== "null") {
-            dataObject.businessUnit = businessUnit;
-        }
-        if (branch && branch !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-        }
-        if (warehouse && warehouse !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-            dataObject.warehouse = warehouse;
-        }
-
         // update 
-        const updated = await financialYearService.update(clientId, groupId, dataObject);
-
+        const updated = await financialYearService.update(clientId, financialYearId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblFinancialYearUpdatedSuccess,
         });
-
     } catch (error) {
         next(error);
     }

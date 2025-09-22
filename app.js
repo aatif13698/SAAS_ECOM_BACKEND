@@ -66,7 +66,8 @@ const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
 const vendorStock = require("./VendorInventory/routes/stock.routes.js");
 const vendorOrder = require("./VendorInventory/routes/orders.routes.js");
 
-const vendorLedgerGroup = require("./VendorAccount/routes/ledgerGroup.routes.js")
+const vendorLedgerGroup = require("./VendorAccount/routes/ledgerGroup.routes.js");
+const financialYear = require("./VendorAccount/routes/financialYear.routes.js");
 
 
 
@@ -153,6 +154,7 @@ app.use("/api/vendor/order", vendorOrder.router);
 
 // route setup for accounting master
 app.use("/api/vendor/accounts/lg", vendorLedgerGroup.router);
+app.use("/api/vendor/accounts/fy", financialYear.router);
 
 
 

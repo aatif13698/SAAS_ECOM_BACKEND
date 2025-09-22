@@ -22,10 +22,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
         const { page, limit } = options;
-        
         const skip = (Number(page) - 1) * Number(limit);
-        console.log("skip", skip);
-        
         const [financialYears, total] = await Promise.all([
             FinancialYear.find(filters).skip(skip).limit(limit),
             FinancialYear.countDocuments(filters),
@@ -51,11 +48,11 @@ const activeInactive = async (clientId, financialYearId, data) => {
     }
 };
 
-const update = async (clientId, shiftId, updateData) => {
+const update = async (clientId, financialYearId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
-        const financialYear = await FinancialYear.findById(shiftId);
+        const financialYear = await FinancialYear.findById(financialYearId);
         if (!financialYear) {
             throw new CustomError(statusCode.NotFound, message.lblFinancialYearNotFound);
         }

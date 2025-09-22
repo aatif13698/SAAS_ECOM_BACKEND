@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
 const currencySchema = new mongoose.Schema({
-  code: { type: String, required: true, unique: true, match: /^[A-Z]{3}$/ }, // ISO 4217, e.g., 'USD'
-  name: { type: String, required: true }, // e.g., 'US Dollar'
-  symbol: { type: String, required: true }, // e.g., '$'
+  code: { type: String, required: true, unique: true, match: /^[A-Z]{3}$/ }, // ISO 4217, e.g., 'INR'
+  name: { type: String, required: true }, // e.g., 'INDIAN Rupee'
+  decimaName: { type: String, required: true }, 
+  decimaNumber: { type: Number, required: true }, 
+  symbol: { type: String, required: true }, // e.g., '₹'
   isBase: { type: Boolean, default: false }
 });
 
