@@ -55,6 +55,7 @@ const vendorRoleRouter = require("./commonClinetRolesAndPermission/routes/roles.
 const vendorEmployeeRouter = require("./VendorAdministration/routes/employee.routes.js");
 const vendorCustomerRouter = require("./VendorAdministration/routes/customers.routes.js");
 const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDepartment.routes.js");
+const vendorShiftRouter = require("./VendorAdministration/routes/shift.routes.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
@@ -126,7 +127,8 @@ app.use("/api/superAdmin/query/", superAdminQueryRoute.router);
 
 // routes setup for client
 app.use("/api/vendor/auth/", vendorAuthRouter.router);
-app.use("/api/vendor/department", vendorDepartmentRouter.router)
+app.use("/api/vendor/department", vendorDepartmentRouter.router);
+app.use("/api/vendor/shift", vendorShiftRouter.router);
 app.use("/api/vendor/business/", vendorBusinessRouter.router);
 app.use("/api/vendor/branch/", vendorBranchRouter.router);
 app.use("/api/vendor/warehouse/", vendorWarehouseRouter.router);

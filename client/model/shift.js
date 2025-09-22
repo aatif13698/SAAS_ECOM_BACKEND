@@ -17,8 +17,8 @@ const clientShiftSchema = new Schema(
         isWarehouseLevel: { type: Boolean, default: false },
 
         shiftName: { type: String, required: true },
-        startTime: { type: Date, required: true },
-        endTime: { type: Date, required: true },
+        startTime: { type: String, required: true },
+        endTime: { type: String, required: true },
         duration: { type: Number }, 
         shiftType: { type: String, enum: ['day', 'night', 'rotating', 'on-call'], required: true },
         status: { type: String, enum: ['planned', 'active', 'completed', 'canceled'], default: 'planned' },
@@ -38,10 +38,7 @@ const clientShiftSchema = new Schema(
     { timestamps: true }
 );
 
-// Virtual for duration
-clientShiftSchema.virtual('duration').get(function() {
-  return (this.endTime - this.startTime) / (1000 * 60); // minutes
-});
+
 
 module.exports = clientShiftSchema;
 

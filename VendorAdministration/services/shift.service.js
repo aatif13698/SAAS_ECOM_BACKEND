@@ -21,6 +21,22 @@ const create = async (clientId, data) => {
     }
 };
 
+const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const { page, limit } = options;
+        const skip = (page - 1) * limit;
+        const [shifts, total] = await Promise.all([
+            Shift.find(filters).skip(skip),
+            Shift.countDocuments(filters),
+        ]);
+        return { count: total, shifts };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing shift: ${error.message}`);
+    }
+};
+
 const update = async (clientId, shiftId, updateData) => {
 
     try {
@@ -55,22 +71,6 @@ const getById = async (clientId, shiftId) => {
     }
 };
 
-
-const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
-    try {
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-        const [employees, total] = await Promise.all([
-            Shift.find(filters).skip(skip),
-            Shift.countDocuments(filters),
-        ]);
-        return { count: total, employees };
-    } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error listing shift: ${error.message}`);
-    }
-};
 
 
 const activeInactive = async (clientId, shiftId, data) => {

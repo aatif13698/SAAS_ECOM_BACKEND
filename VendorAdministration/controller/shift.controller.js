@@ -27,12 +27,15 @@ exports.create = async (req, res, next) => {
             startTime,
             endTime,
             shiftType,
+            duration,
             status,
             requiredEmployees,
             notes,
             recurring,
-            isApproved,
         } = req.body;
+
+        console.log("req.body", req.body);
+        
 
         const mainUser = req.user;
 
@@ -41,7 +44,7 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [shiftName, startTime, endTime, shiftType, status, requiredEmployees, level, notes, recurring];
+        const requiredFields = [shiftName, startTime, endTime, duration, shiftType, status, requiredEmployees, level, notes, recurring];
         console.log("requiredFields", requiredFields);
 
         if (requiredFields.some((field) => !field)) {
@@ -54,11 +57,11 @@ exports.create = async (req, res, next) => {
             startTime,
             endTime,
             shiftType,
+            duration,
             status,
             requiredEmployees,
             notes,
             recurring,
-            isApproved,
             createdBy: mainUser._id,
         };
 
@@ -111,6 +114,69 @@ exports.create = async (req, res, next) => {
         next(error);
     }
 };
+
+// list
+exports.list = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            ...(keyword && {
+                $or: [
+                    { shiftName: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                // isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                isWarehouseLevel: levelId
+            }
+        }
+
+        const result = await shiftService.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblShiftFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
 
 // update  
 exports.update = async (req, res, next) => {
@@ -246,59 +312,7 @@ exports.getParticular = async (req, res, next) => {
 };
 
 
-// list
-exports.list = async (req, res, next) => {
-    try {
 
-        const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblClinetIdIsRequired,
-            });
-        }
-        let filters = {
-            deletedAt: null,
-            _id: { $ne: mainUser?._id },
-            roleId: { $gt: 1, $ne: 0 },
-            ...(keyword && {
-                $or: [
-                    { shiftName: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
-        };
-
-        if (level == "vendor") {
-
-        } else if (level == "business" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                businessUnit: levelId
-            }
-        } else if (level == "branch" && levelId) {
-            filters = {
-                ...filters,
-                // isBranchLevel: true,
-                branch: levelId
-            }
-        } else if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
-            }
-        }
-
-        const result = await shiftService.list(clientId, filters, { page, limit: perPage });
-        return res.status(statusCode.OK).send({
-            message: message.lblShiftFoundSucessfully,
-            data: result,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
 
 // active inactive
 exports.activeinactive = async (req, res, next) => {
