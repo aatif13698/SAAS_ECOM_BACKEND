@@ -278,6 +278,18 @@ module.exports = {
   lblLedgerGroupIdIdRequired: "LedgerGroup Id id required!",
 
 
+  // Financial year
+  lblFinancialYearAlreadyExists: "FinancialYear already exists with this email or phone!",
+  lblFinancialYearCreatedSuccess: "FinancialYear created successfully!",
+  lblFinancialYearUpdatedSuccess: "FinancialYear updated successfully!",
+  lblFinancialYearIdAndClientIdRequired: " FinancialYear Id and Client Id are required!",
+  lblFinancialYearNotFound: "FinancialYear not found!",
+  lblFinancialYearFoundSucessfully: "FinancialYear found successfully!",
+  lblFinancialYearIdIdAndClientIdRequired: "FinancialYear Id and Client Id are required!",
+  lblFinancialYearIdIdRequired: "FinancialYear Id id required!",
+
+
+
 
 
   // branch

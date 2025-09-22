@@ -55,6 +55,25 @@ const update = async (clientId, shiftId, updateData) => {
     }
 };
 
+const activeInactive = async (clientId, shiftId, data) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const shift = await Shift.findById(shiftId);
+        if (!shift) {
+            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
+        }
+        Object.assign(shift, data);
+        return await shift.save();
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
+    }
+};
+
+
+
+
+
 
 
 const getById = async (clientId, shiftId) => {
@@ -72,21 +91,6 @@ const getById = async (clientId, shiftId) => {
 };
 
 
-
-const activeInactive = async (clientId, shiftId, data) => {
-    try {
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientShift', clientShiftSchema);
-        const shift = await Shift.findById(shiftId);
-        if (!shift) {
-            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
-        }
-        Object.assign(shift, data);
-        return await shift.save();
-    } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
-    }
-};
 
 
 

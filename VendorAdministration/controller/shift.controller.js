@@ -167,17 +167,6 @@ exports.list = async (req, res, next) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-
-
 // update  
 exports.update = async (req, res, next) => {
 
@@ -198,11 +187,7 @@ exports.update = async (req, res, next) => {
             requiredEmployees,
             notes,
             recurring,
-            isApproved,
         } = req.body;
-
-        console.log("warehouse", warehouse);
-
 
         const mainUser = req.user;
 
@@ -235,7 +220,6 @@ exports.update = async (req, res, next) => {
             requiredEmployees,
             notes,
             recurring,
-            isApproved,
             createdBy: mainUser._id,
         };
         
@@ -281,7 +265,6 @@ exports.update = async (req, res, next) => {
         // update 
         const updated = await shiftService.update(clientId, shiftId, dataObject);
        
-        await existingStaff.save();
         return res.status(statusCode.OK).send({
             message: message.lblShiftUpdatedSuccess,
         });
@@ -291,28 +274,6 @@ exports.update = async (req, res, next) => {
     }
 
 };
-
-// get particular 
-exports.getParticular = async (req, res, next) => {
-    try {
-        const { clientId, shiftId } = req.params;
-        if (!clientId || !shiftId) {
-            return res.status(400).send({
-                message: message.lblShiftIdAndClientIdRequired,
-            });
-        }
-        const shift = await shiftService.getById(clientId, shiftId);
-        return res.status(200).send({
-            message: message.lblShiftFoundSucessfully,
-            data: employee,
-        });
-    } catch (error) {
-        next(error)
-    }
-};
-
-
-
 
 // active inactive
 exports.activeinactive = async (req, res, next) => {
@@ -335,6 +296,40 @@ exports.activeinactive = async (req, res, next) => {
         next(error);
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+// get particular 
+exports.getParticular = async (req, res, next) => {
+    try {
+        const { clientId, shiftId } = req.params;
+        if (!clientId || !shiftId) {
+            return res.status(400).send({
+                message: message.lblShiftIdAndClientIdRequired,
+            });
+        }
+        const shift = await shiftService.getById(clientId, shiftId);
+        return res.status(200).send({
+            message: message.lblShiftFoundSucessfully,
+            data: employee,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
+
 
 
 

@@ -492,9 +492,9 @@ const defaultPersmissionsList = [
         name: "Accounting Master",
         access: false,
         menu: [
-            {
-                name: "Group",
-                displayName: "All Group",
+           {
+                name: "Financial Year",
+                displayName: "All Financial Year",
                 access: false,
                 subMenus: {
                     create: { id: 91, access: false, api: "/demo/path" },
@@ -502,6 +502,42 @@ const defaultPersmissionsList = [
                     update: { id: 93, access: false, api: "/demo/path" },
                     softDelete: { id: 94, access: false, api: "/demo/path" },
                     activeActive: { id: 95, access: false, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Currency",
+                displayName: "All Currency",
+                access: false,
+                subMenus: {
+                    create: { id: 96, access: false, api: "/demo/path" },
+                    view: { id: 97, access: false, api: "/demo/path" },
+                    update: { id: 98, access: false, api: "/demo/path" },
+                    softDelete: { id: 99, access: false, api: "/demo/path" },
+                    activeActive: { id: 100, access: false, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Group",
+                displayName: "All Group",
+                access: false,
+                subMenus: {
+                    create: { id: 101, access: false, api: "/demo/path" },
+                    view: { id: 102, access: false, api: "/demo/path" },
+                    update: { id: 103, access: false, api: "/demo/path" },
+                    softDelete: { id: 104, access: false, api: "/demo/path" },
+                    activeActive: { id: 105, access: false, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Voucher Group",
+                displayName: "All Voucher Group",
+                access: false,
+                subMenus: {
+                    create: { id: 106, access: false, api: "/demo/path" },
+                    view: { id: 107, access: false, api: "/demo/path" },
+                    update: { id: 108, access: false, api: "/demo/path" },
+                    softDelete: { id: 109, access: false, api: "/demo/path" },
+                    activeActive: { id: 110, access: false, api: "/demo/path" },
                 }
             },
         ]
@@ -749,8 +785,8 @@ const vendorPersmissionsList = [
         access: true,
         menu: [
             {
-                name: "Group",
-                displayName: "All Group",
+                name: "Financial Year",
+                displayName: "All Financial Year",
                 access: true,
                 subMenus: {
                     create: { id: 91, access: true, api: "/demo/path" },
@@ -758,6 +794,42 @@ const vendorPersmissionsList = [
                     update: { id: 93, access: true, api: "/demo/path" },
                     softDelete: { id: 94, access: true, api: "/demo/path" },
                     activeActive: { id: 95, access: true, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Currency",
+                displayName: "All Currency",
+                access: true,
+                subMenus: {
+                    create: { id: 96, access: true, api: "/demo/path" },
+                    view: { id: 97, access: true, api: "/demo/path" },
+                    update: { id: 98, access: true, api: "/demo/path" },
+                    softDelete: { id: 99, access: true, api: "/demo/path" },
+                    activeActive: { id: 100, access: true, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Group",
+                displayName: "All Group",
+                access: true,
+                subMenus: {
+                    create: { id: 101, access: true, api: "/demo/path" },
+                    view: { id: 102, access: true, api: "/demo/path" },
+                    update: { id: 103, access: true, api: "/demo/path" },
+                    softDelete: { id: 104, access: true, api: "/demo/path" },
+                    activeActive: { id: 105, access: true, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Voucher Group",
+                displayName: "All Voucher Group",
+                access: true,
+                subMenus: {
+                    create: { id: 106, access: true, api: "/demo/path" },
+                    view: { id: 107, access: true, api: "/demo/path" },
+                    update: { id: 108, access: true, api: "/demo/path" },
+                    softDelete: { id: 109, access: true, api: "/demo/path" },
+                    activeActive: { id: 110, access: true, api: "/demo/path" },
                 }
             },
         ]
