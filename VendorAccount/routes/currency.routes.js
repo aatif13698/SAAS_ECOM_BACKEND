@@ -11,14 +11,13 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 // # create, update, view, list, activate/inactive Currency
 
-router.post('/create/financialYear', entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.create);
+router.post('/create/currency', entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.create);
 
-router.get('/list/financialYear', entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.list);
+router.get('/list/currency', entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.list);
 
-router.post("/activeInactive/financialYear", entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.activeinactive);
+router.post("/activeInactive/currency", entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.activeinactive);
 
-router.put('/update/financialYear', entityAuth.authorizeEntity("Accounting Master", "Currency", "update"), currencyController.update);
-
+router.put('/update/currency', entityAuth.authorizeEntity("Accounting Master", "Currency", "update"), currencyController.update);
 
 // # create, update, view, list, activate/inactive Currency
 

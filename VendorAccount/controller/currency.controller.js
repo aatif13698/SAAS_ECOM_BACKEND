@@ -30,6 +30,9 @@ exports.create = async (req, res, next) => {
             isBase
         } = req.body;
 
+        console.log("req.body", req.body);
+        
+
         const mainUser = req.user;
 
         // Validate required fields
@@ -43,7 +46,6 @@ exports.create = async (req, res, next) => {
             decimalName,
             decimaNumber,
             symbol,
-            isBase
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -61,11 +63,11 @@ exports.create = async (req, res, next) => {
             createdBy: mainUser._id,
         };
 
-        const newFinancialYear = await currencyService.create(clientId, dataObject, mainUser);
+        const newCurrency = await currencyService.create(clientId, dataObject, mainUser);
 
         return res.status(statusCode.OK).send({
-            message: message.lblFinancialYearCreatedSuccess,
-            data: { year: newFinancialYear },
+            message: message.lblCurrencyCreatedSuccess,
+            data: { year: newCurrency },
         });
     } catch (error) {
         next(error);
@@ -105,7 +107,7 @@ exports.activeinactive = async (req, res, next) => {
         req.query.perPage = perPage;
         if (!clientId || !id) {
             return res.status(400).send({
-                message: message.lblFinancialYearIdAndClientIdRequired,
+                message: message.lblCurrencyIdAndClientIdRequired,
             });
         }
         const updated = await currencyService.activeInactive(clientId, id, {
@@ -122,14 +124,14 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            financialYearId,
-            startDate,
-            endDate,
-            notes,
+            currencyId,
+            code,
+            name,
+            decimalName,
+            decimaNumber,
+            symbol,
+            isBase
         } = req.body;
-
-
-
 
         const mainUser = req.user;
         // Validate required fields
@@ -138,9 +140,12 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            startDate,
-            endDate,
-            notes,
+            code,
+            name,
+            decimalName,
+            decimaNumber,
+            symbol,
+            isBase
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -149,16 +154,19 @@ exports.update = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
-            startDate,
-            endDate,
-            notes,
+            code,
+            name,
+            decimalName,
+            decimaNumber,
+            symbol,
+            isBase,
             createdBy: mainUser._id,
         };
 
         // update 
-        const updated = await currencyService.update(clientId, financialYearId, dataObject);
+        const updated = await currencyService.update(clientId, currencyId, dataObject);
         return res.status(statusCode.OK).send({
-            message: message.lblFinancialYearUpdatedSuccess,
+            message: message.lblCurrencyUpdatedSuccess,
         });
     } catch (error) {
         next(error);
