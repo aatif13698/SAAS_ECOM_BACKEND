@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 const financialYearSchema = new mongoose.Schema({
+  name: { type: String, require: true},
+  alias: { type: String, require: true, unique: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   isClosed: { type: Boolean, default: false },
@@ -10,7 +12,6 @@ const financialYearSchema = new mongoose.Schema({
 
 
 module.exports = financialYearSchema;
-
 
 
 

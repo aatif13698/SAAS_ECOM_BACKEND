@@ -111,12 +111,14 @@ exports.update = async (req, res, next) => {
         const {
             clientId,
             financialYearId,
+            name,
+            alias,
             startDate,
             endDate,
             notes,
         } = req.body;
 
-      
+
 
 
         const mainUser = req.user;
@@ -126,6 +128,8 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
+            name,
+            alias,
             startDate,
             endDate,
             notes,
@@ -137,6 +141,8 @@ exports.update = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
+            name,
+            alias,
             startDate,
             endDate,
             notes,

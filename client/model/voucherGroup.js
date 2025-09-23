@@ -26,7 +26,6 @@ const clientVoucharGroupSchema = new Schema(
         gstApplicable: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         resetFrequency: { type: String, enum: ['monthly', 'yearly'] },
-        financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'ledgerGroup', default: null },
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
