@@ -5,7 +5,6 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const currencySchema = require("../../client/model/currency");
 
-
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -64,10 +63,12 @@ const update = async (clientId, currencyId, updateData) => {
     }
 };
 
-
 module.exports = {
     create,
     list,
     update,
     activeInactive,
 };
+
+
+
