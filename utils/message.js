@@ -299,6 +299,16 @@ module.exports = {
   lblCurrencyIdIdAndClientIdRequired: "Currency Id and Client Id are required!",
   lblCurrencyIdIdRequired: "Currency Id id required!",
 
+    // document requirement
+  lblDocumentRequirementAlreadyExists: "DocumentRequirement already exists with this email or phone!",
+  lblDocumentRequirementCreatedSuccess: "DocumentRequirement created successfully!",
+  lblDocumentRequirementUpdatedSuccess: "DocumentRequirement updated successfully!",
+  lblDocumentRequirementIdAndClientIdRequired: " DocumentRequirement Id and Client Id are required!",
+  lblDocumentRequirementNotFound: "DocumentRequirement not found!",
+  lblDocumentRequirementFoundSucessfully: "DocumentRequirement found successfully!",
+  lblDocumentRequirementIdIdAndClientIdRequired: "DocumentRequirement Id and Client Id are required!",
+  lblDocumentRequirementIdIdRequired: "DocumentRequirement Id id required!",
+
 
 
 
