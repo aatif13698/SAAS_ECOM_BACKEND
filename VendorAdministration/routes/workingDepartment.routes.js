@@ -20,6 +20,8 @@ router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Ad
 
 router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.list);
 
+router.get('/all/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.allDepartment);
+
 router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.activeinactive);
 
 // # create, update, view, list, activate/inactive  woring department

@@ -308,6 +308,50 @@ exports.activeinactive = async (req, res, next) => {
 };
 
 
+exports.allDepartment = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                // isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                isWarehouseLevel: levelId
+            }
+        }
+        const result = await workingDepartmentService.all(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblWorkingDepaermentFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 
 

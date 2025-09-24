@@ -89,17 +89,19 @@ const activeInactive = async (clientId, shiftId, data) => {
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
+const all = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const skip = (page - 1) * limit;
+        const [departments] = await Promise.all([
+            WorkingDepartment.find(filters),
+        ]);
+        return { departments };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing departments: ${error.message}`);
+    }
+};
 
 
 
@@ -109,4 +111,5 @@ module.exports = {
     getById,
     list,
     activeInactive,
+    all
 };

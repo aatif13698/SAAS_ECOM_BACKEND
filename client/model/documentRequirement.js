@@ -11,7 +11,7 @@ const documentRequirementSchema = new Schema(
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
-        workDdepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
+        workDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
         jobRole: { type: ObjectId, ref: "clientRoles", default: null, index: true },
 
         isVendorLevel: { type: Boolean, default: false },
