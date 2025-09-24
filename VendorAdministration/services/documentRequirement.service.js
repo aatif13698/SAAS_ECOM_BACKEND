@@ -4,7 +4,7 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
-const documentRequirementSchema  = require("../../client/model/documentRequirement");
+const documentRequirementSchema = require("../../client/model/documentRequirement");
 const documentCustomFieldSchema = require("../../client/model/documentCustomField");
 
 
@@ -31,7 +31,7 @@ const create = async (clientId, data, mainUser) => {
                 documentRequirementId: doc._id,
                 createdBy: mainUser?._id,
             },
-             {
+            {
                 name: "lastName",
                 label: "Last Name",
                 type: "text",
@@ -61,6 +61,17 @@ const update = async (clientId, documentRequirementId, updateData) => {
         if (!documentRequirement) {
             throw new CustomError(statusCode.NotFound, message.lblDocumentRequirementNotFound);
         }
+        const existingDocumentRequirement = await DocumentRequirement.findOne({
+            $and: [
+                { _id: { $ne: documentRequirementId } },
+                {
+                    $or: [{ jobRole: updateData.jobRole }],
+                },
+            ],
+        })
+        if (existingDocumentRequirement) {
+            throw new CustomError(statusCode.Conflict, message.lblDocumentRequirementAlreadyExists);
+        }
         Object.assign(documentRequirement, updateData);
         await documentRequirement.save();
         return documentRequirement
@@ -87,11 +98,11 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const DocumentRequirement = clientConnection.model("documentRequirement", documentRequirementSchema);
         const { page, limit } = options;
-        console.log("options",options);
-        
+        console.log("options", options);
+
         const skip = (Number(page) - 1) * Number(limit);
         console.log("skip", skip);
-        
+
         const [documentRequirements, total] = await Promise.all([
             DocumentRequirement.find(filters).skip(skip).limit(limit),
             DocumentRequirement.countDocuments(filters),

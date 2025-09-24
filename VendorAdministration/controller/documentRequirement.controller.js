@@ -130,10 +130,6 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        if (hasParent == true && parentGroup == "") {
-            return res.status(statusCode.BadRequest).send({ message: "Parent group is required." });
-        }
-
         // Base data object
         const dataObject = {
             workDdepartment,

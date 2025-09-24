@@ -32,9 +32,18 @@ const documentCustomFieldSchema = new mongoose.Schema({
     order: Number
   },
   isDeleteAble: { type: Boolean, default: true },
-  
+  fieldType: {
+    type: String,
+    enum: [
+      'Profile completion',
+      'Mandatory in creation'
+    ],
+    required: true,
+    default: "Profile completion"
+  },
   documentRequirementId: { type: mongoose.Schema.Types.ObjectId, ref: "documentRequirement", default: null, index: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers' },
+  
 }, { timestamps: true });
 
 module.exports = documentCustomFieldSchema;
