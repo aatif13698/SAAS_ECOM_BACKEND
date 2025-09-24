@@ -19,6 +19,8 @@ router.post("/activeInactive/financialYear", entityAuth.authorizeEntity("Account
 
 router.put('/update/financialYear', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), financialYearController.update);
 
+router.get('/all/financialYear', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), financialYearController.all);
+
 
 // # create, update, view, list, activate/inactive financial year
 

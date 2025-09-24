@@ -69,6 +69,7 @@ const vendorOrder = require("./VendorInventory/routes/orders.routes.js");
 const vendorLedgerGroup = require("./VendorAccount/routes/ledgerGroup.routes.js");
 const financialYear = require("./VendorAccount/routes/financialYear.routes.js");
 const currency = require("./VendorAccount/routes/currency.routes.js");
+const voucherGroup = require("./VendorAccount/routes/voucherGroup.routes.js");
 
 
 
@@ -157,6 +158,7 @@ app.use("/api/vendor/order", vendorOrder.router);
 app.use("/api/vendor/accounts/lg", vendorLedgerGroup.router);
 app.use("/api/vendor/accounts/fy", financialYear.router);
 app.use("/api/vendor/accounts/cu", currency.router);
+app.use("/api/vendor/accounts/vg", voucherGroup.router);
 
 
 

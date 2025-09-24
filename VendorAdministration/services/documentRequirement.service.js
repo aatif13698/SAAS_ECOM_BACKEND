@@ -4,7 +4,7 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
-const documentRequirementSchema  = require("../../client/model/documentRequorement");
+const documentRequirementSchema  = require("../../client/model/documentRequirement");
 const documentCustomFieldSchema = require("../../client/model/documentCustomField");
 
 

@@ -33,6 +33,19 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const all = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const [financialYears] = await Promise.all([
+            FinancialYear.find({})
+        ]);
+        return { financialYears };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing financial year: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, financialYearId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -100,4 +113,5 @@ module.exports = {
     list,
     update,
     activeInactive,
+    all
 };

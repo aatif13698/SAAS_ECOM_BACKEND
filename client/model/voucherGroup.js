@@ -18,14 +18,15 @@ const clientVoucharGroupSchema = new Schema(
 
         name: { type: String, required: true, unique: true },
         code: { type: String, required: true, unique: true },
-        category: { type: String, required: true, unique: true },
-        description: { type: String, required: true, unique: true },
+        category: { type: String, required: true,  },
+        description: { type: String, required: true, },
         isTaxable: { type: Boolean, default: false },
         approvalRequired: { type: Boolean, default: false },
         relatedToInventory: { type: Boolean, default: false },
         gstApplicable: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         resetFrequency: { type: String, enum: ['monthly', 'yearly'] },
+        financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'financialYear', default: null },
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },

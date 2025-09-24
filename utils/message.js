@@ -299,7 +299,7 @@ module.exports = {
   lblCurrencyIdIdAndClientIdRequired: "Currency Id and Client Id are required!",
   lblCurrencyIdIdRequired: "Currency Id id required!",
 
-    // document requirement
+  // document requirement
   lblDocumentRequirementAlreadyExists: "DocumentRequirement already exists with this email or phone!",
   lblDocumentRequirementCreatedSuccess: "DocumentRequirement created successfully!",
   lblDocumentRequirementUpdatedSuccess: "DocumentRequirement updated successfully!",
@@ -308,6 +308,16 @@ module.exports = {
   lblDocumentRequirementFoundSucessfully: "DocumentRequirement found successfully!",
   lblDocumentRequirementIdIdAndClientIdRequired: "DocumentRequirement Id and Client Id are required!",
   lblDocumentRequirementIdIdRequired: "DocumentRequirement Id id required!",
+
+  // voucher group
+  lblVoucherGroupAlreadyExists: "VoucherGroup already exists with this email or phone!",
+  lblVoucherGroupCreatedSuccess: "VoucherGroup created successfully!",
+  lblVoucherGroupUpdatedSuccess: "VoucherGroup updated successfully!",
+  lblVoucherGroupIdAndClientIdRequired: " VoucherGroup Id and Client Id are required!",
+  lblVoucherGroupNotFound: "VoucherGroup not found!",
+  lblVoucherGroupFoundSucessfully: "VoucherGroup found successfully!",
+  lblVoucherGroupIdIdAndClientIdRequired: "VoucherGroup Id and Client Id are required!",
+  lblVoucherGroupIdIdRequired: "VoucherGroup Id id required!",
 
 
 
