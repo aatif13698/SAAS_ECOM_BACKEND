@@ -56,6 +56,7 @@ const vendorEmployeeRouter = require("./VendorAdministration/routes/employee.rou
 const vendorCustomerRouter = require("./VendorAdministration/routes/customers.routes.js");
 const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDepartment.routes.js");
 const vendorShiftRouter = require("./VendorAdministration/routes/shift.routes.js");
+const documentRouter = require("./VendorAdministration/routes/documentRequirement.routes.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
@@ -141,6 +142,7 @@ app.use("/api/vendor/manufacturer/", vendorManufacturerRouter.router);
 app.use("/api/vendor/role", vendorRoleRouter.router);
 app.use("/api/vendor/employee", vendorEmployeeRouter.router);
 app.use("/api/vendor/customer", vendorCustomerRouter.router);
+app.use("/api/vendor/hr/doc", documentRouter.router);
 
 
 // route setup for products

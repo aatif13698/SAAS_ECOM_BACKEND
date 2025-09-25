@@ -25,7 +25,7 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            workDdepartment,
+            workDepartment,
             jobRole,
 
             name,
@@ -37,15 +37,17 @@ exports.create = async (req, res, next) => {
         }
         const requiredFields = [
             name,
-            workDdepartment,
+            workDepartment,
             jobRole,
         ];
+        console.log("requiredFields", requiredFields);
+        
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
         // Base data object
         const dataObject = {
-            workDdepartment,
+            workDepartment,
             jobRole,
             name,
             createdBy: mainUser._id,
@@ -104,7 +106,7 @@ exports.update = async (req, res, next) => {
             branch,
             warehouse,
 
-            workDdepartment,
+            workDepartment,
             jobRole,
 
             name,
@@ -120,7 +122,7 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            workDdepartment,
+            workDepartment,
             jobRole,
 
             name,
@@ -132,7 +134,7 @@ exports.update = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
-            workDdepartment,
+            workDepartment,
             jobRole,
 
             name,

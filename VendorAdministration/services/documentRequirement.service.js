@@ -18,25 +18,11 @@ const create = async (clientId, data, mainUser) => {
         const doc = await DocumentRequirement.findById(documentRequirement._id);
         const fieldArray = [
             {
-                name: "firstName",
-                label: "First Name",
+                name: "fullName",
+                label: "Full Name",
                 type: "text",
                 isRequired: true,
-                placeholder: "Enter First Name.",
-                gridConfig: {
-                    span: 12,
-                    order: 1
-                },
-                isDeleteAble: false,
-                documentRequirementId: doc._id,
-                createdBy: mainUser?._id,
-            },
-            {
-                name: "lastName",
-                label: "Last Name",
-                type: "text",
-                isRequired: true,
-                placeholder: "Enter Last Name.",
+                placeholder: "Enter Full Name.",
                 gridConfig: {
                     span: 12,
                     order: 1
@@ -47,7 +33,7 @@ const create = async (clientId, data, mainUser) => {
             },
         ]
         await CustomField.insertMany(fieldArray);
-        return group
+        return doc
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating document requirement : ${error.message}`);
     }
