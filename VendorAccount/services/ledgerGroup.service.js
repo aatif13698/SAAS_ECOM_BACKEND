@@ -21,11 +21,11 @@ const create = async (clientId, data, mainUser) => {
         })
         const fieldArray = [
             {
-                name: "name",
-                label: "Name",
+                name: "nickName",
+                label: "Nick Name",
                 type: "text",
                 isRequired: true,
-                placeholder: "Enter Name.",
+                placeholder: "Enter Nick Name.",
                 gridConfig: {
                     span: 12,
                     order: 1
@@ -34,48 +34,6 @@ const create = async (clientId, data, mainUser) => {
                 groupId: ledgerGruop._id,
                 createdBy: mainUser?._id,
             },
-            {
-                name: "openingBalance",
-                label: "Opening Balance",
-                type: "number",
-                isRequired: true,
-                placeholder: "Enter balance.",
-                gridConfig: {
-                    span: 12,
-                    order: 1
-                },
-                isDeleteAble: false,
-                groupId: ledgerGruop._id,
-                createdBy: mainUser?._id,
-            },
-            {
-                name: "openingDate",
-                label: "Opening Date",
-                type: "date",
-                isRequired: true,
-                placeholder: "pick date.",
-                gridConfig: {
-                    span: 12,
-                    order: 1
-                },
-                isDeleteAble: false,
-                groupId: ledgerGruop._id,
-                createdBy: mainUser?._id,
-            },
-            {
-                name: "balance",
-                label: "Balance",
-                type: "number",
-                isRequired: true,
-                placeholder: "Enter balance.",
-                gridConfig: {
-                    span: 12,
-                    order: 1
-                },
-                isDeleteAble: false,
-                groupId: ledgerGruop._id,
-                createdBy: mainUser?._id,
-            }
         ]
         await CustomField.insertMany(fieldArray);
         return group

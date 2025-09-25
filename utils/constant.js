@@ -277,8 +277,8 @@ const defaultPersmissionsList = [
                 }
             },
             {
-                name: "Group",
-                displayName: "All Group",
+                name: "Ledger",
+                displayName: "All Ledger",
                 access: false,
                 subMenus: {
                     create: { id: 106, access: false, api: "/demo/path" },
@@ -289,8 +289,8 @@ const defaultPersmissionsList = [
                 }
             },
             {
-                name: "Voucher Group",
-                displayName: "All Voucher Group",
+                name: "Group",
+                displayName: "All Group",
                 access: false,
                 subMenus: {
                     create: { id: 111, access: false, api: "/demo/path" },
@@ -298,6 +298,18 @@ const defaultPersmissionsList = [
                     update: { id: 113, access: false, api: "/demo/path" },
                     softDelete: { id: 114, access: false, api: "/demo/path" },
                     activeActive: { id: 115, access: false, api: "/demo/path" },
+                }
+            },
+            {
+                name: "Voucher Group",
+                displayName: "All Voucher Group",
+                access: false,
+                subMenus: {
+                    create: { id: 116, access: false, api: "/demo/path" },
+                    view: { id: 117, access: false, api: "/demo/path" },
+                    update: { id: 118, access: false, api: "/demo/path" },
+                    softDelete: { id: 119, access: false, api: "/demo/path" },
+                    activeActive: { id: 120, access: false, api: "/demo/path" },
                 }
             },
         ]
@@ -581,8 +593,8 @@ const vendorPersmissionsList = [
                 }
             },
             {
-                name: "Group",
-                displayName: "All Group",
+                name: "Ledger",
+                displayName: "All Ledger",
                 access: true,
                 subMenus: {
                     create: { id: 106, access: true, api: "/demo/path" },
@@ -593,8 +605,8 @@ const vendorPersmissionsList = [
                 }
             },
             {
-                name: "Voucher Group",
-                displayName: "All Voucher Group",
+                name: "Group",
+                displayName: "All Group",
                 access: true,
                 subMenus: {
                     create: { id: 111, access: true, api: "/demo/path" },
@@ -604,10 +616,21 @@ const vendorPersmissionsList = [
                     activeActive: { id: 115, access: true, api: "/demo/path" },
                 }
             },
+            {
+                name: "Voucher Group",
+                displayName: "All Voucher Group",
+                access: true,
+                subMenus: {
+                    create: { id: 116, access: true, api: "/demo/path" },
+                    view: { id: 117, access: true, api: "/demo/path" },
+                    update: { id: 118, access: true, api: "/demo/path" },
+                    softDelete: { id: 119, access: true, api: "/demo/path" },
+                    activeActive: { id: 120, access: true, api: "/demo/path" },
+                }
+            },
         ]
     },
 ];
-
 
 
 
