@@ -363,7 +363,7 @@ const uploadProductBlueprintToS3 = multer({
 //     filename: async (req, file, cb) => {
 //         console.log("file", file);
 //         console.log("req",req)
-        
+
 //         cb(null, `${Date.now()}_${file.originalname.toLowerCase().replaceAll(' ', '')}`);
 //     },
 // });
@@ -380,31 +380,42 @@ const imageFilters = (req, file, cb) => {
     const mimetype = fileTypes.test(file.mimetype);
     if (extname && mimetype) return cb(null, true);
     cb(new Error("Only images and PDFs are allowed"));
-  };
-  
-  // Multer storage configuration
-  const customizableDetailStorage = multer.diskStorage({
+};
+
+// Multer storage configuration
+const customizableDetailStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "./public/customizations"); // Ensure this folder exists
+        cb(null, "./public/customizations"); // Ensure this folder exists
     },
     filename: (req, file, cb) => {
-      console.log("Uploading file:", file); // Debug log
-      cb(null, `${Date.now()}_${file.originalname.toLowerCase().replaceAll(" ", "")}`);
+        console.log("Uploading file:", file); // Debug log
+        cb(null, `${Date.now()}_${file.originalname.toLowerCase().replaceAll(" ", "")}`);
     },
-  });
-  
-  // Correct multer configuration
-  const uploadCustomizable = multer({
+});
+
+// Correct multer configuration
+const uploadCustomizable = multer({
     storage: customizableDetailStorage, // Use 'storage' key
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: imageFilters,
-  });
+});
 
+
+const uploadCustomFormWithS3 = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'text/csv'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error('Invalid file type. Only JPEG, PNG, PDF, CSV allowed.'));
+        }
+        cb(null, true);
+    },
+});
 
 
 
 exports.uploadProfile = uploadProfile;
-
 exports.uploadProfile = uploadProfile;
 exports.uploadCategorySubCategoryIcon = uploadCategorySubCategoryIcon;
 exports.uploadImages = uploadImages;
@@ -419,3 +430,4 @@ exports.uploadIconToS3 = uploadIconToS3;
 exports.uploadProductBlueprintToS3 = uploadProductBlueprintToS3;
 exports.uploadImagesToS3 = uploadImagesToS3;
 exports.uploadProfileToS3 = uploadProfileToS3;
+exports.uploadCustomFormWithS3 = uploadCustomFormWithS3;
