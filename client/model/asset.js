@@ -29,15 +29,17 @@ const clientAssetSchema = new Schema(
         warrantyEndDate: { type: Date },
         disposalDate: { type: Date },
         disposalReason: { type: String },
-        assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers' },
+        assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers', default: null },
         notes: { type: String },
         expirationDate: { type: Date },
         auditLogs: [{
             action: { type: String },
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers' },
-            date: { type: Date }
+            logDate: { type: Date, default: Date.now },
+            status: { type: String, enum: ['healthy', 'warning', 'defective'] },
+            defectInterval: { type: Number }, // e.g., days since last defect
+            notes: { type: String },
         }],
-
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
         updatedAt: { type: Date, default: null, index: true },

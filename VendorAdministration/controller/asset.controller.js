@@ -13,7 +13,7 @@ const assetService = require("../services/asset.service");
 const bcrypt = require("bcrypt")
 
 
-
+// create
 exports.create = async (req, res, next) => {
     try {
         const {
@@ -36,7 +36,6 @@ exports.create = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate,
         } = req.body;
@@ -62,7 +61,6 @@ exports.create = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate,
         ];
@@ -86,7 +84,6 @@ exports.create = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate,
             createdBy: mainUser._id,
@@ -167,7 +164,6 @@ exports.update = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate,
         } = req.body;
@@ -192,7 +188,6 @@ exports.update = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate
         ];
@@ -200,10 +195,9 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-
         // Base data object
         const dataObject = {
-           assetName,
+            assetName,
             assetType,
             serialNumber,
             model,
@@ -216,7 +210,6 @@ exports.update = async (req, res, next) => {
             warrantyEndDate,
             disposalDate,
             disposalReason,
-            assignedTo,
             notes,
             expirationDate,
             createdBy: mainUser._id,
@@ -284,10 +277,10 @@ exports.getParticular = async (req, res, next) => {
                 message: message.lblShiftIdAndClientIdRequired,
             });
         }
-        const shift = await assetService.getById(clientId, assetId);
+        const asset = await assetService.getById(clientId, assetId);
         return res.status(200).send({
             message: message.lblAssetFoundSucessfully,
-            data: shift,
+            data: asset,
         });
     } catch (error) {
         next(error)
@@ -308,8 +301,6 @@ exports.list = async (req, res, next) => {
         }
         let filters = {
             deletedAt: null,
-            _id: { $ne: mainUser?._id },
-            roleId: { $gt: 1, $ne: 0 },
             ...(keyword && {
                 $or: [
                     { assetName: { $regex: keyword.trim(), $options: "i" } },
@@ -371,6 +362,84 @@ exports.activeinactive = async (req, res, next) => {
     }
 };
 
+// assign
+exports.assign = async (req, res, next) => {
+    try {
+        const { useId } = req.body;
+        const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
+        return res.status(statusCode.OK).send({
+            message: message.lblAssetCreatedSuccess,
+            data: { newAssigned: newAssigned._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// unassign
+exports.unAssign = async (req, res, next) => {
+    try {
+        const { useId } = req.body;
+        const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
+        return res.status(statusCode.OK).send({
+            message: message.lblAssetCreatedSuccess,
+            data: { newAssigned: newAssigned._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// create request
+exports.createRequest = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            assetId,
+            employeeId,
+            requestType,
+            reason,
+            status,
+            notes,
+        } = req.body;
+        const mainUser = req.user;
+        // Validate required fields
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+        const requiredFields = [
+            assetId,
+            employeeId,
+            requestType,
+            reason,
+            status,
+            notes,
+        ];
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+        // Base data object
+        const dataObject = {
+            assetId,
+            employeeId,
+            requestType,
+            reason,
+            status,
+            notes,
+            createdBy: mainUser._id,
+        };
+        const newRequest = await assetService.createRequest(clientId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: "Request submitted successfully",
+            data: { request: newRequest._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
 

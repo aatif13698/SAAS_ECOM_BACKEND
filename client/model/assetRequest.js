@@ -14,7 +14,7 @@ const clientAssetRequestSchema = new Schema(
         status: { type: String, enum: ['pending', 'approved', 'denied', 'completed'], default: 'pending' },
         notes: { type: String },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers' },
-
+        newAssetId: { type: mongoose.Schema.Types.ObjectId, ref: 'clientAsset' },
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
         updatedAt: { type: Date, default: null, index: true },
