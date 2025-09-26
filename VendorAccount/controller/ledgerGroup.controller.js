@@ -260,6 +260,51 @@ exports.list = async (req, res, next) => {
 };
 
 // all
+exports.allLedgerGroup = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {};
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                // isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                isWarehouseLevel: levelId
+            }
+        }
+
+        const result = await ledgerGroupService.allLedgerGroup(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblLedgerGroupFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// all
 exports.all = async (req, res, next) => {
     try {
 

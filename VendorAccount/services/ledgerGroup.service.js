@@ -73,11 +73,11 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
         const { page, limit } = options;
-        console.log("options",options);
-        
+        console.log("options", options);
+
         const skip = (Number(page) - 1) * Number(limit);
         console.log("skip", skip);
-        
+
         const [ledgerGroup, total] = await Promise.all([
             LedgerGroup.find(filters).skip(skip).limit(limit)
                 .populate({
@@ -87,6 +87,19 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
             LedgerGroup.countDocuments(filters),
         ]);
         return { count: total, ledgerGroup };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing ledger group: ${error.message}`);
+    }
+};
+
+const allLedgerGroup = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const [ledgerGroup] = await Promise.all([
+            LedgerGroup.find(filters)
+        ]);
+        return { ledgerGroup };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing ledger group: ${error.message}`);
     }
@@ -160,7 +173,7 @@ module.exports = {
     list,
     all,
     allField,
-
+    allLedgerGroup,
 
     update,
     getById,

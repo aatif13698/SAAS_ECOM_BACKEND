@@ -16,6 +16,8 @@ router.post('/create/ledgerGroup', entityAuth.authorizeEntity("Accounting Master
 
 router.get('/list/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.list);
 
+router.get('/all/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.allLedgerGroup);
+
 router.get('/all/non/parent/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.all);
 
 router.post("/activeInactive/ledgerGroup", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.activeinactive);
