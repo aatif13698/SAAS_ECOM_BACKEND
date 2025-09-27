@@ -10,7 +10,7 @@ router.get('/welcome', async (req,res) => {
 
     return   res.send({
         users : users,
-        message: "Welcome to KOSMO"
+        message: "Welcome to Saas ecom"
     })
 
 });
