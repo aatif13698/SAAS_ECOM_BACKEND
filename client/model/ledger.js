@@ -26,6 +26,7 @@ const ledgerSchema = new Schema(
         isCustomer: { type: Boolean, default: false },
         isSupplier: { type: Boolean, default: false },
         isEmployee: { type: Boolean, default: false },
+        isNone: { type: Boolean, default: false },
 
         // Transaction Type (only one can be true)
         isCredit: { type: Boolean, default: false },
@@ -45,15 +46,6 @@ const ledgerSchema = new Schema(
         // Transaction Metadata
         lastTransactionDate: { type: Date, default: null, index: true },
         referenceNumber: { type: String, default: null, trim: true },
-
-        // Status
-        status: {
-            type: String,
-            enum: ["active", "inactive"],
-            required: true,
-            default: "active",
-        },
-
 
         isActive: { type: Boolean, default: true },
 

@@ -480,9 +480,9 @@ exports.createField = async (req, res, next) => {
             options: options || [],
             isRequired: isRequired || false,
             placeholder,
-            valictRation: aspectRation,
+            aspectRation: aspectRation,
             gridConfig: finalGridConfig,
-            creadation: validation || {},
+            validation: validation,
             aspetedBy: req.user._id,
             groupId: groupId
         });
