@@ -10,6 +10,10 @@ const ledgerService = require("../services/ledger.service");
 
 const ledgerCustomDataSchema = require("../../client/model/ledgerCustomData");
 const { default: mongoose } = require("mongoose");
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -55,9 +59,6 @@ const uploadFilesToS3 = async (file, clientId) => {
 
 // create
 exports.create = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const {
             clientId,
@@ -72,21 +73,19 @@ exports.create = async (req, res, next) => {
             isCustomer,
             isSupplier,
             isEmployee,
+            isNone,
             isCredit,
             isDebit,
             creditLimit,
             creditDays,
             openingBalance,
             openingDate,
-            status
         } = req.body;
 
         const mainUser = req.user;
 
         // Validate required fields
         if (!clientId) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
@@ -95,21 +94,13 @@ exports.create = async (req, res, next) => {
             alias,
             ledgerGroupId,
             ledgerType,
-            isCustomer,
-            isSupplier,
-            isEmployee,
-            isCredit,
-            isDebit,
             creditLimit,
             creditDays,
             openingBalance,
             openingDate,
-            status
         ];
 
         if (requiredFields.some((field) => !field)) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
@@ -122,13 +113,13 @@ exports.create = async (req, res, next) => {
             isCustomer,
             isSupplier,
             isEmployee,
+            isNone,
             isCredit,
             isDebit,
             creditLimit,
             creditDays,
             openingBalance,
             openingDate,
-            status,
             createdBy: mainUser._id,
         };
 
@@ -140,24 +131,16 @@ exports.create = async (req, res, next) => {
             warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
         };
         if (!levelConfig[level]) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
         }
         Object.assign(dataObject, levelConfig[level]);
         if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
         }
         if (['branch', 'warehouse'].includes(level) && !branch) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
         }
         if (level === 'warehouse' && !warehouse) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
         }
         // Add optional fields based on level
@@ -188,60 +171,68 @@ exports.create = async (req, res, next) => {
                 && key !== "isCustomer"
                 && key !== "isSupplier"
                 && key !== "isEmployee"
+                && key !== "isNone"
                 && key !== "isCredit"
                 && key !== "isDebit"
                 && key !== "creditLimit"
                 && key !== "creditDays"
                 && key !== "openingBalance"
                 && key !== "openingDate"
-                && key !== "status"
             ) {
                 otherThanFiles[key] = value;
             }
         }
 
-        // Create ledger with session
-        const newLedger = await ledgerService.create(clientId, dataObject, mainUser, { session });
-
-        const files = [];
-        if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                const uploadResult = await uploadFilesToS3(file, clientId);
-                files.push({
-                    fieldName: uploadResult.fieldName,
-                    fileUrl: uploadResult.url,
-                    originalName: uploadResult.originalName,
-                    mimeType: uploadResult.mimeType,
-                    size: uploadResult.size,
-                    key: uploadResult.key,
-                });
-            }
-        }
-
-        // Get client connection and create custom data with session
+        // All validations passed; now start the DB transaction on the client-specific connection
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const LedgerCustomData = clientConnection.model("ledgerCustomData", ledgerCustomDataSchema);
-        const ledgerCustomData = new LedgerCustomData({
-            otherThanFiles: new Map(Object.entries(otherThanFiles || {})),
-            files,
-            ledgerId: newLedger._id
-        });
+        const session = await clientConnection.startSession();
+        session.startTransaction();
 
-        await ledgerCustomData.save({ session });
+        try {
+            // Create ledger with session
+            const newLedger = await ledgerService.create(clientId, dataObject, mainUser, { session });
 
-        await session.commitTransaction();
-        session.endSession();
+            const files = [];
+            if (req.files && req.files.length > 0) {
+                for (const file of req.files) {
+                    const uploadResult = await uploadFilesToS3(file, clientId);
+                    files.push({
+                        fieldName: uploadResult.fieldName,
+                        fileUrl: uploadResult.url,
+                        originalName: uploadResult.originalName,
+                        mimeType: uploadResult.mimeType,
+                        size: uploadResult.size,
+                        key: uploadResult.key,
+                    });
+                }
+            }
 
-        return res.status(httpStatusCode.OK).json({
-            success: true,
-            message: "created successfully",
-            data: {
-                data: { ledgerId: newLedger._id, ledgerCustomDataId: ledgerCustomData._id },
-            },
-        });
+            // Create custom data with session
+            const LedgerCustomData = clientConnection.model("ledgerCustomData", ledgerCustomDataSchema);
+            const ledgerCustomData = new LedgerCustomData({
+                otherThanFiles: new Map(Object.entries(otherThanFiles || {})),
+                files,
+                ledgerId: newLedger._id
+            });
+
+            await ledgerCustomData.save({ session });
+
+            await session.commitTransaction();
+
+            return res.status(httpStatusCode.OK).json({
+                success: true,
+                message: "created successfully",
+                data: {
+                    data: { ledgerId: newLedger._id, ledgerCustomDataId: ledgerCustomData._id },
+                },
+            });
+        } catch (error) {
+            await session.abortTransaction();
+            throw error; // Rethrow to outer catch
+        } finally {
+            session.endSession();
+        }
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
         console.error("Form creation error:", error);
         return res.status(httpStatusCode.InternalServerError).json({
             success: false,
@@ -487,6 +478,30 @@ exports.getParticular = async (req, res, next) => {
             });
         }
         const result = await ledgerService.getById(clientId, ledgerId);
+        return res.status(statusCode.OK).send({
+            message: message.lblLedgerFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.getCustomData = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, ledgerId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!ledgerId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblLedgerIdIdRequired,
+            });
+        }
+        const result = await ledgerService.getCustomData(clientId, ledgerId);
         return res.status(statusCode.OK).send({
             message: message.lblLedgerFoundSucessfully,
             data: result,

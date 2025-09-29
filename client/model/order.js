@@ -177,6 +177,8 @@ const orderSchema = new Schema(
           quantity: { type: Number, required: true },
           unitPrice: { type: Number, required: true },
           price: { type: Number, required: true },
+          hasDiscount: {type: Boolean, default: false},
+          discountPercent: {type: Number, default: 0}
         },
         customizationDetails: {
           type: Map,

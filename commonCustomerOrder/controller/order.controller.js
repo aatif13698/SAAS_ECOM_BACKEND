@@ -295,13 +295,30 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
         message: "Product stock not found or inactive",
       });
     }
+    
     const priceArray = productMainStock.variant.priceId.price;
     const priceTiers = convertPricingTiers(priceArray);
     const priceObject = priceTiers.find(item =>
       quantity >= item.minQuantity &&
       (item.maxQuantity === null || quantity <= item.maxQuantity)
     ) || null;
-    const calculatedPrice = priceObject?.unitPrice * quantity;
+
+    let calculatedPrice;
+
+    if (!priceObject) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: "Invalid price calculation occured.",
+      });
+    }
+
+    if (priceObject?.hasDiscount == true) {
+      const discountedUnitPrice = priceObject?.unitPrice - priceObject?.unitPrice * (priceObject?.discountPercent / 100);
+      calculatedPrice = quantity * discountedUnitPrice
+    } else {
+      calculatedPrice = quantity * priceObject?.unitPrice
+    }
+
     if (calculatedPrice !== JSON.parse(priceOption)?.price) {
       return res.status(httpStatusCode.Conflict).json({
         success: false,
@@ -501,9 +518,9 @@ exports.placeOrderFromCart = async (req, res, next) => {
       await stock.save({ session });
     }
 
-     const count = await Order.countDocuments({
-        createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
-      });
+    const count = await Order.countDocuments({
+      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    });
 
     let orderCount = count;
 
@@ -594,7 +611,7 @@ exports.placeOrderFromCart = async (req, res, next) => {
     });
   } catch (error) {
     console.log("ererer", error);
-    
+
     if (session) {
       await session.abortTransaction();
     }

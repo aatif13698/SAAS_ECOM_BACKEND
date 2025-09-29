@@ -3,19 +3,45 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
-const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
-const clientCustomFieldSchema = require("../../client/model/customField");
 const ledgerSchema = require("../../client/model/ledger");
+const currencySchema = require("../../client/model/currency");
+const ledgerCustomDataSchema = require("../../client/model/ledgerCustomData");
 
+
+// const create = async (clientId, data, mainUser, options = {}) => {
+//     try {
+//         const { session } = options; 
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const Ledger = clientConnection.model("ledger", ledgerSchema);
+//         const Currency = clientConnection.model("currency", currencySchema);
+//         const currentCurrency = await Currency.findOne({isActive: true});
+//         console.log("currentCurrency", currentCurrency);
+
+//         if(!currentCurrency){
+//             throw new CustomError(statusCode.BadRequest, "Curreny has not been setup yet. Please setup currency first.");
+//         }
+//         const ledger = await Ledger.create([{...data, currency: currentCurrency.code, currencySymbol: currentCurrency.symbol  }], { session }); 
+//         return ledger[0]; 
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error creating ledger: ${error.message}`);
+//     }
+// };
 
 const create = async (clientId, data, mainUser, options = {}) => {
     try {
-        const { session } = options; 
+        const { session } = options;
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
-        const ledger = await Ledger.create([data], { session }); 
-        return ledger[0]; 
+        const Currency = clientConnection.model("currency", currencySchema);
+        const currentCurrency = await Currency.findOne({ isActive: true });
+        console.log("currentCurrency", currentCurrency);
+
+        if (!currentCurrency) {
+            throw new CustomError(statusCode.BadRequest, "Curreny has not been setup yet. Please setup currency first.");
+        }
+        const ledger = await Ledger.create([{ ...data, currency: currentCurrency.code, currencySymbol: currentCurrency.symbol }], { session });
+        return ledger[0];
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating ledger: ${error.message}`);
     }
@@ -23,7 +49,7 @@ const create = async (clientId, data, mainUser, options = {}) => {
 
 const update = async (clientId, ledgerId, updateData, mainUser, options = {}) => {
     try {
-        const { session } = options; 
+        const { session } = options;
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
         const ledger = await Ledger.findById(ledgerId);
@@ -54,14 +80,38 @@ const getById = async (clientId, ledgerId) => {
     }
 };
 
+const getCustomData = async (clientId, ledgerId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const LedgerCustomData = clientConnection.model("ledgerCustomData", ledgerCustomDataSchema);
+
+        const ledger = await Ledger.findById(ledgerId);
+        if (!ledger) {
+            throw new CustomError(statusCode.NotFound, message.lblLedgerNotFound);
+        }
+        const customData = await LedgerCustomData.findOne({ ledgerId: ledgerId })
+        return customData;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing ledger: ${error.message}`);
+    }
+};
+
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
         const [ledgers, total] = await Promise.all([
-            Ledger.find(filters).skip(skip).limit(limit),
+            Ledger.find(filters).skip(skip).limit(limit)
+                .populate({
+                    path: "ledgerGroupId",
+                    model: LedgerGroup,
+                    select: "groupName "
+                }),
             Ledger.countDocuments(filters),
         ]);
         return { count: total, ledgers };
@@ -96,4 +146,5 @@ module.exports = {
     list,
     update,
     activeInactive,
+    getCustomData
 };

@@ -5,13 +5,27 @@ function generateOtp() {
 }
 
 
+// function convertPricingTiers(pricingArray) {
+//   return pricingArray.map((item, index, arr) => ({
+//     minQuantity: item.quantity,
+//     maxQuantity: index < arr.length - 1 ? arr[index + 1].quantity - 1 : null,
+//     unitPrice: item.unitPrice
+//   }));
+// };
+
+
+
+
 function convertPricingTiers(pricingArray) {
   return pricingArray.map((item, index, arr) => ({
     minQuantity: item.quantity,
     maxQuantity: index < arr.length - 1 ? arr[index + 1].quantity - 1 : null,
-    unitPrice: item.unitPrice
+    unitPrice: item.unitPrice,
+    hasDiscount: item?.hasDiscount,
+    discountPercent: item?.discountPercent
   }));
 };
+
 
 
 function groupByStockId(array) {
