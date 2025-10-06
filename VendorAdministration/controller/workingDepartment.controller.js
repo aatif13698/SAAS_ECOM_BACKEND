@@ -131,6 +131,9 @@ exports.update = async (req, res, next) => {
             notes,
         } = req.body;
 
+        console.log("req.body", req.body);
+        
+
         const mainUser = req.user;
         // Validate required fields
         if (!clientId) {
@@ -202,7 +205,6 @@ exports.update = async (req, res, next) => {
         // update 
         const updated = await workingDepartmentService.update(clientId, workingDepartmentId, dataObject);
 
-        await existingStaff.save();
         return res.status(statusCode.OK).send({
             message: message.lblShiftUpdatedSuccess,
         });
@@ -295,7 +297,7 @@ exports.activeinactive = async (req, res, next) => {
         req.query.perPage = perPage;
         if (!clientId || !id) {
             return res.status(400).send({
-                message: message.lblEmployeeIdIdAndClientIdRequired,
+                message: message.lblWorkingDepaermentIdIdAndClientIdRequired,
             });
         }
         const updated = await workingDepartmentService.activeInactive(clientId, id, {

@@ -24,9 +24,9 @@ router.get('/all/field/document/requirement', entityAuth.authorizeEntity("Accoun
 
 router.post("/create/field", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), documentRequirementController.createField);
 
-router.delete('/delete/field/:groupId/:clientId/:fieldId', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), documentRequirementController.deleteField);
+router.delete('/delete/field/:documentRequirementId/:clientId/:fieldId', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), documentRequirementController.deleteField);
 
-router.post("/update/order/field/:groupId/:clientId", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), documentRequirementController.updateFieldOrder);
+router.post("/update/order/field/:documentRequirementId/:clientId", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), documentRequirementController.updateFieldOrder);
 
 
 // # create, update, view, list, activate/inactive ledger group
