@@ -330,6 +330,17 @@ module.exports = {
   lblVoucherGroupIdIdRequired: "VoucherGroup Id id required!",
 
 
+  // voucher
+  lblVoucherAlreadyExists: "Voucher already exists with this email or phone!",
+  lblVoucherCreatedSuccess: "Voucher created successfully!",
+  lblVoucherUpdatedSuccess: "Voucher updated successfully!",
+  lblVoucherIdAndClientIdRequired: " Voucher Id and Client Id are required!",
+  lblVoucherNotFound: "Voucher not found!",
+  lblVoucherFoundSucessfully: "Voucher found successfully!",
+  lblVoucherIdIdAndClientIdRequired: "Voucher Id and Client Id are required!",
+  lblVoucherIdIdRequired: "Voucher Id id required!",
+
+
 
 
 

@@ -330,6 +330,18 @@ const defaultPersmissionsList = [
                     activeActive: { id: 125, access: false, api: "/demo/path" },
                 }
             },
+            {
+                name: "Voucher ",
+                displayName: "All Voucher",
+                access: false,
+                subMenus: {
+                    create: { id: 126, access: false, api: "/demo/path" },
+                    view: { id: 127, access: false, api: "/demo/path" },
+                    update: { id: 128, access: false, api: "/demo/path" },
+                    softDelete: { id: 129, access: false, api: "/demo/path" },
+                    activeActive: { id: 130, access: false, api: "/demo/path" },
+                }
+            }
         ]
     },
 ];
@@ -664,6 +676,18 @@ const vendorPersmissionsList = [
                     activeActive: { id: 125, access: true, api: "/demo/path" },
                 }
             },
+            {
+                name: "Voucher ",
+                displayName: "All Voucher",
+                access: true,
+                subMenus: {
+                    create: { id: 126, access: true, api: "/demo/path" },
+                    view: { id: 127, access: true, api: "/demo/path" },
+                    update: { id: 128, access: true, api: "/demo/path" },
+                    softDelete: { id: 129, access: true, api: "/demo/path" },
+                    activeActive: { id: 130, access: true, api: "/demo/path" },
+                }
+            }
         ]
     },
 ];
