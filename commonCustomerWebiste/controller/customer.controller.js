@@ -9,6 +9,7 @@ const productVariantSchema = require("../../client/model/productVariant");
 const clientRoleSchema = require("../../client/model/role");
 const clinetSubCategorySchema = require("../../client/model/subCategory");
 const clinetUserSchema = require("../../client/model/user");
+const wishListSchema = require("../../client/model/wishList");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const { convertPricingTiers } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
@@ -956,11 +957,11 @@ exports.getCart = async (req, res, next) => {
             {
               path: 'variant',
               model: ProductVariant,
-              select: "priceId ", 
+              select: "priceId ",
               populate: {
                 path: 'priceId',
                 model: ProductRate,
-                select : "price product variant"
+                select: "price product variant"
               }
             }
           ],
@@ -1001,5 +1002,293 @@ exports.getCart = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// add to wishlist
+exports.addToWishList = async (req, res, next) => {
+  try {
+    const { clientId, productStockId, productMainStockId, sessionId } = req.body;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const userId = req.user ? req.user._id : null; // From auth middleware
+    // Validate input
+    if (!productStockId || !productMainStockId) {
+      return res.status(httpStatusCode.BadRequest).send({
+        success: false,
+        message: message.lblRequiredFieldMissing,
+      });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Stock = clientConnection.model("productStock", productStockSchema);
+    const WishList = clientConnection.model("wishlist", wishListSchema)
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+
+    // Fetch product stock
+    const productStock = await Stock.findById(productStockId);
+    if (!productStock || !productStock.isActive) {
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "Product stock not found or inactive",
+      });
+    }
+
+    const productMainStock = await MainStock.findById(productMainStockId).populate({
+      path: 'product',
+      model: ProductBluePrint
+    }).populate({
+      path: 'variant',
+      model: ProductVariant,
+      populate: {
+        path: 'priceId',
+        model: ProductRate
+      }
+
+    });
+
+    if (!productMainStock || !productMainStock.isActive) {
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "Product stock not found or inactive",
+      });
+    }
+
+    // Find or create wishlist
+    let wishlist;
+    if (userId) {
+      wishlist = await WishList.findOne({ user: userId });
+      if (!wishlist) {
+        wishlist = new WishList({ user: userId, createdBy: userId });
+      }
+    } else if (sessionId) {
+      wishlist = await WishList.findOne({ sessionId, isGuest: true });
+      if (!wishlist) {
+        wishlist = new WishList({ sessionId, isGuest: true });
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "User or session ID required",
+      });
+    }
+    // Check if item already exists in wishlist
+    const itemIndex = wishlist.items.findIndex(
+      (item) => item.productMainStock.toString() === productMainStock.toString()
+    );
+    if (itemIndex > -1) {
+      // Update quantity if item exists
+      wishlist.items[itemIndex].quantity += quantity;
+    } else {
+      // Add new item
+      wishlist.items.push({
+        productStock: productStockId,
+        productMainStock: productMainStockId,
+      });
+    }
+    // Save wishlist
+    await wishlist.save();
+    res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "Item added to wishlist",
+      data: wishlist,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// get wishlist
+exports.getWishList = async (req, res, next) => {
+  try {
+    const { sessionId, clientId } = req.query; // From query params
+    const userId = req.user ? req.user._id : null; // From auth middleware, if present
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Cart = clientConnection.model("cart", cartSchema);
+    const WishList = clientConnection.model("wishlist", wishListSchema)
+
+    const Stock = clientConnection.model("productStock", productStockSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+
+
+
+    const ProductBluePrint = clientConnection.model(
+      "productBlueprint",
+      productBlueprintSchema
+    );
+
+    if (!userId && !sessionId) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: "User authentication or session ID is required",
+      });
+    }
+    let wishList;
+    if (userId) {
+      // Fetch cart for authenticated user
+      wishList = await WishList.findOne({ user: userId })
+        .populate({
+          path: "items.productStock",
+          model: Stock,
+          select: " _id product ",
+          populate: {
+            path: "product",
+            model: ProductBluePrint,
+            select: "name description images sku categoryId subCategoryId brandId",
+
+          },
+        })
+        .populate({
+          path: "items.productMainStock",
+          model: MainStock,
+          populate: [
+            {
+              path: 'variant',
+              model: ProductVariant,
+              select: "priceId ",
+              populate: {
+                path: 'priceId',
+                model: ProductRate,
+                select: "price product variant"
+              }
+            }
+          ],
+          select: "name priceId description totalStock images onlineStock"
+        })
+        .lean(); // Return plain JS object for performance
+    } else if (sessionId) {
+      wishList = await WishList.findOne({
+        sessionId,
+        isGuest: true,
+      }).populate({
+        path: "items.productStock",
+        model: Stock,
+        select: " _id product ",
+        populate: {
+          path: "product",
+          model: ProductBluePrint,
+          select: "name description images sku categoryId subCategoryId brandId",
+        },
+      }).populate({
+        path: "items.productMainStock",
+        model: MainStock,
+      })
+        .lean();
+    }
+    if (!wishList) {
+      return res.status(httpStatusCode.NotFound).json({
+        success: false,
+        message: "WishList not found",
+      });
+    }
+    res.status(httpStatusCode.OK).json({
+      success: true,
+      message: "WishList retrieved successfully",
+      data: wishList,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// remove from wish list
+exports.removeFromWishList = async (req, res, next) => {
+  const maxRetries = 3;
+  let retries = 0;
+  while (retries < maxRetries) {
+    try {
+      const { clientId, productStockId, sessionId } = req.body;
+      if (!clientId) {
+        return res
+          .status(httpStatusCode.BadRequest)
+          .send({ message: message.lblClinetIdIsRequired });
+      }
+      const userId = req.user ? req.user._id : null; // From auth middleware
+      // Validate input
+      if (!productStockId) {
+        return res.status(httpStatusCode.BadRequest).send({
+          success: false,
+          message: "Product stock ID is required",
+        });
+      }
+      const clientConnection = await getClientDatabaseConnection(clientId);
+      const WishList = clientConnection.model("wishlist", wishListSchema)
+      // Find the cart
+      let wishList;
+      if (userId) {
+        wishList = await WishList.findOne({ user: userId, });
+      } else if (sessionId) {
+        wishList = await WishList.findOne({
+          sessionId,
+        
+          isGuest: true,
+        });
+      } else {
+        return res.status(httpStatusCode.BadRequest).json({
+          success: false,
+          message: "User or session ID required",
+        });
+      }
+
+      if (!wishList) {
+        return res.status(httpStatusCode.NotFound).json({
+          success: false,
+          message: "wishList not found",
+        });
+      }
+
+      // Find item in cart
+      const itemIndex = wishList.items.findIndex(
+        (item) => item.productStock.toString() === productStockId
+      );
+      if (itemIndex === -1) {
+        return res.status(httpStatusCode.BadRequest).json({
+          success: false,
+          message: "Item not found in wishList",
+        });
+      }
+     
+     
+      // Remove item from cart
+      wishList.items.splice(itemIndex, 1);
+     
+      // Save wishList with optimistic locking
+      await wishList.save(); // Throws VersionError if modified concurrently
+
+      return res.status(httpStatusCode.OK).json({
+        success: true,
+        message: "Item removed from wishList",
+        data: wishList,
+      });
+    } catch (error) {
+      if (error.name === "VersionError") {
+        retries++;
+        if (retries === maxRetries) {
+          return res.status(409).json({
+            success: false,
+            message: "Conflict detected after max retries. Please try again.",
+          });
+        }
+        // Exponential backoff before retrying
+        await new Promise((resolve) => setTimeout(resolve, 100 * retries));
+        continue;
+      }
+      next(error);
+    }
   }
 };

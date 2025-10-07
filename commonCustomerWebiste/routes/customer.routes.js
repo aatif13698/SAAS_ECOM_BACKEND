@@ -39,6 +39,12 @@ router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), cu
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);
 
+router.post('/wishlist/add/new', customerAuth.customer, uploadCustomizable.any(), customerCoontroller.addToWishList);
+router.get("/wishlist", customerAuth.customer, customerCoontroller.getWishList);
+router.delete("/wishlist/remove", customerAuth.customer, customerCoontroller.removeFromWishList);
+
+
+
  
 
 
