@@ -22,11 +22,11 @@ router.get('/list/asset', entityAuth.authorizeEntity("Administration", "Employee
 
 router.post("/activeInactive/asset", entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.activeinactive);
 
-app.post('/asset/:assetId/assign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.assign );
+// router.post('/asset/:assetId/assign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.assign );
 
-app.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.unAssign );
+// router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.unAssign );
 
-app.post('/create/asset/request', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.createRequest );
+router.post('/create/asset/request', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.createRequest );
 
 
 // # create, update, view, list, activate/inactive  woring department

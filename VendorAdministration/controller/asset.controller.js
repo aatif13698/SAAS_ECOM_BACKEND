@@ -24,7 +24,6 @@ exports.create = async (req, res, next) => {
             warehouse,
 
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -40,6 +39,7 @@ exports.create = async (req, res, next) => {
             expirationDate,
         } = req.body;
 
+
         const mainUser = req.user;
 
         // Validate required fields
@@ -49,7 +49,6 @@ exports.create = async (req, res, next) => {
 
         const requiredFields = [
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -59,11 +58,12 @@ exports.create = async (req, res, next) => {
             status,
             condition,
             warrantyEndDate,
-            disposalDate,
-            disposalReason,
             notes,
             expirationDate,
         ];
+
+        console.log("requiredFields", requiredFields);
+        
 
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
@@ -72,7 +72,6 @@ exports.create = async (req, res, next) => {
         // Base data object
         const dataObject = {
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -152,7 +151,6 @@ exports.update = async (req, res, next) => {
             warehouse,
 
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -176,7 +174,6 @@ exports.update = async (req, res, next) => {
 
         const requiredFields = [
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -186,8 +183,6 @@ exports.update = async (req, res, next) => {
             status,
             condition,
             warrantyEndDate,
-            disposalDate,
-            disposalReason,
             notes,
             expirationDate
         ];
@@ -198,7 +193,6 @@ exports.update = async (req, res, next) => {
         // Base data object
         const dataObject = {
             assetName,
-            assetType,
             serialNumber,
             model,
             purchaseDate,
@@ -257,7 +251,6 @@ exports.update = async (req, res, next) => {
         // update 
         const updated = await assetService.update(clientId, assetId, dataObject);
 
-        await existingStaff.save();
         return res.status(statusCode.OK).send({
             message: message.lblAssetUpdatedSuccess,
         });
@@ -363,32 +356,32 @@ exports.activeinactive = async (req, res, next) => {
 };
 
 // assign
-exports.assign = async (req, res, next) => {
-    try {
-        const { useId } = req.body;
-        const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
-        return res.status(statusCode.OK).send({
-            message: message.lblAssetCreatedSuccess,
-            data: { newAssigned: newAssigned._id },
-        });
-    } catch (error) {
-        next(error);
-    }
-};
+// exports.assign = async (req, res, next) => {
+//     try {
+//         const { useId } = req.body;
+//         const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
+//         return res.status(statusCode.OK).send({
+//             message: message.lblAssetCreatedSuccess,
+//             data: { newAssigned: newAssigned._id },
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
 // unassign
-exports.unAssign = async (req, res, next) => {
-    try {
-        const { useId } = req.body;
-        const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
-        return res.status(statusCode.OK).send({
-            message: message.lblAssetCreatedSuccess,
-            data: { newAssigned: newAssigned._id },
-        });
-    } catch (error) {
-        next(error);
-    }
-};
+// exports.unAssign = async (req, res, next) => {
+//     try {
+//         const { useId } = req.body;
+//         const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
+//         return res.status(statusCode.OK).send({
+//             message: message.lblAssetCreatedSuccess,
+//             data: { newAssigned: newAssigned._id },
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 
 
 // create request

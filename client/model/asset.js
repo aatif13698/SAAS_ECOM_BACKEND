@@ -17,7 +17,6 @@ const clientAssetSchema = new Schema(
         isWarehouseLevel: { type: Boolean, default: false },
 
         assetName: { type: String, required: true },
-        assetType: { type: String, required: true },
         serialNumber: { type: String, unique: true, required: true },
         model: { type: String },
         purchaseDate: { type: Date },
@@ -40,6 +39,8 @@ const clientAssetSchema = new Schema(
             defectInterval: { type: Number }, // e.g., days since last defect
             notes: { type: String },
         }],
+        isActive: { type: Boolean, default: false },
+
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
         updatedAt: { type: Date, default: null, index: true },
