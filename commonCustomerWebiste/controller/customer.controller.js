@@ -1254,7 +1254,7 @@ exports.removeFromWishList = async (req, res, next) => {
 
       // Find item in cart
       const itemIndex = wishList.items.findIndex(
-        (item) => item.productStock.toString() === productStockId
+        (item) => item.productMainStock.toString() === productStockId
       );
       if (itemIndex === -1) {
         return res.status(httpStatusCode.BadRequest).json({

@@ -28,6 +28,7 @@ const PRIVATEKEY = process.env.PRIVATEKEY;
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const wishListSchema = require("../../client/model/wishList");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -270,6 +271,7 @@ exports.signIn = async (req, res, next) => {
 
         const clientConnection = await getClientDatabaseConnection(clientId);
         const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const WishList = clientConnection.model("wishlist", wishListSchema)
         const customerAddress = clientConnection.model(
             "customerAddress",
             customerAddressSchema
@@ -294,12 +296,16 @@ exports.signIn = async (req, res, next) => {
             customerId: userExist._id,
             deletedAt: null,
         });
+        const wishList = await WishList.findOne({
+            user: userExist._id,
+        });
 
         return res.status(statusCode.OK).send({
             token,
             expiryTime,
             customerInfo: userExist,
             addresses: addresses,
+            wishList: wishList,
             message: message.lblLoginSuccess
         });
 
