@@ -285,6 +285,47 @@ exports.list = async (req, res, next) => {
     }
 };
 
+// all
+exports.all = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+        };
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: levelId
+            }
+        }
+        const result = await voucherGroupService.all(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblVoucherGroupFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 // active inactive
 exports.activeinactive = async (req, res, next) => {
     try {

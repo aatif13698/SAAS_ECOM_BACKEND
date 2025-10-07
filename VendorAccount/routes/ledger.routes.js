@@ -22,6 +22,8 @@ router.get('/get/custom/data/ledger/:clientId/:ledgerId', entityAuth.authorizeEn
 
 router.get('/list/ledger', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerController.list);
 
+router.get('/all/ledger', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerController.all);
+
 router.post("/activeInactive/ledger", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerController.activeinactive);
 
 // # create, update, view, list, activate/inactive ledger group

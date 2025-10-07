@@ -120,6 +120,25 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const all = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const [ledgers] = await Promise.all([
+            Ledger.find(filters)
+                .populate({
+                    path: "ledgerGroupId",
+                    model: LedgerGroup,
+                    select: "groupName "
+                }),
+        ]);
+        return { ledgers };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing ledger: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, groupId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -146,5 +165,6 @@ module.exports = {
     list,
     update,
     activeInactive,
-    getCustomData
+    getCustomData,
+    all
 };

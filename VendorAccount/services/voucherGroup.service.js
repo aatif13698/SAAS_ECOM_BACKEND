@@ -44,6 +44,24 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const all = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const [voucherGroups] = await Promise.all([
+            VoucherGroup.find(filters)
+                .populate({
+                    path: "financialYear",
+                    model: FinancialYear
+            }),
+        ]);
+        return { voucherGroups };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing voucher group: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, voucherGroupId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -81,4 +99,5 @@ module.exports = {
     list,
     update,
     activeInactive,
+    all
 };

@@ -17,6 +17,8 @@ router.post('/create/voucherGroup', entityAuth.authorizeEntity("Accounting Maste
 
 router.get('/list/voucherGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), voucherGroupController.list);
 
+router.get('/all/voucherGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), voucherGroupController.all);
+
 router.post("/activeInactive/voucherGroup", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), voucherGroupController.activeinactive);
 
 router.put('/update/voucherGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), voucherGroupController.update);
