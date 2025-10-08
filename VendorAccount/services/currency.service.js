@@ -32,6 +32,19 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const all = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Currency = clientConnection.model("currency", currencySchema);
+        const [currencies] = await Promise.all([
+            Currency.find({})
+        ]);
+        return { currencies };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing currency: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, currencyId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -68,6 +81,7 @@ module.exports = {
     list,
     update,
     activeInactive,
+    all
 };
 
 

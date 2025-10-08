@@ -19,6 +19,9 @@ router.post("/activeInactive/currency", entityAuth.authorizeEntity("Accounting M
 
 router.put('/update/currency', entityAuth.authorizeEntity("Accounting Master", "Currency", "update"), currencyController.update);
 
+router.get('/all/currency', entityAuth.authorizeEntity("Accounting Master", "Currency", "create"), currencyController.all);
+
+
 // # create, update, view, list, activate/inactive Currency
 
 

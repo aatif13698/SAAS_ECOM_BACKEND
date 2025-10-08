@@ -25,6 +25,8 @@ exports.create = async (req, res, next) => {
             startDate,
             endDate,
             notes,
+            name,
+            alias
         } = req.body;
 
         const mainUser = req.user;
@@ -35,7 +37,8 @@ exports.create = async (req, res, next) => {
         }
 
         const requiredFields = [
-            startDate, endDate, notes
+            startDate, endDate, notes, name,
+            alias
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -45,7 +48,8 @@ exports.create = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
-            startDate, endDate, notes,
+            startDate, endDate, notes, name,
+            alias, 
             createdBy: mainUser._id,
         };
 

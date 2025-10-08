@@ -6,6 +6,8 @@ const CustomError = require("../../utils/customeError");
 const voucherSchema = require("../../client/model/voucher");
 const financialYearSchema = require("../../client/model/financialYear");
 const { v4: uuidv4 } = require('uuid');
+const ledgerSchema = require("../../client/model/ledger");
+const currencySchema = require("../../client/model/currency");
 
 
 
@@ -103,7 +105,7 @@ const update = async (clientId, voucherLinkId, dataObject) => {
         });
         return true
     } catch (error) {
-         if (session) {
+        if (session) {
             await session.endSession();
         }
         throw new CustomError(error.statusCode || 500, `Error updating voucher group: ${error.message}`);
@@ -115,6 +117,9 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Voucher = clientConnection.model("voucher", voucherSchema);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const Currency = clientConnection.model("currency", currencySchema);
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
@@ -123,6 +128,14 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                 .populate({
                     path: "financialYear",
                     model: FinancialYear
+                })
+                .populate({
+                    path: "ledger",
+                    model: Ledger
+                })
+                 .populate({
+                    path: "currency",
+                    model: Currency
                 }),
             Voucher.countDocuments(filters),
         ]);

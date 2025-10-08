@@ -73,6 +73,7 @@ const ledger = require("./VendorAccount/routes/ledger.routes.js");
 const financialYear = require("./VendorAccount/routes/financialYear.routes.js");
 const currency = require("./VendorAccount/routes/currency.routes.js");
 const voucherGroup = require("./VendorAccount/routes/voucherGroup.routes.js");
+const Voucher = require("./VendorAccount/routes/voucher.routes.js");
 
 
 
@@ -165,6 +166,7 @@ app.use("/api/vendor/accounts/l", ledger.router);
 app.use("/api/vendor/accounts/fy", financialYear.router);
 app.use("/api/vendor/accounts/cu", currency.router);
 app.use("/api/vendor/accounts/vg", voucherGroup.router);
+app.use("/api/vendor/accounts/vo", Voucher.router);
 
 
 

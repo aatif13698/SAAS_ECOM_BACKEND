@@ -97,6 +97,26 @@ exports.list = async (req, res, next) => {
     }
 };
 
+exports.all = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.query;
+        console.log("req.query", req.query);
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const result = await currencyService.all(clientId);
+        return res.status(statusCode.OK).send({
+            message: message.lblFinancialYearFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // active inactive
 exports.activeinactive = async (req, res, next) => {
     try {
