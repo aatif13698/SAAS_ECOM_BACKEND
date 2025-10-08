@@ -45,6 +45,10 @@ const productMainStockSchema = new Schema(
         lastRestockedAt: { type: Date },
         isBulkType: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
+
+        averageRating: { type: Number, default: 0 },
+        reviewCount: { type: Number, default: 0 },
+
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         deletedAt: { type: Date, default: null, index: true },
         updatedAt: { type: Date, default: null, index: true },

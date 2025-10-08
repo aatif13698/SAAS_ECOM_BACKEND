@@ -9,8 +9,9 @@ const customerCoontroller = require("../controller/customer.controller");
 
 const customerAuth = require("../../middleware/authorization/customer");
 const {
-    uploadCustomizable
-    
+    uploadCustomizable,
+    uploadProductBlueprintToS3
+
 } = require('../../utils/multer');
 const httpStatusCode = require("../../utils/http-status-code");
 
@@ -39,13 +40,46 @@ router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), cu
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);
 
+// routes for wishlist
 router.post('/wishlist/add/new', customerAuth.customer, uploadCustomizable.any(), customerCoontroller.addToWishList);
 router.get("/wishlist", customerAuth.customer, customerCoontroller.getWishList);
 router.delete("/wishlist/remove", customerAuth.customer, customerCoontroller.removeFromWishList);
 
 
 
- 
+// routes for rating and reviews
+router.post(
+    '/create/ratingAndReview',
+    customerAuth.customer,
+    uploadProductBlueprintToS3.array("file", 5),
+    async (req, res, next) => {
+        try {
+            // Validate file uploads
+            if (req.files && req.files.length > 0) {
+                const allowedMimetypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                for (const file of req.files) {
+                    if (!allowedMimetypes.includes(file.mimetype)) {
+                        return res.status(400).send({
+                            message: 'Invalid file type. Only JPEG, PNG, GIF, and WEBP are allowed.'
+                        });
+                    }
+                }
+            }
+            // Process the request
+            await customerCoontroller.postRating(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
+        }
+    }
+);
+
+router.get('/get/review/product/:clientId/:productMainStockId', customerAuth.customer, customerCoontroller.getReviewsByProduct);
+
+router.get('/get/all/review/customer/:clientId/:userId', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
+
 
 
 
