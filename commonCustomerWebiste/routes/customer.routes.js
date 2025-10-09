@@ -10,7 +10,8 @@ const customerCoontroller = require("../controller/customer.controller");
 const customerAuth = require("../../middleware/authorization/customer");
 const {
     uploadCustomizable,
-    uploadProductBlueprintToS3
+    uploadProductBlueprintToS3,
+    uploadCustomizationFileToS3
 
 } = require('../../utils/multer');
 const httpStatusCode = require("../../utils/http-status-code");
@@ -36,7 +37,7 @@ router.post('/vendor/deleteAddress', entityAuth.authorizeEntity("Administration"
 // routes for cart
 router.post("/cart/add", customerAuth.customer, customerCoontroller.addToCart);
 
-router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), customerCoontroller.addToCartNew);
+router.post('/cart/add/new', customerAuth.customer, uploadCustomizationFileToS3.any(), customerCoontroller.addToCartNew);
 router.post('/cart/change/quantity', customerAuth.customer, customerCoontroller.addToCartNew);
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);

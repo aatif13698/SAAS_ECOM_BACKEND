@@ -63,6 +63,33 @@ const uploadProductImageToS3 = async (file, clientId) => {
   }
 };
 
+const uploadCustomizationFileToS3 = async (file, clientId) => {
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  const fileName = `saasEcommerce/${clientId}/customization/${uuidv4()}${fileExtension}`;
+  const params = {
+    Bucket: process.env.DO_SPACES_BUCKET,
+    Key: fileName,
+    Body: file.buffer,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+    Metadata: {
+      'original-filename': file.originalname
+    }
+  };
+  try {
+    const { Location } = await s3.upload(params).promise();
+    return {
+      success: true,
+      url: Location,
+      key: fileName
+    };
+  } catch (error) {
+    console.log("error in s3", error);
+
+    throw new Error(`Failed to upload to S3: ${error.message}`);
+  }
+};
+
 
 
 
@@ -603,20 +630,51 @@ exports.addToCartNew = async (req, res, next) => {
       }
     }
 
-    // Handle file uploads
+
+    // Handle file uploads to S3
     if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        customizationFiles.push({
-          fieldName: file.fieldname,
-          fileUrl: `/public/customizations/${file.filename}`, // Correct path
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-        });
+      const uploadPromises = req.files.map(async (file) => {
+        try {
+          const { url, key } = await uploadCustomizationFileToS3(file, clientId);
+          return {
+            fieldName: file.fieldname,
+            fileUrl: url,
+            key: key,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
+          };
+        } catch (error) {
+          throw new Error(`Failed to upload file ${file.originalname}: ${error.message}`);
+        }
       });
-    } else {
-      console.log("No files uploaded"); // Debug log
+
+      try {
+        customizationFiles.push(...await Promise.all(uploadPromises));
+      } catch (error) {
+        return res.status(httpStatusCode.StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message: error.message,
+        });
+      }
     }
+
+
+
+    // // Handle file uploads
+    // if (req.files && req.files.length > 0) {
+    //   req.files.forEach((file) => {
+    //     customizationFiles.push({
+    //       fieldName: file.fieldname,
+    //       fileUrl: `/public/customizations/${file.filename}`, // Correct path
+    //       originalName: file.originalname,
+    //       mimeType: file.mimetype,
+    //       size: file.size,
+    //     });
+    //   });
+    // } else {
+    //   console.log("No files uploaded"); // Debug log
+    // }
 
 
     const clientConnection = await getClientDatabaseConnection(clientId);
@@ -1466,24 +1524,24 @@ exports.getAllReviewsByCustomer = async (req, res) => {
     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
 
     const reviews = await RatingAndReview.find({ customerId: userId })
-    .populate({
-      path: "productStock",
-      model: ProductStock,
-      populate: {
-        path: "product", // Assuming productStock has a 'product' ref
-        model: ProductBluePrint,
-        select: "name images isCustomizable _id", // Only fetch necessary fields
-      },
-    })
-    .populate({
-      path: "productMainStockId",
-      model: MainStock,
-      // populate: {
-      //   path: "product", // Assuming productStock has a 'product' ref
-      //   model: MainStock,
-      //   select: "name images isCustomizable _id", // Only fetch necessary fields
-      // },
-    })
+      .populate({
+        path: "productStock",
+        model: ProductStock,
+        populate: {
+          path: "product", // Assuming productStock has a 'product' ref
+          model: ProductBluePrint,
+          select: "name images isCustomizable _id", // Only fetch necessary fields
+        },
+      })
+      .populate({
+        path: "productMainStockId",
+        model: MainStock,
+        // populate: {
+        //   path: "product", // Assuming productStock has a 'product' ref
+        //   model: MainStock,
+        //   select: "name images isCustomizable _id", // Only fetch necessary fields
+        // },
+      })
       .sort(sort)
     // .skip((page - 1) * limit)
     // .limit(parseInt(limit))
