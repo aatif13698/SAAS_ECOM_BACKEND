@@ -17,7 +17,56 @@ const { convertPricingTiers } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
 
 const message = require("../../utils/message");
-const { path } = require("../../client/model/ledgerGroup");
+
+
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET,
+  s3ForcePathStyle: true,
+  maxRetries: 5,
+  retryDelayOptions: { base: 500 },
+  httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadProductImageToS3 = async (file, clientId) => {
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  const fileName = `saasEcommerce/${clientId}/products/${uuidv4()}${fileExtension}`;
+  const params = {
+    Bucket: process.env.DO_SPACES_BUCKET,
+    Key: fileName,
+    Body: file.buffer,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+    Metadata: {
+      'original-filename': file.originalname
+    }
+  };
+  try {
+    const { Location } = await s3.upload(params).promise();
+    return {
+      success: true,
+      url: Location,
+      key: fileName
+    };
+  } catch (error) {
+    console.log("error in s3", error);
+
+    throw new Error(`Failed to upload to S3: ${error.message}`);
+  }
+};
+
+
+
+
+
 
 // verify otp
 exports.getCategoryAndSubCategory = async (req, res) => {
@@ -1301,18 +1350,18 @@ exports.removeFromWishList = async (req, res, next) => {
 // post rating
 exports.postRating = async (req, res, next) => {
   try {
-    const { clientId, productMainStockId, rating, name, description, images } = req.body;
+    const { clientId, productMainStockId, productStock, rating, name, description } = req.body;
     // const customerId = req.user.id; // From auth middleware, assuming JWT with user.id as clientUsers _id
     const customerId = req.user ? req.user._id : null; // From auth middleware, if present
 
     // Validate required fields
-    if (!productMainStockId || !rating) {
+    if (!productMainStockId || !productStock || !rating) {
       return res.status(httpStatusCode.BadRequest).json({ message: 'productMainStockId and rating are required' });
     }
 
     // Validate rating: between 1 and 5, in 0.5 increments
-    if (typeof rating !== 'number' || rating < 1 || rating > 5 || (rating * 2) % 1 !== 0) {
-      return res.status(httpStatusCode.BadRequest).json({ message: 'Rating must be between 1 and 5 in 0.5 increments (e.g., 1, 1.5, 2, ..., 5)' });
+    if (Number(rating) < 1 || Number(rating) > 5) {
+      return res.status(httpStatusCode.BadRequest).json({ message: 'Rating must be between 1 and 5 ' });
     }
 
     const clientConnection = await getClientDatabaseConnection(clientId);
@@ -1343,8 +1392,9 @@ exports.postRating = async (req, res, next) => {
 
     const dataObject = {
       customerId,
+      productStock,
       productMainStockId,
-      rating,
+      rating: Number(rating),
       name: name || null,
       description: description || null,
       createdBy: customerId, // Assuming createdBy is the same as customerId
@@ -1406,14 +1456,37 @@ exports.getReviewsByProduct = async (req, res) => {
 
 exports.getAllReviewsByCustomer = async (req, res) => {
   try {
-    const { clientId, userId } = req.params;
+    const { clientId } = req.query; // Using query param for clientId
+    const userId = req.user ? req.user._id : null; // From auth middleware   
     const { page = 1, limit = 10, sort = '-createdAt' } = req.query; // Pagination and sorting
     const clientConnection = await getClientDatabaseConnection(clientId);
     const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
     const reviews = await RatingAndReview.find({ customerId: userId })
+    .populate({
+      path: "productStock",
+      model: ProductStock,
+      populate: {
+        path: "product", // Assuming productStock has a 'product' ref
+        model: ProductBluePrint,
+        select: "name images isCustomizable _id", // Only fetch necessary fields
+      },
+    })
+    .populate({
+      path: "productMainStockId",
+      model: MainStock,
+      // populate: {
+      //   path: "product", // Assuming productStock has a 'product' ref
+      //   model: MainStock,
+      //   select: "name images isCustomizable _id", // Only fetch necessary fields
+      // },
+    })
       .sort(sort)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
+    // .skip((page - 1) * limit)
+    // .limit(parseInt(limit))
 
     const total = await RatingAndReview.countDocuments({ customerId: userId });
     res.status(200).json({

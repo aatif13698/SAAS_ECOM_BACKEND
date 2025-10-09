@@ -79,7 +79,7 @@ router.post(
 
 router.get('/get/review/product/:clientId/:productMainStockId', customerAuth.customer, customerCoontroller.getReviewsByProduct);
 
-router.get('/get/all/review/customer/:clientId/:userId', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
+router.get('/get/all/review/customer', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
 
 
 
