@@ -78,7 +78,39 @@ router.post(
     }
 );
 
+
+// routes for rating and reviews
+router.post(
+    '/update/ratingAndReview',
+    customerAuth.customer,
+    uploadProductBlueprintToS3.array("file", 5),
+    async (req, res, next) => {
+        try {
+            // Validate file uploads
+            if (req.files && req.files.length > 0) {
+                const allowedMimetypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                for (const file of req.files) {
+                    if (!allowedMimetypes.includes(file.mimetype)) {
+                        return res.status(400).send({
+                            message: 'Invalid file type. Only JPEG, PNG, GIF, and WEBP are allowed.'
+                        });
+                    }
+                }
+            }
+            // Process the request
+            await customerCoontroller.updateRating(req, res, next);
+        } catch (error) {
+            console.error('Upload Error:', error.message);
+            return res.status(400).send({
+                message: error.message
+            });
+        }
+    }
+);
+
 router.get('/get/review/product/:clientId/:productMainStockId', customerAuth.customer, customerCoontroller.getReviewsByProduct);
+router.get('/get/review/one/product/:reviewId', customerAuth.customer, customerCoontroller.getReviewsByReviewId);
+router.delete('/delete/review/:clientId/:id', customerAuth.customer, customerCoontroller.deleteReview);
 
 router.get('/get/all/review/customer', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
 

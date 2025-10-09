@@ -1478,6 +1478,81 @@ exports.postRating = async (req, res, next) => {
   }
 };
 
+// update rating
+exports.updateRating = async (req, res, next) => {
+  try {
+    const { clientId, reviewId, productMainStockId, productStock, rating, name, description } = req.body;
+    // const customerId = req.user.id; // From auth middleware, assuming JWT with user.id as clientUsers _id
+    const customerId = req.user ? req.user._id : null; // From auth middleware, if present
+
+
+    console.log("req.body", req.body);
+
+
+    // Validate required fields
+    if (!productMainStockId || !productStock || !rating) {
+      return res.status(httpStatusCode.BadRequest).json({ message: 'productMainStockId and rating are required' });
+    }
+
+    // Validate rating: between 1 and 5, in 0.5 increments
+    if (Number(rating) < 1 || Number(rating) > 5) {
+      return res.status(httpStatusCode.BadRequest).json({ message: 'Rating must be between 1 and 5 ' });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+
+    // Check if product exists
+    const product = await ProductMainStock.findById(productMainStockId);
+    if (!product) {
+      return res.status(httpStatusCode.NotFound).json({ message: 'Product not found' });
+    }
+
+    // Check if customer has already reviewed this product (prevent duplicates)
+    const existingReview = await RatingAndReview.findById(reviewId);
+    if (!existingReview) {
+      return res.status(httpStatusCode.NotFound).json({ message: 'Review not found' });
+    }
+
+    // Placeholder: Check if customer purchased the product
+    // const hasPurchased = await Order.exists({
+    //   customerId,
+    //   'items.productMainStockId': productMainStockId,
+    //   status: { $in: ['delivered', 'completed'] } // Adjust based on your order statuses
+    // });
+    // if (!hasPurchased) {
+    //   return res.status(403).json({ message: 'You must purchase the product to review it' });
+    // }
+
+    const dataObject = {
+      customerId,
+      productStock,
+      productMainStockId,
+      rating: Number(rating),
+      name: name || null,
+      description: description || null,
+      createdBy: customerId, // Assuming createdBy is the same as customerId
+    }
+
+    let attachments = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const uploadResult = await uploadProductImageToS3(file, clientId);
+        attachments.push(uploadResult.url);
+      }
+      dataObject.images = attachments;
+    }
+    Object.assign(existingReview, dataObject);
+    await existingReview.save()
+    await updateAverageRating2(clientId, productMainStockId);
+    res.status(201).json({ message: 'Review updated successfully', review: existingReview });
+
+  } catch (error) {
+    next(error)
+  }
+};
+
 exports.getReviewsByProduct = async (req, res) => {
   try {
     const { clientId, productMainStockId } = req.params;
@@ -1509,6 +1584,63 @@ exports.getReviewsByProduct = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+exports.getReviewsByReviewId = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const { clientId } = req.query; // Pagination and sorting
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+    const review = await RatingAndReview.findById(reviewId);
+    if (!review) {
+      return res.status(404).send({
+        success: false,
+        message: "Review not found"
+      })
+    }
+    res.status(200).json({
+      review,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteReview = async (req, res) => {
+  try {
+    const { id, clientId } = req.params; // reviewId
+    const customerId = req.user.id; // Assuming auth middleware sets req.user.id from JWT (customerId)
+
+    // Validate ID format (MongoDB ObjectId)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid review ID format' });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+
+    // Find and delete the review, ensuring only the owner can delete
+    const review = await RatingAndReview.findOneAndDelete({
+      _id: id,
+      customerId: customerId, // Enforce ownership
+    });
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found or you do not have permission to delete it' });
+    }
+
+    // Update the product's average rating and review count after deletion
+    await updateAverageRating3(clientId, review.productMainStockId);
+
+    res.status(200).json({
+      message: 'Review deleted successfully',
+      deletedReview: { id: review._id, productMainStockId: review.productMainStockId }
+    });
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ message: 'Server error while deleting review' });
   }
 };
 
@@ -1589,5 +1721,70 @@ const updateAverageRating = async (clientId, productMainStockId) => {
       averageRating: 0,
       reviewCount: 0,
     });
+  }
+};
+
+const updateAverageRating2 = async (clientId, productMainStockId) => {
+
+  const clientConnection = await getClientDatabaseConnection(clientId);
+  const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+  const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+
+
+  const aggregation = await RatingAndReview.aggregate([
+    { $match: { productMainStockId: new mongoose.Types.ObjectId(productMainStockId) } },
+    {
+      $group: {
+        _id: '$productMainStockId',
+        averageRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+
+  if (aggregation.length > 0) {
+    const { averageRating, reviewCount } = aggregation[0];
+    await ProductMainStock.findByIdAndUpdate(productMainStockId, {
+      averageRating: parseFloat(averageRating.toFixed(1)), // Round to 1 decimal for display
+    });
+  } else {
+    // If no reviews, reset to defaults
+    await ProductMainStock.findByIdAndUpdate(productMainStockId, {
+      averageRating: 0,
+      reviewCount: 0,
+    });
+  }
+};
+
+const updateAverageRating3 = async (clientId, productMainStockId) => {
+  try {
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+    const aggregation = await RatingAndReview.aggregate([
+      { $match: { productMainStockId: new mongoose.Types.ObjectId(productMainStockId) } },
+      {
+        $group: {
+          _id: '$productMainStockId',
+          averageRating: { $avg: '$rating' },
+          reviewCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    if (aggregation.length > 0) {
+      const { averageRating, reviewCount } = aggregation[0];
+      await ProductMainStock.findByIdAndUpdate(productMainStockId, {
+        averageRating: parseFloat(averageRating.toFixed(1)),
+        reviewCount,
+      });
+    } else {
+      await ProductMainStock.findByIdAndUpdate(productMainStockId, {
+        averageRating: 0,
+        reviewCount: 0,
+      });
+    }
+  } catch (error) {
+    console.error('Error updating average rating:', error);
   }
 };
