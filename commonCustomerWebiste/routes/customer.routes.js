@@ -37,6 +37,7 @@ router.post('/vendor/deleteAddress', entityAuth.authorizeEntity("Administration"
 router.post("/cart/add", customerAuth.customer, customerCoontroller.addToCart);
 
 router.post('/cart/add/new', customerAuth.customer, uploadCustomizable.any(), customerCoontroller.addToCartNew);
+router.post('/cart/change/quantity', customerAuth.customer, customerCoontroller.addToCartNew);
 router.delete("/cart/remove", customerAuth.customer, customerCoontroller.removeFromCart);
 router.get("/cart", customerAuth.customer, customerCoontroller.getCart);
 

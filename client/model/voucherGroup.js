@@ -24,6 +24,7 @@ const clientVoucharGroupSchema = new Schema(
         approvalRequired: { type: Boolean, default: false },
         relatedToInventory: { type: Boolean, default: false },
         gstApplicable: { type: Boolean, default: false },
+        isSingleEntryType: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
         resetFrequency: { type: String, enum: ['monthly', 'yearly'] },
         financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'financialYear', default: null },

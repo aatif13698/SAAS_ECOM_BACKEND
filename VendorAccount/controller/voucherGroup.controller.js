@@ -36,6 +36,7 @@ exports.create = async (req, res, next) => {
             relatedToInventory,
             gstApplicable,
             resetFrequency,
+            isSingleEntryType,
             financialYear,
 
         } = req.body;
@@ -78,6 +79,7 @@ exports.create = async (req, res, next) => {
             gstApplicable,
             resetFrequency,
             financialYear,
+            isSingleEntryType,
             createdBy: mainUser._id,
         };
 
@@ -152,6 +154,7 @@ exports.update = async (req, res, next) => {
             relatedToInventory,
             gstApplicable,
             resetFrequency,
+            isSingleEntryType,
             financialYear,
         } = req.body;
         const mainUser = req.user;
@@ -185,6 +188,7 @@ exports.update = async (req, res, next) => {
             gstApplicable,
             resetFrequency,
             financialYear,
+            isSingleEntryType,
             createdBy: mainUser._id,
         };
 
@@ -231,6 +235,7 @@ exports.update = async (req, res, next) => {
         const updated = await voucherGroupService.update(clientId, groupId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblVoucherGroupUpdatedSuccess,
+            data: updated
         });
 
     } catch (error) {
