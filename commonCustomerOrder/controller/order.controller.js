@@ -11,7 +11,51 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const { convertPricingTiers, groupByStockId } = require("../../helper/common");
 const httpStatusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET,
+  s3ForcePathStyle: true,
+  maxRetries: 5,
+  retryDelayOptions: { base: 500 },
+  httpOptions: { timeout: 60000 },
+});
+
+
+const uploadCustomizationFileToS3 = async (file, clientId) => {
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+  const fileName = `saasEcommerce/${clientId}/customization/${uuidv4()}${fileExtension}`;
+  const params = {
+    Bucket: process.env.DO_SPACES_BUCKET,
+    Key: fileName,
+    Body: file.buffer,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+    Metadata: {
+      'original-filename': file.originalname
+    }
+  };
+  try {
+    const { Location } = await s3.upload(params).promise();
+    return {
+      success: true,
+      url: Location,
+      key: fileName
+    };
+  } catch (error) {
+    console.log("error in s3", error);
+
+    throw new Error(`Failed to upload to S3: ${error.message}`);
+  }
+};
 
 // place normal order
 exports.placeOrderTypeOne = async (req, res, next) => {
@@ -218,19 +262,47 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
       }
     }
 
-    // Handle file uploads
+    // // Handle file uploads
+    // if (req.files && req.files.length > 0) {
+    //   req.files.forEach((file) => {
+    //     customizationFiles.push({
+    //       fieldName: file.fieldname,
+    //       fileUrl: `/public/customizations/${file.filename}`,
+    //       originalName: file.originalname,
+    //       mimeType: file.mimetype,
+    //       size: file.size,
+    //     });
+    //   });
+    // } else {
+    //   console.log("No files uploaded");
+    // }
+
+    // Handle file uploads to S3
     if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        customizationFiles.push({
-          fieldName: file.fieldname,
-          fileUrl: `/public/customizations/${file.filename}`,
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-        });
+      const uploadPromises = req.files.map(async (file) => {
+        try {
+          const { url, key } = await uploadCustomizationFileToS3(file, clientId);
+          return {
+            fieldName: file.fieldname,
+            fileUrl: url,
+            key: key,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
+          };
+        } catch (error) {
+          throw new Error(`Failed to upload file ${file.originalname}: ${error.message}`);
+        }
       });
-    } else {
-      console.log("No files uploaded");
+
+      try {
+        customizationFiles.push(...await Promise.all(uploadPromises));
+      } catch (error) {
+        return res.status(httpStatusCode.StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message: error.message,
+        });
+      }
     }
 
     // Get client-specific database connection
@@ -295,7 +367,7 @@ exports.placeOrderTypeOneNew = async (req, res, next) => {
         message: "Product stock not found or inactive",
       });
     }
-    
+
     const priceArray = productMainStock.variant.priceId.price;
     const priceTiers = convertPricingTiers(priceArray);
     const priceObject = priceTiers.find(item =>

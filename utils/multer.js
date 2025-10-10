@@ -474,6 +474,81 @@ const uploadCustomizable = multer({
     fileFilter: imageFilters,
 });
 
+const uploadCustomizableToS3 = multer({
+    storage: multer.memoryStorage(), // Use 'storage' key
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        // Comprehensive list of allowed file extensions
+        const filetypes = /jpg|jpeg|png|gif|webp|bmp|tiff|tif|svg|ico|heic|heif|avif|jfif|pjpeg|pjp|apng|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf|csv|md|json|xml|zip|rar|7z|tar|gz|mp4|mov|avi|mkv|wmv|flv|mpeg|mp3|wav|ogg|flac|aac|wma/;
+        // Corresponding MIME types for validation
+        const mimeTypes = {
+            // Images
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'bmp': 'image/bmp',
+            'tiff': 'image/tiff',
+            'tif': 'image/tiff',
+            'svg': 'image/svg+xml',
+            'ico': 'image/x-icon',
+            'heic': 'image/heic',
+            'heif': 'image/heif',
+            'avif': 'image/avif',
+            'jfif': 'image/jpeg',
+            'pjpeg': 'image/jpeg',
+            'pjp': 'image/jpeg',
+            'apng': 'image/apng',
+            // Documents
+            'pdf': 'application/pdf',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls': 'application/vnd.ms-excel',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'txt': 'text/plain',
+            'rtf': 'application/rtf',
+            'csv': 'text/csv',
+            'md': 'text/markdown',
+            'json': 'application/json',
+            'xml': 'application/xml',
+            // Archives
+            'zip': 'application/zip',
+            'rar': 'application/x-rar-compressed',
+            '7z': 'application/x-7z-compressed',
+            'tar': 'application/x-tar',
+            'gz': 'application/gzip',
+            // Videos
+            'mp4': 'video/mp4',
+            'mov': 'video/quicktime',
+            'avi': 'video/x-msvideo',
+            'mkv': 'video/x-matroska',
+            'wmv': 'video/x-ms-wmv',
+            'flv': 'video/x-flv',
+            'mpeg': 'video/mpeg',
+            // Audio
+            'mp3': 'audio/mpeg',
+            'wav': 'audio/wav',
+            'ogg': 'audio/ogg',
+            'flac': 'audio/flac',
+            'aac': 'audio/aac',
+            'wma': 'audio/x-ms-wma'
+        };
+
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase().replace('.', ''));
+        const expectedMimeType = mimeTypes[path.extname(file.originalname).toLowerCase().replace('.', '')];
+        const mimeTypeValid = expectedMimeType === file.mimetype.toLowerCase();
+
+        if (extname && mimeTypeValid) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Unsupported file type. Allowed types: jpg, jpeg, png, gif, webp, bmp, tiff, tif, svg, ico, heic, heif, avif, jfif, pjpeg, pjp, apng, pdf, doc, docx, xls, xlsx, ppt, pptx, txt, rtf, csv, md, json, xml, zip, rar, 7z, tar, gz, mp4, mov, avi, mkv, wmv, flv, mpeg, mp3, wav, ogg, flac, aac, wma'));
+        }
+    },
+});
+
 
 const uploadCustomFormWithS3 = multer({
     storage: multer.memoryStorage(),
