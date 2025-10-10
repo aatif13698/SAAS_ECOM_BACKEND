@@ -115,6 +115,11 @@ router.delete('/delete/review/:clientId/:id', customerAuth.customer, customerCoo
 router.get('/get/all/review/customer', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
 
 
+// route for product question & answers
+router.post("/post/question", customerAuth.customer, customerCoontroller.addToCart);
+router.get('/get/all/question/customer', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
+
+
 
 
 

@@ -23,6 +23,7 @@ const message = require("../../utils/message");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const questionAndAnswerProductSchema = require("../../client/model/questionAndAnswerProduct");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -1786,5 +1787,90 @@ const updateAverageRating3 = async (clientId, productMainStockId) => {
     }
   } catch (error) {
     console.error('Error updating average rating:', error);
+  }
+};
+
+
+// post question
+exports.postQuestion = async (req, res, next) => {
+  try {
+    const { clientId, productMainStockId, productStock, question } = req.body;
+    const customerId = req.user ? req.user._id : null; // From auth middleware, if present
+    // Validate required fields
+    if (!productMainStockId || !productStock || !question) {
+      return res.status(httpStatusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+
+    // Check if product exists
+    const product = await ProductMainStock.findById(productMainStockId);
+    if (!product) {
+      return res.status(httpStatusCode.NotFound).json({ message: 'Product not found' });
+    }
+
+    const existingQuestion = await QuestionAndAnswerProduct.findOne({ customerId, question });
+    if (existingQuestion) {
+      return res.status(httpStatusCode.BadRequest).json({ message: 'You have already raised this question' });
+    }
+
+    const dataObject = {
+      customerId,
+      productStock,
+      productMainStockId,
+      question,
+      createdBy: customerId, // Assuming createdBy is the same as customerId
+    }
+
+    const newQuestion = new ProductMainStock(dataObject);
+    await newQuestion.save();
+    res.status(201).json({ message: 'Question posted successfully', review: newQuestion });
+
+  } catch (error) {
+    next(error)
+  }
+};
+
+exports.getAllQuestionsByCustomer = async (req, res) => {
+  try {
+    const { clientId } = req.query; // Using query param for clientId
+    const userId = req.user ? req.user._id : null; // From auth middleware   
+    const { page = 1, limit = 10, sort = '-createdAt' } = req.query; // Pagination and sorting
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductStock = clientConnection.model("productStock", productStockSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+
+    const questions = await QuestionAndAnswerProduct.find({ customerId: userId })
+      .populate({
+        path: "productStock",
+        model: ProductStock,
+        populate: {
+          path: "product", // Assuming productStock has a 'product' ref
+          model: ProductBluePrint,
+          select: "name images isCustomizable _id", // Only fetch necessary fields
+        },
+      })
+      .populate({
+        path: "productMainStockId",
+        model: MainStock,
+      })
+      .sort(sort)
+    // .skip((page - 1) * limit)
+    // .limit(parseInt(limit))
+
+    const total = await QuestionAndAnswerProduct.countDocuments({ customerId: userId });
+    res.status(200).json({
+      questions,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
