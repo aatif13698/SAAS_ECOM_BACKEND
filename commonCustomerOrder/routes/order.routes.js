@@ -16,7 +16,7 @@ const { uploadCustomizable, uploadCustomizationFileToS3 } = require("../../utils
 
 router.post('/place-order', customerAuth.customer,  uploadCustomizationFileToS3.any(), customerOrder.placeOrderTypeOneNew);
 
-router.post("/place-order-from-cart", customerAuth.customer, customerOrder.placeOrderFromCart);
+router.post("/place-order-from-cart", customerAuth.customer, customerOrder.newplaceOrderFromCart);
 
 // place order from the cart
 router.post('/place-order/from-cart', customerAuth.customer, customerOrder.placeOrderTypeTwo);

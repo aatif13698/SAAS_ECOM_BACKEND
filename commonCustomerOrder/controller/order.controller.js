@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const { log } = require("console");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -705,6 +706,388 @@ exports.placeOrderFromCart = async (req, res, next) => {
     }
   }
 };
+
+// new place order from cart
+// exports.newplaceOrderFromCart = async (req, res, next) => {
+//   let clientConnection;
+//   let session;
+
+//   try {
+//     const { clientId, addressId, itemsArray } = req.body;
+//     console.log("req.body", req.body);
+
+//     const userId = req.user ? req.user._id : null; // From auth middleware
+
+//     if (!clientId || !addressId || !itemsArray) {
+//       return res.status(httpStatusCode.BadRequest).json({
+//         success: false,
+//         message: message.lblRequiredFieldMissing,
+//       });
+//     }
+
+//     if (!userId) {
+//       return res.status(httpStatusCode.Unauthorized).json({
+//         success: false,
+//         message: "User authentication required",
+//       });
+//     }
+
+//     const parsedItemArray = JSON.parse(itemsArray);
+
+//     console.log("parsedItemArray", parsedItemArray);
+
+
+//     // Get client-specific database connection
+//     clientConnection = await getClientDatabaseConnection(clientId);
+//     session = await clientConnection.startSession();
+//     session.startTransaction();
+
+//     // Define models
+//     const Cart = clientConnection.model("cart", cartSchema);
+//     const CustomerAddress = clientConnection.model("customerAddress", customerAddressSchema);
+//     const ProductStock = clientConnection.model("productStock", productStockSchema);
+//     const Order = clientConnection.model("Order", orderSchema);
+//     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+
+//     // Fetch cart
+//     const cart = await Cart.findOne({ user: userId, status: "active", deletedAt: null })
+//       .populate({
+//         path: "items.productStock",
+//         model: ProductStock,
+//         select: "product warehouse branch businessUnit"
+//       })
+//       .session(session).lean();
+//     console.log("cart", cart);
+
+//     const arrayOfObjects = groupByStockId(cart.items)
+
+//     console.log("cart aa", arrayOfObjects);
+
+//     // Verify address
+//     const address = await CustomerAddress.findOne({
+//       _id: addressId,
+//       customerId: userId,
+//       deletedAt: null,
+//     }).session(session);
+//     if (!address) {
+//       await session.abortTransaction();
+//       return res.status(httpStatusCode.BadRequest).json({
+//         success: false,
+//         message: "Address not found or does not belong to user",
+//       });
+//     }
+
+//     const newItemsArray = parsedItemArray.map((item) => {
+//       for (let index = 0; index < arrayOfObjects.length; index++) {
+//         const element = arrayOfObjects[index];
+//         console.log("element", element);
+//         console.log("element.productMainStock", element.productMainStock.toString());
+
+//         if(element.productMainStock == item.productMainStockId){
+//           return {
+//             ...element,
+//             quantity: item.quantity
+//           }
+//         }
+//       }
+//     });
+
+//     // Commit transaction
+//     await session.commitTransaction();
+
+//     return res.status(httpStatusCode.Created).json({
+//       success: true,
+//       message: "Order placed successfully",
+//       // data: order,
+//     });
+//   } catch (error) {
+//     console.log("ererer", error);
+
+//     if (session) {
+//       await session.abortTransaction();
+//     }
+//     if (error.code === 11000) {
+//       return res.status(httpStatusCode.Conflict).json({
+//         success: false,
+//         message: "Order number generation conflict, please try again",
+//       });
+//     }
+//     console.error("Error placing order from cart:", error);
+//     res.status(httpStatusCode.InternalServerError).json({
+//       success: false,
+//       message: "Failed to place order",
+//       error: error.message,
+//     });
+//   } finally {
+//     if (session) {
+//       session.endSession();
+//     }
+//   }
+// };
+
+
+exports.newplaceOrderFromCart = async (req, res, next) => {
+  let clientConnection;
+  let session;
+
+  try {
+    const { clientId, addressId, itemsArray } = req.body;
+    console.log('req.body', req.body);
+
+    const userId = req.user ? req.user._id : null; // From auth middleware
+
+    // Validate required fields
+    if (!clientId || !addressId || !itemsArray) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: message.lblRequiredFieldMissing,
+      });
+    }
+
+    if (!userId) {
+      return res.status(httpStatusCode.Unauthorized).json({
+        success: false,
+        message: 'User authentication required',
+      });
+    }
+
+    // Parse itemsArray (ensure it's an array)
+    let parsedItemArray;
+    try {
+      parsedItemArray = JSON.parse(itemsArray);
+      if (!Array.isArray(parsedItemArray)) {
+        throw new Error('itemsArray must be an array');
+      }
+    } catch (error) {
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: 'Invalid itemsArray format',
+      });
+    }
+
+    console.log('parsedItemArray', parsedItemArray);
+
+    // Get client-specific database connection
+    clientConnection = await getClientDatabaseConnection(clientId);
+    session = await clientConnection.startSession();
+    session.startTransaction();
+
+    // Define models
+    const Cart = clientConnection.model('cart', cartSchema);
+    const CustomerAddress = clientConnection.model('customerAddress', customerAddressSchema);
+    const ProductStock = clientConnection.model('productStock', productStockSchema);
+    const Order = clientConnection.model('Order', orderSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    // Fetch cart
+    const cart = await Cart.findOne({ user: userId, status: 'active', deletedAt: null })
+      .populate({
+        path: 'items.productStock',
+        model: ProductStock,
+        select: 'product warehouse branch businessUnit',
+      })
+      .session(session)
+      .lean();
+    console.log('cart', cart);
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: 'Cart is empty or not found',
+      });
+    }
+
+    // Group items by productMainStock (assumes groupByStockId returns array of items)
+    const arrayOfObjects = groupByStockId(cart.items);
+    console.log('arrayOfObjects', arrayOfObjects);
+
+    // Verify address
+    const address = await CustomerAddress.findOne({
+      _id: addressId,
+      customerId: userId,
+      deletedAt: null,
+    }).session(session);
+    if (!address) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: 'Address not found or does not belong to user',
+      });
+    }
+
+    // Map parsedItemArray to update quantities, ensuring no undefined values
+    const newItemsArray = parsedItemArray.map((item) => {
+      // Find matching item in arrayOfObjects
+      const matchingElement = cart.items.find((element) => {
+        // Ensure productMainStock is treated as a string
+        const elementStockId = element.productMainStock ? element.productMainStock.toString() : null;
+        return elementStockId === item.productMainStockId;
+      });
+
+      if (!matchingElement) {
+        // Log non-matching items for debugging but don't include in newItemsArray
+        console.warn(`No matching productMainStock found for ${item.productMainStockId}`);
+        return null;
+      }
+
+      return {
+        ...matchingElement,
+        quantity: item.quantity,
+      };
+    }).filter(item => item !== null); // Remove null entries
+
+    console.log('newItemsArray', newItemsArray);
+
+    if (newItemsArray.length === 0) {
+      await session.abortTransaction();
+      return res.status(httpStatusCode.BadRequest).json({
+        success: false,
+        message: 'No valid items found to process order',
+      });
+    }
+    let orderItems = [];
+    let totoalAmount = 0;
+    for (let index = 0; index < newItemsArray.length; index++) {
+      const element = newItemsArray[index];
+      console.log("element", element);
+      const productMainStock = await MainStock.findById(element?.productMainStock?.toString()).populate({
+        path: 'product',
+        model: ProductBluePrint
+      }).populate({
+        path: 'variant',
+        model: ProductVariant,
+        populate: {
+          path: 'priceId',
+          model: ProductRate
+        }
+      });
+      console.log("productMainStock", productMainStock);
+      if (!productMainStock || !productMainStock.isActive) {
+        return res.status(httpStatusCode.NotFound).json({
+          success: false,
+          message: "Product stock not found or inactive",
+        });
+      }
+      const priceArray = productMainStock.variant.priceId.price;
+      const priceTiers = convertPricingTiers(priceArray);
+      const priceObject = priceTiers.find(item =>
+        element.quantity >= item.minQuantity &&
+        (item.maxQuantity === null || element.quantity <= item.maxQuantity)
+      ) || null;
+
+      let calculatedPrice;
+      if (!priceObject) {
+        return res.status(httpStatusCode.Conflict).json({
+          success: false,
+          message: "Invalid price calculation occured.",
+        });
+      }
+      if (priceObject?.hasDiscount == true) {
+        const discountedUnitPrice = priceObject?.unitPrice - priceObject?.unitPrice * (priceObject?.discountPercent / 100);
+        calculatedPrice = element.quantity * discountedUnitPrice;
+
+      } else {
+        calculatedPrice = element.quantity * priceObject?.unitPrice
+      }
+      priceObject.price = calculatedPrice;
+      priceObject.quantity = element.quantity;
+      console.log("priceObject", priceObject);
+
+      totoalAmount += calculatedPrice;
+
+      orderItems.push({
+        customizationDetails: element.customizationDetails,
+        customizationFiles: element.customizationFiles,
+        productStock: element.productStock?._id.toString(),
+        productMainStock: element.productMainStock?.toString(),
+        quantity: element.quantity,
+        priceOption: priceObject,
+        subtotal: calculatedPrice,
+      })
+    }
+    const count = await Order.countDocuments({
+      createdAt: { $gte: new Date().setHours(0, 0, 0, 0) },
+    });
+
+    let orderCount = count + 1;
+
+    const date = new Date().toISOString().slice(0, 10).replace(/-/, ""); // e.g., "20250411"
+    const orderNumber = `ORD-${date}-${String(orderCount).padStart(3, "0")}`
+    // Create order
+    const order = new Order({
+      orderNumber: orderNumber,
+      customer: userId,
+      items: orderItems,
+      address: addressId,
+      paymentMethod: "COD",
+      paymentStatus: "PENDING",
+      status: "PENDING",
+      totalAmount: totoalAmount,
+      createdBy: userId,
+      activities: [
+        {
+          status: "PENDING",
+          updatedBy: userId,
+        },
+      ],
+    });
+
+    await order.save({ session });
+
+    // Update cart status to 'converted'
+    await Cart.updateOne(
+      { _id: cart._id },
+      { status: 'converted', lastModified: Date.now() },
+      { session }
+    );
+
+    // Commit transaction
+    await session.commitTransaction();
+
+    return res.status(httpStatusCode.Created).json({
+      success: true,
+      message: 'Order placed successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Error placing order from cart:', error);
+
+    if (session) {
+      await session.abortTransaction();
+    }
+    if (error.code === 11000) {
+      return res.status(httpStatusCode.Conflict).json({
+        success: false,
+        message: 'Order number generation conflict, please try again',
+      });
+    }
+    return res.status(httpStatusCode.InternalServerError).json({
+      success: false,
+      message: 'Failed to place order',
+      error: error.message,
+    });
+  } finally {
+    if (session) {
+      session.endSession();
+    }
+  }
+};
+
+// // Placeholder for groupByStockId (adjust as per your implementation)
+// function groupByStockId(items) {
+//   // Assuming it groups items by productMainStock and returns an array
+//   return items; // Modify based on your actual groupByStockId logic
+// }
+
+// // Placeholder for generateOrderNumber
+// function generateOrderNumber() {
+//   return `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+// }
+
 
 // testin push
 
