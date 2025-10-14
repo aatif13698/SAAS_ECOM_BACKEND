@@ -5,7 +5,7 @@ let router = express.Router();
 
 
 
-const shiftController = require("../controller/shift.controller");
+const shiftController = require("../controller/shifts.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
 const { uploadBranchIcon } = require("../../utils/multer");
 

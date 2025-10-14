@@ -9,7 +9,7 @@ const userModel = require("../../model/user");
 const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const shiftService = require("../services/shift.service");
+const shiftService = require("../services/shifts.service");
 const bcrypt = require("bcrypt")
 
 

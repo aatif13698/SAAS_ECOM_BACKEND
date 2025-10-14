@@ -55,7 +55,7 @@ const vendorRoleRouter = require("./commonClinetRolesAndPermission/routes/roles.
 const vendorEmployeeRouter = require("./VendorAdministration/routes/employee.routes.js");
 const vendorCustomerRouter = require("./VendorAdministration/routes/customers.routes.js");
 const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDepartments.routes.js");
-const vendorShiftRouter = require("./VendorAdministration/routes/shift.routes.js");
+const vendorShiftRouter = require("./VendorAdministration/routes/shifts.routes.js");
 const documentRouter = require("./VendorAdministration/routes/documentRequirements.routes.js");
 const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
 
