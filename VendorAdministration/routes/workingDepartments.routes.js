@@ -5,7 +5,7 @@ let router = express.Router();
 
 
 
-const workingDepartmentController = require("../controller/workingDepartment.controller");
+const workingDepartmentController = require("../controller/workingDepartments.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
 const { uploadBranchIcon } = require("../../utils/multer");
 
