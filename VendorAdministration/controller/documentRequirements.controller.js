@@ -10,7 +10,7 @@ const CustomError = require("../../utils/customeError");
 const httpStatusCode = require("../../utils/http-status-code");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const documentRequirementService = require("../services/documentRequirement.service")
+const documentRequirementService = require("../services/documentRequirements.service")
 const bcrypt = require("bcrypt");
 const documentCustomFieldSchema = require("../../client/model/documentCustomField");
 

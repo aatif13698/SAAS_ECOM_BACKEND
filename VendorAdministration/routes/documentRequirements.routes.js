@@ -5,7 +5,7 @@ let router = express.Router();
 
 
 
-const documentRequirementController = require("../controller/documentRequirement.controller");
+const documentRequirementController = require("../controller/documentRequirements.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
 const { uploadBranchIcon } = require("../../utils/multer");
 
