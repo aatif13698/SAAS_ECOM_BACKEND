@@ -57,7 +57,7 @@ const vendorCustomerRouter = require("./VendorAdministration/routes/customers.ro
 const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDepartment.routes.js");
 const vendorShiftRouter = require("./VendorAdministration/routes/shift.routes.js");
 const documentRouter = require("./VendorAdministration/routes/documentRequirement.routes.js");
-const assetRouter = require("./VendorAdministration/routes/asset.routes.js");
+const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
