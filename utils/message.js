@@ -267,6 +267,27 @@ module.exports = {
   lblAssetIdIdRequired: "Asset Id id required!",
 
 
+  // leave category
+  lblLeaveCategoryAlreadyExists: "LeaveCategory already exists with this email or phone!",
+  lblLeaveCategoryCreatedSuccess: "LeaveCategory created successfully!",
+  lblLeaveCategoryUpdatedSuccess: "LeaveCategory updated successfully!",
+  lblLeaveCategoryIdAndClientIdRequired: " LeaveCategory Id and Client Id are required!",
+  lblLeaveCategoryNotFound: "LeaveCategory not found!",
+  lblLeaveCategoryFoundSucessfully: "LeaveCategory found successfully!",
+  lblLeaveCategoryIdIdAndClientIdRequired: "LeaveCategory Id and Client Id are required!",
+  lblLeaveCategoryIdIdRequired: "LeaveCategory Id id required!",
+
+  // holiday
+  lblHolidayAlreadyExists: "Holiday already exists with this email or phone!",
+  lblHolidayCreatedSuccess: "Holiday created successfully!",
+  lblHolidayUpdatedSuccess: "Holiday updated successfully!",
+  lblHolidayIdAndClientIdRequired: " Holiday Id and Client Id are required!",
+  lblHolidayNotFound: "Holiday not found!",
+  lblHolidayFoundSucessfully: "Holiday found successfully!",
+  lblHolidayIdIdAndClientIdRequired: "Holiday Id and Client Id are required!",
+  lblHolidayIdIdRequired: "Holiday Id id required!",
+
+
   // ledger group
   lblLedgerGroupAlreadyExists: "LedgerGroup already exists with this email or phone!",
   lblLedgerGroupCreatedSuccess: "LedgerGroup created successfully!",
