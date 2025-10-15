@@ -8,6 +8,9 @@ const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
 const clientCustomFieldSchema = require("../../client/model/customField");
 const voucherGroupSchema = require("../../client/model/voucherGroup");
 const financialYearSchema = require("../../client/model/financialYear");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 
@@ -27,15 +30,34 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
         const [voucherGroups, total] = await Promise.all([
-            VoucherGroup.find(filters).skip(skip).limit(limit)
+            VoucherGroup.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
                 .populate({
                     path: "financialYear",
                     model: FinancialYear
-            }),
+                })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                }),
             VoucherGroup.countDocuments(filters),
         ]);
         return { count: total, voucherGroups };
@@ -54,7 +76,7 @@ const all = async (clientId, filters = {}) => {
                 .populate({
                     path: "financialYear",
                     model: FinancialYear
-            }),
+                }),
         ]);
         return { voucherGroups };
     } catch (error) {

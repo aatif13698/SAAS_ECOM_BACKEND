@@ -16,7 +16,7 @@ const clientLedgerGroupSchema = new Schema(
         isBranchLevel: { type: Boolean, default: false },
         isWarehouseLevel: { type: Boolean, default: false },
 
-        groupName: { type: String, required: true, unique: true },
+        groupName: { type: String, required: true, },
         hasParent: { type: Boolean, default: false },
         parentGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'ledgerGroup', default: null }, // For sub-groups
         isActive: { type: Boolean, default: true },

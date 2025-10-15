@@ -6,6 +6,11 @@ const CustomError = require("../../utils/customeError");
 const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
 const clientCustomFieldSchema = require("../../client/model/customField");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
+const { path } = require("../../client/model/user");
+const { model } = require("mongoose");
 
 
 
@@ -72,6 +77,10 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+
         const { page, limit } = options;
         console.log("options", options);
 
@@ -79,10 +88,25 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         console.log("skip", skip);
 
         const [ledgerGroup, total] = await Promise.all([
-            LedgerGroup.find(filters).skip(skip).limit(limit)
+            LedgerGroup.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
                 .populate({
                     path: 'parentGroup',
                     model: LedgerGroup,
+                })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
                 }),
             LedgerGroup.countDocuments(filters),
         ]);

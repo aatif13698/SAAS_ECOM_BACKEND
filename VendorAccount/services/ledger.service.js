@@ -7,6 +7,9 @@ const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
 const ledgerSchema = require("../../client/model/ledger");
 const currencySchema = require("../../client/model/currency");
 const ledgerCustomDataSchema = require("../../client/model/ledgerCustomData");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 // const create = async (clientId, data, mainUser, options = {}) => {
@@ -102,6 +105,9 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
@@ -111,6 +117,21 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     path: "ledgerGroupId",
                     model: LedgerGroup,
                     select: "groupName "
+                })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
                 }),
             Ledger.countDocuments(filters),
         ]);
@@ -139,16 +160,16 @@ const all = async (clientId, filters = {}) => {
     }
 };
 
-const activeInactive = async (clientId, groupId, data) => {
+const activeInactive = async (clientId, ledgerId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
-        const ledgerGroup = await LedgerGroup.findById(groupId);
-        if (!ledgerGroup) {
-            throw new CustomError(statusCode.NotFound, message.lblLedgerGroupNotFound);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const ledger = await Ledger.findById(ledgerId);
+        if (!ledger) {
+            throw new CustomError(statusCode.NotFound, message.lblLedgerNotFound);
         }
-        Object.assign(ledgerGroup, data);
-        return await ledgerGroup.save();
+        Object.assign(ledger, data);
+        return await ledger.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
     }

@@ -549,7 +549,7 @@ exports.list = async (req, res, next) => {
             filters = {
                 ...filters,
                 // isBuLevel: true,
-                isWarehouseLevel: levelId
+                warehouse: levelId
             }
         }
 

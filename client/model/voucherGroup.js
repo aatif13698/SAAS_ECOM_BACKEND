@@ -16,8 +16,8 @@ const clientVoucharGroupSchema = new Schema(
         isBranchLevel: { type: Boolean, default: false },
         isWarehouseLevel: { type: Boolean, default: false },
 
-        name: { type: String, required: true, unique: true },
-        code: { type: String, required: true, unique: true },
+        name: { type: String, required: true,  },
+        code: { type: String, required: true,  },
         category: { type: String, required: true,  },
         description: { type: String, required: true, },
         isTaxable: { type: Boolean, default: false },

@@ -245,7 +245,7 @@ exports.list = async (req, res, next) => {
             filters = {
                 ...filters,
                 // isBuLevel: true,
-                isWarehouseLevel: levelId
+                warehouse: levelId
             }
         }
 
@@ -277,20 +277,20 @@ exports.allLedgerGroup = async (req, res, next) => {
         } else if (level == "business" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
+                isBuLevel: true,
                 businessUnit: levelId
             }
         } else if (level == "branch" && levelId) {
             filters = {
                 ...filters,
-                // isBranchLevel: true,
+                isBranchLevel: true,
                 branch: levelId
             }
         } else if (level == "warehouse" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
+                isWarehouseLevel: true,
+                warehouse: levelId
             }
         }
 
@@ -324,20 +324,20 @@ exports.all = async (req, res, next) => {
         } else if (level == "business" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
+                isBuLevel: true,
                 businessUnit: levelId
             }
         } else if (level == "branch" && levelId) {
             filters = {
                 ...filters,
-                // isBranchLevel: true,
+                isBranchLevel: true,
                 branch: levelId
             }
         } else if (level == "warehouse" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
+                isWarehouseLevel: true,
+                warehouse: levelId
             }
         }
         const result = await ledgerGroupService.all(clientId, filters,);
@@ -624,7 +624,7 @@ exports.updateFieldOrder = async (req, res, next) => {
 
         const updatePromises = fields.map(({ fieldId, order }) =>
             CustomField.updateOne(
-                { _id: fieldId, groupId  },
+                { _id: fieldId, groupId },
                 { $set: { "gridConfig.order": order } }
             )
         );
