@@ -119,6 +119,7 @@ exports.create = async (req, res, next) => {
             creditLimit,
             creditDays,
             openingBalance,
+            balance: openingBalance,
             openingDate,
             createdBy: mainUser._id,
         };

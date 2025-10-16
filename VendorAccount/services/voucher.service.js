@@ -124,7 +124,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
         const [vouchers, total] = await Promise.all([
-            Voucher.find(filters).skip(skip).limit(limit)
+            Voucher.find(filters).skip(skip).limit(limit).sort({_id: -1})
                 .populate({
                     path: "financialYear",
                     model: FinancialYear
