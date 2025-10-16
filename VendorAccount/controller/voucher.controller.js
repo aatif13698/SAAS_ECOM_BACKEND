@@ -264,6 +264,26 @@ exports.list = async (req, res, next) => {
     }
 };
 
+// get 
+exports.getOne = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, voucherLinkId } = req.params;
+        if (!clientId || !voucherLinkId) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Client id and voucher link id is required",
+            });
+        }
+        const result = await voucherService.getOne(clientId, voucherLinkId);
+        return res.status(statusCode.OK).send({
+            message: message.lblVoucherFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // active inactive
 exports.activeinactive = async (req, res, next) => {
     try {

@@ -16,18 +16,10 @@ const create = async (clientId, dataObject) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Voucher = clientConnection.model("voucher", voucherSchema);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+
         const voucherLinkId = uuidv4()
-        // for (let index = 0; index < data.entries.length; index++) {
-        //     const element = data.entries[index];
-        //     const dataObject = {
-        //         ...data,
-        //         voucherLinkId: voucherLinkId,
-        //         ledger: element.ledger,
-        //         debit: element.debit,
-        //         credit: element.credit
-        //     }
-        //     await Voucher.create(dataObject);
-        // }
+        
         session = await clientConnection.startSession();
         await session.withTransaction(async () => {
             const voucherPromises = dataObject.entries.map(entry => {
@@ -42,6 +34,14 @@ const create = async (clientId, dataObject) => {
             });
             await Promise.all(voucherPromises);
         });
+
+        for (let index = 0; index < dataObject.entries.length; index++) {
+            const element = dataObject.entries[index];
+            const ledger = element.ledger;
+            // const mainLedger = await Ledger.findById(ledger);
+            // if(){
+            // }
+        }
         return true
     } catch (error) {
         if (session) {
@@ -133,7 +133,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     path: "ledger",
                     model: Ledger
                 })
-                 .populate({
+                .populate({
                     path: "currency",
                     model: Currency
                 }),
@@ -142,6 +142,22 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         return { count: total, vouchers };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing voucher: ${error.message}`);
+    }
+};
+
+const getOne = async (clientId, voucherLinkId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Voucher = clientConnection.model("voucher", voucherSchema);
+        const [vouchers] = await Promise.all([
+            Voucher.find({ voucherLinkId: voucherLinkId })
+        ]);
+        if (vouchers?.length !== 2) {
+            throw new CustomError(statusCode.BadRequest, `Voucher's invalid count detected`);
+        }
+        return { vouchers };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting voucher: ${error.message}`);
     }
 };
 
@@ -165,6 +181,7 @@ const activeInactive = async (clientId, voucherGroupId, data) => {
 module.exports = {
     create,
     list,
+    getOne,
     update,
     activeInactive,
 };

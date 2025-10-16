@@ -16,6 +16,8 @@ const { uploadBranchIcon } = require("../../utils/multer");
 router.post('/create/voucher', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), voucherController.create);
 router.put('/update/voucher', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), voucherController.update);
 
+router.get('/get/:clientId/:voucherLinkId', entityAuth.authorizeEntity("Accounting Master", "Group", "update"),voucherController.getOne )
+
 router.get('/list/voucher', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), voucherController.list);
 
 

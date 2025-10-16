@@ -73,7 +73,7 @@ const getById = async (clientId, ledgerId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
-        const ledger = await Ledger.findById(shiftId);
+        const ledger = await Ledger.findById(ledgerId);
         if (!ledger) {
             throw new CustomError(statusCode.NotFound, message.lblLedgerNotFound);
         }

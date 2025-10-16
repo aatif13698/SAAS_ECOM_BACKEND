@@ -7,6 +7,7 @@ const message = require("../../utils/message");
 const productMainStockSchema = require("../../client/model/productMainStock");
 const productVariantSchema = require("../../client/model/productVariant");
 const productRateSchema = require("../../client/model/productRate");
+const ratingAndReviewsSchema = require("../../client/model/ratingAndReviews");
 
 
 
@@ -146,6 +147,42 @@ exports.getProduct = async (req, res, next) => {
     return res.status(httpStatusCode.OK).send({
       message: "Product found successfully.",
       data: product
+    });
+  } catch (error) {
+    console.error("Error fetching product", error);
+    next(error);
+  }
+};
+
+exports.getProductRating = async (req, res, next) => {
+  try {
+    const { clientId, productStockId, productMainStockId } = req.params;
+    const clientConnection = await getClientDatabaseConnection(clientId);
+
+    // Define models
+    const Stock = clientConnection.model("productStock", productStockSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+
+    const product = await Stock.findOne({
+      isActive: true,
+      _id: productStockId
+    });
+    if (!product) {
+      return res.status(httpStatusCode.NotFound).send({
+        message: "Product stock not found"
+      })
+    }
+    const productMainStock = await MainStock.findById(productMainStockId);
+    if (!productMainStock) {
+      return res.status(httpStatusCode.NotFound).json({ message: 'Product stock not found' });
+    }
+    const reviews = await RatingAndReview.find({ productStock: productStockId, productMainStockId: productMainStockId });
+    return res.status(httpStatusCode.OK).send({
+      message: "Ratings found successfully.",
+      data: reviews,
+      averageRating: productMainStock?.averageRating,
+      reviewCount: productMainStock?.reviewCount
     });
   } catch (error) {
     console.error("Error fetching product", error);
@@ -294,7 +331,7 @@ exports.getProductsBySubcategory = [
           },
           select: "name _id images isCustomizable customizableOptions",
         })
-       
+
         .populate({
           path: 'normalSaleStock',
           model: MainStock,
