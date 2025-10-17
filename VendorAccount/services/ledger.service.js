@@ -51,21 +51,25 @@ const create = async (clientId, data, mainUser, options = {}) => {
 };
 
 const update = async (clientId, ledgerId, updateData, mainUser, options = {}) => {
+    let clientConnection = null;
     try {
         const { session } = options;
-        const clientConnection = await getClientDatabaseConnection(clientId);
+        clientConnection = await getClientDatabaseConnection(clientId);
         const Ledger = clientConnection.model("ledger", ledgerSchema);
-        const ledger = await Ledger.findById(ledgerId);
+        const ledger = await Ledger.findById(ledgerId).session(session);
         if (!ledger) {
             throw new CustomError(statusCode.NotFound, message.lblLedgerNotFound);
         }
         Object.assign(ledger, updateData);
-        await session.withTransaction(async () => {
-            await ledger.save({ session });
-        });
-        return ledger
+        await ledger.save({ session });
+        return ledger;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error updating ledger: ${error.message}`);
+    } finally {
+        if (clientConnection) {
+            // Ensure client connection is closed if necessary
+            // await clientConnection.close();
+        }
     }
 };
 

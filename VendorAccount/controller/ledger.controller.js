@@ -246,8 +246,8 @@ exports.create = async (req, res, next) => {
 
 // update
 exports.update = async (req, res, next) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    let session = null;
+    let clientConnection = null;
     try {
         const {
             clientId,
@@ -273,23 +273,19 @@ exports.update = async (req, res, next) => {
             status
         } = req.body;
 
+        console.log("req.body", req.body);
+
         const mainUser = req.user;
 
         if (!clientId) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
         if (!ledgerCustomDataId) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: "Ledger custom field id is required" });
         }
 
         if (!ledgerId) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblLedgerIdIdRequired });
         }
 
@@ -309,12 +305,11 @@ exports.update = async (req, res, next) => {
             creditDays,
             openingBalance,
             openingDate,
-            status
         ];
 
+        console.log("requiredFields", requiredFields);
+
         if (requiredFields.some((field) => !field)) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
@@ -333,51 +328,51 @@ exports.update = async (req, res, next) => {
             creditDays,
             openingBalance,
             openingDate,
-            status,
-            createdBy: mainUser._id,
+            updatedBy: mainUser._id, // Changed from createdBy to updatedBy for updates
         };
 
         // Level-specific validation and assignment
         const levelConfig = {
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, ascend: false },
             business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
             branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
             warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
         };
         if (!levelConfig[level]) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
         }
         Object.assign(dataObject, levelConfig[level]);
         if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
         }
         if (['branch', 'warehouse'].includes(level) && !branch) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
         }
         if (level === 'warehouse' && !warehouse) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
         }
         // Add optional fields based on level
         if (businessUnit) {
             dataObject.businessUnit = businessUnit;
         }
-        if (branch) {
+        if (branch && branch !== null && branch !== "undefined") {
             dataObject.businessUnit = businessUnit;
             dataObject.branch = branch;
         }
-        if (warehouse) {
+        if (warehouse && warehouse !== null && warehouse !== "undefined") {
             dataObject.businessUnit = businessUnit;
             dataObject.branch = branch;
             dataObject.warehouse = warehouse;
         }
+
+        console.log("dataObject", dataObject);
+        
+
+        // Get client connection and start session
+        clientConnection = await getClientDatabaseConnection(clientId);
+        session = await clientConnection.startSession();
+        session.startTransaction();
+
         const otherThanFiles = {};
         for (const [key, value] of Object.entries(req.body)) {
             if (key !== "clientId"
@@ -398,7 +393,6 @@ exports.update = async (req, res, next) => {
                 && key !== "creditDays"
                 && key !== "openingBalance"
                 && key !== "openingDate"
-                && key !== "status"
                 && key !== "ledgerCustomDataId"
                 && key !== "ledgerId"
             ) {
@@ -407,20 +401,21 @@ exports.update = async (req, res, next) => {
                 }
             }
         }
+
         const ledger = await ledgerService.update(clientId, ledgerId, dataObject, mainUser, { session });
-        // Get client connection and create custom data with session
-        const clientConnection = await getClientDatabaseConnection(clientId);
+
         const LedgerCustomData = clientConnection.model("ledgerCustomData", ledgerCustomDataSchema);
         const formData = await LedgerCustomData.findById(ledgerCustomDataId).session(session);
         if (!formData) {
             await session.abortTransaction();
-            session.endSession();
+            await session.endSession();
             return res.status(httpStatusCode.NotFound).json({
                 success: false,
                 message: "Ledger custom data not found",
                 errorCode: "NOT_FOUND",
             });
         }
+
         const files = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
@@ -435,14 +430,16 @@ exports.update = async (req, res, next) => {
                 });
             }
         }
+
         formData.otherThanFiles = new Map(Object.entries(otherThanFiles || {}));
         if (files.length > 0) {
             formData.files = files; // Replace files array
         }
-        await session.withTransaction(async () => {
-            await formData.save({ session });
-        });
+
+        await formData.save({ session });
+        await session.commitTransaction();
         await session.endSession();
+
         return res.status(httpStatusCode.OK).json({
             success: true,
             message: "updated successfully",
@@ -451,8 +448,10 @@ exports.update = async (req, res, next) => {
             },
         });
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        if (session) {
+            await session.abortTransaction();
+            await session.endSession();
+        }
         console.error("Form creation error:", error);
         return res.status(httpStatusCode.InternalServerError).json({
             success: false,
@@ -460,6 +459,12 @@ exports.update = async (req, res, next) => {
             errorCode: "SERVER_ERROR",
             error: process.env.NODE_ENV === "development" ? error.message : undefined,
         });
+    } finally {
+        if (clientConnection) {
+            // Ensure client connection is closed if necessary
+            // Adjust based on how getClientDatabaseConnection manages connections
+            // await clientConnection.close();
+        }
     }
 };
 

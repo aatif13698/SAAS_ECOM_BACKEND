@@ -14,7 +14,7 @@ const { uploadBranchIcon, uploadCustomFormWithS3 } = require("../../utils/multer
 
 router.post('/create/ledger',uploadCustomFormWithS3.any(), entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerController.create);
 
-router.put('/update/ledger', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), ledgerController.update);
+router.put('/update/ledger',uploadCustomFormWithS3.any(), entityAuth.authorizeEntity("Accounting Master", "Group", "update"), ledgerController.update);
 
 router.get('/get/:clientId/:ledgerId', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), ledgerController.getParticular );
 

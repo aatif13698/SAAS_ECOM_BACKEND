@@ -172,9 +172,6 @@ const update = async (clientId, shiftId, updateData) => {
 
 
 
-
-
-
 const getById = async (clientId, shiftId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
