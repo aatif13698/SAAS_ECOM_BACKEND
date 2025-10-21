@@ -76,8 +76,8 @@ const activeInactive = async (clientId, holidayId, data) => {
         if (!holiday) {
             throw new CustomError(statusCode.NotFound, message.lblHolidayNotFound);
         }
-        Object.assign(asset, data);
-        return await asset.save();
+        Object.assign(holiday, data);
+        return await holiday.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
     }

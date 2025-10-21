@@ -75,8 +75,8 @@ const activeInactive = async (clientId, leaveCategoryId, data) => {
         if (!leaveCategory) {
             throw new CustomError(statusCode.NotFound, message.lblLeaveCategoryNotFound);
         }
-        Object.assign(asset, data);
-        return await asset.save();
+        Object.assign(leaveCategory, data);
+        return await leaveCategory.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
     }

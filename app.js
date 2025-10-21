@@ -58,6 +58,8 @@ const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDep
 const vendorShiftRouter = require("./VendorAdministration/routes/shifts.routes.js");
 const documentRouter = require("./VendorAdministration/routes/documentRequirements.routes.js");
 const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
+const leaveCategoryRoute = require("./VendorHr/routes/leaveCategory.route.js");
+const holidayRoute = require("./VendorHr/routes/holiday.route.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
@@ -147,6 +149,8 @@ app.use("/api/vendor/employee", vendorEmployeeRouter.router);
 app.use("/api/vendor/customer", vendorCustomerRouter.router);
 app.use("/api/vendor/hr/doc", documentRouter.router);
 app.use("/api/vendor/hr/asset", assetRouter.router);
+app.use("/api/vendor/hr/leavecategory", leaveCategoryRoute.router);
+app.use("/api/vendor/hr/holiday", holidayRoute.router);
 
 
 // route setup for products
@@ -167,6 +171,8 @@ app.use("/api/vendor/accounts/fy", financialYear.router);
 app.use("/api/vendor/accounts/cu", currency.router);
 app.use("/api/vendor/accounts/vg", voucherGroup.router);
 app.use("/api/vendor/accounts/vo", Voucher.router);
+
+
 
 
 

@@ -22,7 +22,6 @@ router.get('/list/holiday', entityAuth.authorizeEntity("Administration", "Employ
 
 router.post("/activeInactive/holiday", entityAuth.authorizeEntity("Administration", "Employee", "create"), holidayController.activeinactive);
 
-router.post('/create/holiday/request', entityAuth.authorizeEntity("Administration", "Employee", "create"), holidayController.createRequest );
 
 
 exports.router = router;

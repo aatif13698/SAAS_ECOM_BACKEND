@@ -258,7 +258,7 @@ exports.list = async (req, res, next) => {
             deletedAt: null,
             ...(keyword && {
                 $or: [
-                    { assetName: { $regex: keyword.trim(), $options: "i" } },
+                    { name: { $regex: keyword.trim(), $options: "i" } },
                 ],
             }),
         };
