@@ -28,6 +28,8 @@ router.post("/activeInactiveSupplier", entityAuth.authorizeEntity("Inventory", "
 
 router.post("/softDeleteSupplier", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.softDelete);
 
+router.get("/get/active/supplier/:clientId", entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.getAllActive)
+
 
 
 

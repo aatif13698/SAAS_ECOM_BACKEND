@@ -154,6 +154,17 @@ const getBranchByBusiness = async (clientId, businessUnitId) => {
     }
 };
 
+const getAllActive = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Supplier = clientConnection.model('supplier', supplierSchema)
+        const supplier = await Supplier.find({});
+        return supplier;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting supplier: ${error.message}`);
+    }
+};
+
 module.exports = {
     create,
     update,
@@ -162,5 +173,6 @@ module.exports = {
     activeInactive,
     deleted,
     restore,
-    getBranchByBusiness
+    getBranchByBusiness,
+    getAllActive
 };

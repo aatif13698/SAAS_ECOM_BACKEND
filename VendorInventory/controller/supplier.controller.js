@@ -238,6 +238,26 @@ exports.softDelete = async (req, res, next) => {
 };
 
 
+// get all active 
+exports.getAllActive = async (req, res, next) => {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(400).send({
+                message: message.lblSupplierIdIdRequired,
+            });
+        }
+        const supplier = await supplierService.getAllActive(clientId);
+        return res.status(200).send({
+            message: message.lblSupplierFoundSucessfully,
+            data: supplier,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
 
 
 
