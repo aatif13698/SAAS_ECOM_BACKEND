@@ -366,6 +366,18 @@ const defaultPersmissionsList = [
           activeActive: { id: 140, access: false, api: "/demo/path" },
         },
       },
+      {
+        name: "Purchase Order",
+        displayName: "All Purchase Order",
+        access: false,
+        subMenus: {
+          create: { id: 137, access: false, api: "/demo/path" },
+          view: { id: 138, access: false, api: "/demo/path" },
+          update: { id: 139, access: false, api: "/demo/path" },
+          softDelete: { id: 140, access: false, api: "/demo/path" },
+          activeActive: { id: 141, access: false, api: "/demo/path" },
+        },
+      },
     ],
   },
 ];
@@ -736,6 +748,18 @@ const vendorPersmissionsList = [
           activeActive: { id: 140, access: true, api: "/demo/path" },
         },
       },
+      {
+        name: "Purchase Order",
+        displayName: "All Purchase Order",
+        access: true,
+        subMenus: {
+          create: { id: 137, access: true, api: "/demo/path" },
+          view: { id: 138, access: true, api: "/demo/path" },
+          update: { id: 139, access: true, api: "/demo/path" },
+          softDelete: { id: 140, access: true, api: "/demo/path" },
+          activeActive: { id: 141, access: true, api: "/demo/path" },
+        },
+      }
     ],
   },
 ];
