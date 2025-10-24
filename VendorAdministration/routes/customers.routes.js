@@ -7,7 +7,7 @@ let router = express.Router();
 
 const customerContrller = require("../controller/customer.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
-const { uploadBranchIcon, uploadProfile } = require("../../utils/multer");
+const { uploadBranchIcon, uploadProfile, uploadProfileToS3 } = require("../../utils/multer");
 
 
 // # create, update, view, list, activate/inactive, delete Branch by vendor routes starts here
@@ -15,7 +15,7 @@ const { uploadBranchIcon, uploadProfile } = require("../../utils/multer");
 // router.post('/createBranch', entityAuth.authorizeEntity("Branch", "create"), customerContrller.createBranchByVendor);
 
 router.post('/createCustomer', entityAuth.authorizeEntity("Administration", "Customer", "create"), (req, res, next) => {
-    uploadProfile.single("profileImage")(req, res, (err) => {
+    uploadProfileToS3.single("profileImage")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {
                 // MulterError: File too large
@@ -37,7 +37,7 @@ router.post('/createCustomer', entityAuth.authorizeEntity("Administration", "Cus
 // router.put('/updateBranch', entityAuth.authorizeEntity("Branch", "update"), customerContrller.updateBranchByVendor);
 
 router.put('/updateCustomer', entityAuth.authorizeEntity("Administration", "Customer", "update"), (req, res, next) => {
-     uploadProfile.single("profileImage")(req, res, (err) => {
+     uploadProfileToS3.single("profileImage")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {
                 // MulterError: File too large

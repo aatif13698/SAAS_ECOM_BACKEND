@@ -30,6 +30,13 @@ router.post("/softDeleteSupplier", entityAuth.authorizeEntity("Inventory", "Supp
 
 router.get("/get/active/supplier/:clientId", entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.getAllActive)
 
+router.post('/addNewAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.addNewAddress);
+
+router.post('/updateAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.updateAddress);
+
+router.post('/deleteAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.deleteAddress);
+
+router.get('/getAddresses/:clientId/:customerId', entityAuth.authorizeEntity("Administration", "Customer", "create"), supplierContrller.getAddresses);
 
 
 
