@@ -61,7 +61,7 @@ const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDep
 const vendorShiftRouter = require("./VendorAdministration/routes/shifts.routes.js");
 const documentRouter = require("./VendorAdministration/routes/documentRequirements.routes.js");
 const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
-const leaveCategoryRoute = require("./VendorHr/routes/leaveCategory.route.js");
+const leaveCategoryRoute = require("./VendorHr/routes/leaveCategories.route.js");
 const holidayRoute = require("./VendorHr/routes/holiday.route.js");
 
 

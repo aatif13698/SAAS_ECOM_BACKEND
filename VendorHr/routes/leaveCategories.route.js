@@ -5,7 +5,7 @@ let router = express.Router();
 
 
 
-const leaveCategoryController = require("../controller/leaveCategory.controller");
+const leaveCategoryController = require("../controller/leaveCategories.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
 const { uploadBranchIcon } = require("../../utils/multer");
 

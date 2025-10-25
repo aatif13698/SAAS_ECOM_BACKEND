@@ -4,7 +4,7 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clientAssetSchema = require("../../client/model/asset");
-const leaveCategorySchema = require("../../client/model/leaveCategory");
+const leaveCategorySchema = require("../../client/model/leaveCategories");
 
 
 const create = async (clientId, data) => {

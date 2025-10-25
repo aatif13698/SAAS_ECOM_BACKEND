@@ -4,7 +4,6 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clientAssetSchema = require("../../client/model/asset");
-const leaveCategorySchema = require("../../client/model/leaveCategory");
 const holidaySchema = require("../../client/model/holiday");
 
 

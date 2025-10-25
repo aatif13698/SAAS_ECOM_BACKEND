@@ -9,7 +9,7 @@ const userModel = require("../../model/user");
 const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
-const leaveCategoryService = require("../service/leaveCategory.service");
+const leaveCategoryService = require("../service/leaveCategories.service");
 const bcrypt = require("bcrypt")
 
 
