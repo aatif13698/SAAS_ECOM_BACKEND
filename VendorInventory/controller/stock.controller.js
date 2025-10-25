@@ -310,6 +310,45 @@ exports.list = async (req, res, next) => {
     }
 };
 
+// get list stock
+exports.listStock = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            ...(keyword && {
+                $or: [
+                    // { name: { $regex: keyword.trim(), $options: "i" } },
+                    // { contactPerson: { $regex: keyword.trim(), $options: "i" } },
+                    // { emailContact: { $regex: keyword.trim(), $options: "i" } },
+                    // { contactNumber: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+        if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                warehouse: levelId
+            }
+        }
+        const result = await stockService.getListStock(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblStockFoundSuccessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.activeinactive = async (req, res, next) => {
     try {
         const { keyword, page, perPage, id, status, clientId } = req.body;

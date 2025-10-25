@@ -179,6 +179,48 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const getListStock = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        const { page, limit } = options;
+        const skip = (page - 1) * limit;
+        const [stocks, total] = await Promise.all([
+            Stock.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
+                .populate({
+                    path: 'product',
+                    model: ProductBluePrint,
+                    select: 'name categoryId subCategoryId _id ',
+                    populate: {
+                        path: "subCategoryId",
+                        model: SubCategory,
+                        select: "name _id",
+                    },
+                    populate: {
+                        path: "categoryId",
+                        model: Category,
+                        select: "name _id",
+                    }
+                })
+                .populate({
+                    path: 'normalSaleStock',
+                    model: MainStock,
+                    select: "name images varianValue"
+                })
+            ,
+            Stock.countDocuments(filters),
+        ]);
+        return { count: total, stocks };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 const getAllStock = async (clientId, filters = {}) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -245,5 +287,6 @@ module.exports = {
     activeInactive,
     deleted,
 
-    getAllStock
+    getAllStock,
+    getListStock
 };
