@@ -116,8 +116,9 @@ router.get('/get/all/review/customer', customerAuth.customer, customerCoontrolle
 
 
 // route for product question & answers
-router.post("/post/question", customerAuth.customer, customerCoontroller.addToCart);
-router.get('/get/all/question/customer', customerAuth.customer, customerCoontroller.getAllReviewsByCustomer);
+router.post("/post/question", customerAuth.customer, customerCoontroller.postQuestion);
+router.get('/get/all/question/customer', customerAuth.customer, customerCoontroller.getAllQuestionsByCustomer);
+router.delete('/delete/question/:clientId/:id', customerAuth.customer, customerCoontroller.deleteQuestion);
 
 
 

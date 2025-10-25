@@ -15,7 +15,6 @@ const questionAndAnswerProductSchema = new Schema(
         question: { type: String, default: null },
         answer: { type: String, default: null },
         isVerified: { type: Boolean, default: false },
-        isPredefined: { type: Boolean, default: false },
         hasAnswered: { type: Boolean, default: false },
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },

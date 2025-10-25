@@ -1790,7 +1790,6 @@ const updateAverageRating3 = async (clientId, productMainStockId) => {
   }
 };
 
-
 // post question
 exports.postQuestion = async (req, res, next) => {
   try {
@@ -1811,23 +1810,20 @@ exports.postQuestion = async (req, res, next) => {
       return res.status(httpStatusCode.NotFound).json({ message: 'Product not found' });
     }
 
-    const existingQuestion = await QuestionAndAnswerProduct.findOne({ customerId, question });
+    const existingQuestion = await QuestionAndAnswerProduct.findOne({ userId: customerId, productMainStockId, question });
     if (existingQuestion) {
-      return res.status(httpStatusCode.BadRequest).json({ message: 'You have already raised this question' });
+      return res.status(httpStatusCode.BadRequest).json({ message: 'You have already raised this question for this product.' });
     }
-
     const dataObject = {
-      customerId,
+      userId: customerId,
       productStock,
       productMainStockId,
       question,
       createdBy: customerId, // Assuming createdBy is the same as customerId
     }
-
-    const newQuestion = new ProductMainStock(dataObject);
+    const newQuestion = new QuestionAndAnswerProduct(dataObject);
     await newQuestion.save();
-    res.status(201).json({ message: 'Question posted successfully', review: newQuestion });
-
+    return res.status(201).json({ message: 'Question posted successfully', review: newQuestion });
   } catch (error) {
     next(error)
   }
@@ -1844,7 +1840,7 @@ exports.getAllQuestionsByCustomer = async (req, res) => {
     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
     const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
 
-    const questions = await QuestionAndAnswerProduct.find({ customerId: userId })
+    const questions = await QuestionAndAnswerProduct.find({ userId: userId })
       .populate({
         path: "productStock",
         model: ProductStock,
@@ -1861,9 +1857,8 @@ exports.getAllQuestionsByCustomer = async (req, res) => {
       .sort(sort)
     // .skip((page - 1) * limit)
     // .limit(parseInt(limit))
-
     const total = await QuestionAndAnswerProduct.countDocuments({ customerId: userId });
-    res.status(200).json({
+    return res.status(200).json({
       questions,
       total,
       page: parseInt(page),
@@ -1872,5 +1867,37 @@ exports.getAllQuestionsByCustomer = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.deleteQuestion = async (req, res) => {
+  try {
+    const { id, clientId } = req.params; // reviewId
+    const customerId = req.user.id; // Assuming auth middleware sets req.user.id from JWT (customerId)
+
+    // Validate ID format (MongoDB ObjectId)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid review ID format' });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
+    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+
+    const question = await QuestionAndAnswerProduct.findOneAndDelete({
+      _id: id,
+      userId: customerId, // Enforce ownership
+    });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found or you do not have permission to delete it' });
+    }
+    return res.status(200).json({
+      message: 'Question deleted successfully',
+      deletedReview: { id: question._id }
+    });
+  } catch (error) {
+    console.error('Error deleting queston:', error);
+    res.status(500).json({ message: 'Server error while deleting question' });
   }
 };
