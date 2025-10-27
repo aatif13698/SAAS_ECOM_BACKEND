@@ -125,6 +125,8 @@ router.post(
 
 router.get('/stock/:clientId/:stockId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getParticular);
 
+router.get('/stockbyproduct/:clientId/:product', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getStockByProduct);
+
 router.get('/listStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.list);
 
 router.post("/activeInactiveStock", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.activeinactive);

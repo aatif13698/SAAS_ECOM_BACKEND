@@ -266,6 +266,16 @@ module.exports = {
   lblAssetIdIdAndClientIdRequired: "Asset Id and Client Id are required!",
   lblAssetIdIdRequired: "Asset Id id required!",
 
+  // product QA 
+  lblProductQAAlreadyExists: "ProductQA already exists with this email or phone!",
+  lblProductQACreatedSuccess: "ProductQA created successfully!",
+  lblProductQAUpdatedSuccess: "Business unit updated successfully!",
+  lblProductQAIdAndClientIdRequired: " ProductQA Id and Client Id are required!",
+  lblProductQANotFound: "ProductQA not found!",
+  lblProductQAFoundSucessfully: "ProductQA found successfully!",
+  lblProductQAIdIdAndClientIdRequired: "ProductQA Id and Client Id are required!",
+  lblProductQAIdIdRequired: "ProductQA Id id required!",
+
 
   // leave category
   lblLeaveCategoryAlreadyExists: "LeaveCategory already exists with this email or phone!",

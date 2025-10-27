@@ -148,6 +148,25 @@ const getById = async (clientId, stockId) => {
     }
 };
 
+const getByProduct = async (clientId, product) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const stock = await Stock.find({product: product}).populate({
+            path: 'normalSaleStock',
+            model: MainStock,
+            select: "name"
+        });
+        if (!stock) {
+            throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
+        }
+        return stock;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+    }
+};
+
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -298,6 +317,7 @@ module.exports = {
     create,
     update,
     getById,
+    getByProduct,
     list,
     activeInactive,
     deleted,

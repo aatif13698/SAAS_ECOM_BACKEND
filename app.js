@@ -66,7 +66,8 @@ const holidayRoute = require("./VendorHr/routes/holiday.route.js");
 
 
 const vendorAttribute = require("./VendorAdministration/routes/attributes.routes.js")
-const vendorProductBlueprint = require("./VendorAdministration/routes/productBluePrint.routes.js")
+const vendorProductBlueprint = require("./VendorAdministration/routes/productBluePrint.routes.js");
+const productQa = require("./VendorAdministration/routes/productQA.routes.js")
 const vendorProductVariant = require("./VendorAdministration/routes/variant.routes.js");
 const vendorProductPrice = require("./VendorAdministration/routes/productRate.routes.js");
 const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
@@ -159,6 +160,7 @@ app.use("/api/vendor/hr/holiday", holidayRoute.router);
 // route setup for products
 app.use("/api/vendor/attribute", vendorAttribute.router);
 app.use("/api/vendor/blueprint", vendorProductBlueprint.router);
+app.use("/api/vendor/product/qa", productQa.router);
 app.use("/api/vendor/variant", vendorProductVariant.router);
 app.use("/api/vendor/price", vendorProductPrice.router);
 

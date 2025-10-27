@@ -271,6 +271,25 @@ exports.getParticular = async (req, res, next) => {
     }
 };
 
+// get stock by product
+exports.getStockByProduct = async (req, res, next) => {
+    try {
+        const { clientId, product } = req.params;
+        if (!clientId || !product) {
+            return res.status(400).send({
+                message: message.lblRequiredFieldMissing,
+            });
+        }
+        const data = await stockService.getByProduct(clientId, product);
+        return res.status(200).send({
+            message: message.lblStockFoundSuccessfully,
+            data: data,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
 // list 
 exports.list = async (req, res, next) => {
     try {
