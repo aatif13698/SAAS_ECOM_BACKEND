@@ -8,6 +8,8 @@ const productBlueprintSchema = require("../../client/model/productBlueprint");
 const productMainStockSchema = require("../../client/model/productMainStock");
 const clinetSubCategorySchema = require("../../client/model/subCategory");
 const clinetCategorySchema = require("../../client/model/category");
+const productVariantSchema = require("../../client/model/productVariant");
+const productRateSchema = require("../../client/model/productRate");
 
 
 const create = async (clientId, data) => {
@@ -187,6 +189,8 @@ const getListStock = async (clientId, filters = {}, options = { page: 1, limit: 
         const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
         const Category = clientConnection.model('clientCategory', clinetCategorySchema);
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const ProductRate = clientConnection.model('productRate', productRateSchema);
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
@@ -210,7 +214,18 @@ const getListStock = async (clientId, filters = {}, options = { page: 1, limit: 
                 .populate({
                     path: 'normalSaleStock',
                     model: MainStock,
-                    select: "name images varianValue"
+                    select: "-paymentOPtions -product -businessUnit -branch -warehouse -totalStock -specification -onlineStock -offlineStock -lowStockThreshold -restockQuantity -lastRestockedAt -isBulkType -isActive -averageRating -reviewCount -deletedAt -updatedAt -createdAt", 
+                    populate: [
+                        {
+                            path: 'variant',
+                            model: ProductVariant,
+                            populate: {
+                                path: 'priceId',
+                                model: ProductRate,
+                                select: "price"
+                            }
+                        }
+                    ]
                 })
             ,
             Stock.countDocuments(filters),
