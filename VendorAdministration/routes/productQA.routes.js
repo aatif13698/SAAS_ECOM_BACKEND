@@ -13,9 +13,9 @@ router.post('/create/productQa', entityAuth.authorizeEntity("Administration", "E
 
 router.get('/get/productQa/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getByProductMainStockId);
 
-
 router.put('/update/productQa', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.update);
 
+router.delete('/delete/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.deleteOne);
 
 router.get('/list/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.list);
 

@@ -61,7 +61,7 @@ exports.create = async (req, res, next) => {
             answer,
         ];
         console.log("requiredFields", requiredFields);
-        
+
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
@@ -93,127 +93,115 @@ exports.create = async (req, res, next) => {
 
 // update  
 exports.update = async (req, res, next) => {
-
     try {
         const {
             clientId,
-            assetId,
-            level,
+            qaId,
             businessUnit,
             branch,
             warehouse,
-
-            assetName,
-            serialNumber,
-            model,
-            purchaseDate,
-            purchaseCost,
-            currentValue,
-            usefulLife,
-            status,
-            condition,
-            warrantyEndDate,
-            disposalDate,
-            disposalReason,
-            notes,
-            expirationDate,
+            product,
+            productStock,
+            productMainStockId,
+            question,
+            answer,
         } = req.body;
-
         const mainUser = req.user;
+        if (!productMainStockId || !clientId || !productStock || !question || !answer) {
+            return res.status(statusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+        // Check if product exists
+        const productt = await ProductMainStock.findById(productMainStockId);
+        if (!productt) {
+            return res.status(statusCode.NotFound).json({ message: 'Product not found' });
+        }
         // Validate required fields
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
-
         const requiredFields = [
-            assetName,
-            serialNumber,
-            model,
-            purchaseDate,
-            purchaseCost,
-            currentValue,
-            usefulLife,
-            status,
-            condition,
-            warrantyEndDate,
-            notes,
-            expirationDate
+            clientId,
+            qaId,
+            businessUnit,
+            branch,
+            warehouse,
+            product,
+            productStock,
+            productMainStockId,
+            question,
+            answer,
         ];
+        console.log("requiredFields", requiredFields);
+
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
-
         // Base data object
         const dataObject = {
-            assetName,
-            serialNumber,
-            model,
-            purchaseDate,
-            purchaseCost,
-            currentValue,
-            usefulLife,
-            status,
-            condition,
-            warrantyEndDate,
-            disposalDate,
-            disposalReason,
-            notes,
-            expirationDate,
+            userId: mainUser._id,
+            businessUnit,
+            branch,
+            warehouse,
+            product,
+            productStock,
+            productMainStockId,
+            isPredefined: true,
+            question,
+            answer,
+            isVerified: true,
+            hasAnswered: true,
             createdBy: mainUser._id,
         };
-
-        const levelConfig = {
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
-        };
-
-        if (!levelConfig[level]) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
-        }
-
-        Object.assign(dataObject, levelConfig[level]);
-
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
-        }
-
-        if (['branch', 'warehouse'].includes(level) && !branch) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
-        }
-
-        if (level === 'warehouse' && !warehouse) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
-        }
-
-        // Add optional fields based on level
-        if (businessUnit && businessUnit !== "null") {
-            dataObject.businessUnit = businessUnit;
-        }
-        if (branch && branch !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-        }
-        if (warehouse && warehouse !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-            dataObject.warehouse = warehouse;
-        }
-
-        // update 
-        const updated = await productQaService.update(clientId, assetId, dataObject);
-
+        const newQA = await productQaService.update(clientId, qaId, dataObject);
         return res.status(statusCode.OK).send({
-            message: message.lblAssetUpdatedSuccess,
+            message: message.lblProductQAUpdatedSuccess,
+            data: { workingDepartmentId: newQA._id },
         });
-
     } catch (error) {
         next(error);
     }
-
 };
 
+// delete
+exports.deleteOne = async (req, res, next) => {
+  try {
+    const { id } = req.params; // <-- Q&A document ID
+    const clientId = req.body.clientId || req.query.clientId;
+
+    if (!clientId) {
+      return res.status(statusCode.BadRequest).json({ message: message.lblClinetIdIsRequired });
+    }
+
+    if (!id) {
+      return res.status(statusCode.BadRequest).json({ message: "Q&A ID is required." });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema);
+
+    const qa = await ProductQA.findById(id);
+    if (!qa) {
+      return res.status(statusCode.NotFound).json({ message: "Q&A not found." });
+    }
+
+    // Optional: Soft delete (recommended)
+    // await ProductQA.findByIdAndUpdate(id, { deletedAt: new Date() });
+
+    // OR Hard delete:
+    await ProductQA.findByIdAndDelete(id);
+
+    return res.status(statusCode.OK).json({
+      message: "Q&A deleted successfully.",
+      data: { deletedId: id }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getByProductMainStockId = async (req, res, next) => {
     try {

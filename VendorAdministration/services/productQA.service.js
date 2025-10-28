@@ -39,6 +39,9 @@ const update = async (clientId, qaId, updateData) => {
 
 
 
+
+
+
 const getByProductMainSockId = async (clientId, productMainStockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
