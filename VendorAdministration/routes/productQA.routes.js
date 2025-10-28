@@ -11,9 +11,11 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 router.post('/create/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.create);
 
+router.get('/get/productQa/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getByProductMainStockId);
+
+
 router.put('/update/productQa', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.update);
 
-router.get('/get/:clientId/:productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getParticular);
 
 router.get('/list/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.list);
 

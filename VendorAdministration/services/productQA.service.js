@@ -39,11 +39,11 @@ const update = async (clientId, qaId, updateData) => {
 
 
 
-const getById = async (clientId, qaId) => {
+const getByProductMainSockId = async (clientId, productMainStockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
-        const qa = await ProductQA.findById(qaId);
+        const qa = await ProductQA.find({productMainStockId: productMainStockId}).select("question answer");
         if (!qa) {
             throw new CustomError(statusCode.NotFound, message.lblProductQANotFound);
         }
@@ -91,7 +91,7 @@ const activeInactive = async (clientId, qaId, data) => {
 module.exports = {
     create,
     update,
-    getById,
+    getByProductMainSockId,
     list,
     activeInactive,
 };

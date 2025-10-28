@@ -23,13 +23,13 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            userId,
+            product,
             productStock,
             productMainStockId,
-            isPredefined,
             question,
             answer,
         } = req.body;
+        const mainUser = req.user;
         if (!productMainStockId || !clientId || !productStock || !question || !answer) {
             return res.status(statusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
         }
@@ -37,15 +37,14 @@ exports.create = async (req, res, next) => {
         const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
         const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
         // Check if product exists
-        const product = await ProductMainStock.findById(productMainStockId);
-        if (!product) {
+        const productt = await ProductMainStock.findById(productMainStockId);
+        if (!productt) {
             return res.status(statusCode.NotFound).json({ message: 'Product not found' });
         }
-        const existingQuestion = await QuestionAndAnswerProduct.findOne({ userId: userId, warehouse, productMainStockId, question });
+        const existingQuestion = await QuestionAndAnswerProduct.findOne({ userId: mainUser._id, warehouse, productMainStockId, question });
         if (existingQuestion) {
             return res.status(statusCode.BadRequest).json({ message: 'You have already raised this question for this product.' });
         }
-        const mainUser = req.user;
         // Validate required fields
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
@@ -55,24 +54,27 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            userId,
+            product,
             productStock,
             productMainStockId,
             question,
             answer,
         ];
+        console.log("requiredFields", requiredFields);
+        
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
         // Base data object
         const dataObject = {
-            userId,
+            userId: mainUser._id,
             businessUnit,
             branch,
             warehouse,
+            product,
             productStock,
             productMainStockId,
-            isPredefined,
+            isPredefined: true,
             question,
             answer,
             isVerified: true,
@@ -212,19 +214,19 @@ exports.update = async (req, res, next) => {
 
 };
 
-// get particular 
-exports.getParticular = async (req, res, next) => {
+
+exports.getByProductMainStockId = async (req, res, next) => {
     try {
-        const { clientId, assetId } = req.params;
-        if (!clientId || !assetId) {
+        const { clientId, productMainStockId } = req.params;
+        if (!clientId || !productMainStockId) {
             return res.status(400).send({
                 message: message.lblShiftIdAndClientIdRequired,
             });
         }
-        const asset = await productQaService.getById(clientId, assetId);
+        const qa = await productQaService.getByProductMainSockId(clientId, productMainStockId);
         return res.status(200).send({
-            message: message.lblAssetFoundSucessfully,
-            data: asset,
+            message: message.lblProductQAFoundSucessfully,
+            data: qa,
         });
     } catch (error) {
         next(error)
