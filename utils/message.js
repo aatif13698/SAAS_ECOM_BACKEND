@@ -136,6 +136,15 @@ module.exports = {
   lblSubCategoryIdIsRequired: "SubCategory Id is required!",
 
 
+  // supplier transport
+  lblSupplierTransportNotFound: "SupplierTransport not found!",
+  lblSupplierTransportAlreadyExists: "SupplierTransport already exists!",
+  lblSupplierTransportCreatedSuccess: "SupplierTransport created successfully!",
+  lblSupplierTransportUpdatedSuccess: "SupplierTransport updated successfully!",
+  lblSupplierTransportFoundSuccessfully: "SupplierTransport found successfully!",
+  lblSupplierTransportSoftDeletedSuccess: "SupplierTransport soft deleted successfully!",
+  lblSupplierTransportRestoredSuccess: "SupplierTransport restored succesfully!",
+  lblSupplierTransportIdIsRequired: "SupplierTransport Id is required!",
 
 
 
