@@ -7,16 +7,15 @@ const ObjectId = Schema.ObjectId;
 
 const purchaseInvoiceTransportSchema = new Schema(
     {
-        /* -------------------------------------------------
-        REFERENCE FIELDS
-        ------------------------------------------------- */
+
         supplierId: {
             type: ObjectId,
-            ref: "supplier",               // or "User" if supplier is a user
+            ref: "supplier",
             required: true,
-            index: true,
         },
-       
+
+
+
 
         /* -------------------------------------------------
            E-WAY BILL (India)
@@ -64,15 +63,10 @@ const purchaseInvoiceTransportSchema = new Schema(
             },
 
             // Transporter / Carrier
-            transporter: {
-                name: { type: String, default: null },
-                gstin: { type: String, default: null },
-                pan: { type: String, default: null },
-                address: { type: String, default: null },
-                contactPerson: { type: String, default: null },
-                phone: { type: String, default: null },
-                email: { type: String, default: null },
-                transporterId: { type: String, default: null }, // optional govt ID
+            transporterId: {
+                type: ObjectId,
+                ref: "supplierTransport",
+                required: true,
             },
 
             // Vehicle & Driver
@@ -123,8 +117,7 @@ const purchaseInvoiceTransportSchema = new Schema(
             privateMarks: { type: String, default: null },
             remarks: { type: String, default: null },
         },
-
-        /* -------------------------------------------------
+ /* -------------------------------------------------
            SHIPPING METHOD & INCOTERMS (Global)
            ------------------------------------------------- */
         shippingMethod: {
@@ -141,6 +134,7 @@ const purchaseInvoiceTransportSchema = new Schema(
             ],
             default: null,
         },
+
         incoterm: {
             type: String,
             enum: [
