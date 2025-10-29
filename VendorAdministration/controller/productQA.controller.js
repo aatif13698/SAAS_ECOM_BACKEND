@@ -35,7 +35,7 @@ exports.create = async (req, res, next) => {
         }
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
-        const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+        const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema)
         // Check if product exists
         const productt = await ProductMainStock.findById(productMainStockId);
         if (!productt) {
@@ -112,7 +112,7 @@ exports.update = async (req, res, next) => {
         }
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
-        const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+        const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema)
         // Check if product exists
         const productt = await ProductMainStock.findById(productMainStockId);
         if (!productt) {
@@ -180,7 +180,7 @@ exports.deleteOne = async (req, res, next) => {
     }
 
     const clientConnection = await getClientDatabaseConnection(clientId);
-    const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema);
+    const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema);
 
     const qa = await ProductQA.findById(id);
     if (!qa) {

@@ -13,7 +13,7 @@ const questionAndAnswerProductSchema = require("../../client/model/questionAndAn
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)
         return await ProductQA.create(data);
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
@@ -23,7 +23,7 @@ const create = async (clientId, data) => {
 const update = async (clientId, qaId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)
         const qa = await ProductQA.findById(qaId);
         if (!qa) {
             throw new CustomError(statusCode.NotFound, message.lblProductQANotFound);
@@ -45,7 +45,7 @@ const update = async (clientId, qaId, updateData) => {
 const getByProductMainSockId = async (clientId, productMainStockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)
         const qa = await ProductQA.find({productMainStockId: productMainStockId}).select("question answer");
         if (!qa) {
             throw new CustomError(statusCode.NotFound, message.lblProductQANotFound);
@@ -60,7 +60,7 @@ const getByProductMainSockId = async (clientId, productMainStockId) => {
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [qas, total] = await Promise.all([
@@ -77,7 +77,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 const activeInactive = async (clientId, qaId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const ProductQA = clientConnection.model('productQA', questionAndAnswerProductSchema)
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)
         const qa = await ProductQA.findById(qaId);
         if (!qa) {
             throw new CustomError(statusCode.NotFound, message.lblProductQANotFound);

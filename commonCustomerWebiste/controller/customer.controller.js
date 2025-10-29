@@ -1793,16 +1793,18 @@ const updateAverageRating3 = async (clientId, productMainStockId) => {
 // post question
 exports.postQuestion = async (req, res, next) => {
   try {
-    const { clientId, productMainStockId, productStock, question } = req.body;
+    const { clientId, businessUnit,
+      branch,
+      warehouse, productMainStockId, productStock, question } = req.body;
     const customerId = req.user ? req.user._id : null; // From auth middleware, if present
     // Validate required fields
-    if (!productMainStockId || !productStock || !question) {
+    if (!productMainStockId || !productStock || !question || !businessUnit || !branch || !warehouse) {
       return res.status(httpStatusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
     }
 
     const clientConnection = await getClientDatabaseConnection(clientId);
     const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
-    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+    const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema);
 
     // Check if product exists
     const product = await ProductMainStock.findById(productMainStockId);
@@ -1816,6 +1818,9 @@ exports.postQuestion = async (req, res, next) => {
     }
     const dataObject = {
       userId: customerId,
+      businessUnit,
+      branch,
+      warehouse,
       productStock,
       productMainStockId,
       question,
@@ -1829,6 +1834,8 @@ exports.postQuestion = async (req, res, next) => {
   }
 };
 
+
+
 exports.getAllQuestionsByCustomer = async (req, res) => {
   try {
     const { clientId } = req.query; // Using query param for clientId
@@ -1838,7 +1845,7 @@ exports.getAllQuestionsByCustomer = async (req, res) => {
     const ProductStock = clientConnection.model("productStock", productStockSchema);
     const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
     const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
-    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+    const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema)
 
     const questions = await QuestionAndAnswerProduct.find({ userId: userId })
       .populate({
@@ -1882,7 +1889,7 @@ exports.deleteQuestion = async (req, res) => {
 
     const clientConnection = await getClientDatabaseConnection(clientId);
     const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
-    const QuestionAndAnswerProduct = clientConnection.model('questionAndAnswer', questionAndAnswerProductSchema)
+    const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema)
 
     const question = await QuestionAndAnswerProduct.findOneAndDelete({
       _id: id,

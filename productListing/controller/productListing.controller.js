@@ -8,6 +8,7 @@ const productMainStockSchema = require("../../client/model/productMainStock");
 const productVariantSchema = require("../../client/model/productVariant");
 const productRateSchema = require("../../client/model/productRate");
 const ratingAndReviewsSchema = require("../../client/model/ratingAndReviews");
+const questionAndAnswerProductSchema = require("../../client/model/questionAndAnswerProduct");
 
 
 
@@ -187,6 +188,43 @@ exports.getProductRating = async (req, res, next) => {
   } catch (error) {
     console.error("Error fetching product", error);
     next(error);
+  }
+};
+
+// get Question by product
+exports.getQuestionsByProduct = async (req, res) => {
+  try {
+    const { clientId, productMainStockId } = req.params;
+    const { page = 1, limit = 10, sort = '-createdAt' } = req.query; // Pagination and sorting
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema);
+
+    // Validate product exists
+    const product = await ProductMainStock.findById(productMainStockId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    console.log("productMainStockId", productMainStockId);
+    
+
+    const qa = await QuestionAndAnswerProduct.find({ productMainStockId, isVerified: true, hasAnswered: true })
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await QuestionAndAnswerProduct.countDocuments({ productMainStockId, isVerified: true, hasAnswered: true });
+
+    res.status(200).json({
+      qa,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

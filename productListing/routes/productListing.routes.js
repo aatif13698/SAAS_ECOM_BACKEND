@@ -12,6 +12,7 @@ const productlistingController = require("../controller/productListing.controlle
 router.get('/get/laptopList/v1/:clientId', productlistingController.getLaptopList1);
 router.get('/get/product/v1/:clientId/:productStockId', productlistingController.getProduct);
 router.get('/get/product/v1/:clientId/:productStockId/:productMainStockId', productlistingController.getProductRating);
+router.get('/get/question/product/:clientId/:productStockId/:productMainStockId', productlistingController.getQuestionsByProduct);
 
 
 
