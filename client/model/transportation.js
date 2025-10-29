@@ -13,10 +13,12 @@ const supplierTransportationSchema = new Schema(
             required: true,
             index: true,
         },
-
         transporterName: { type: String, default: null },
         transporterGstin: { type: String, default: null },
         transporterPan: { type: String, default: null },
+        country: { type: String, trim: true, default: null },
+        state: { type: String, trim: true, default: null },
+        city: { type: String, trim: true, default: null },
         transporterAddress: { type: String, default: null },
         transporterContactPerson: { type: String, default: null },
         transporterPhone: { type: String, default: null },
