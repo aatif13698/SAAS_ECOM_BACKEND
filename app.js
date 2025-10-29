@@ -71,6 +71,7 @@ const productQa = require("./VendorAdministration/routes/productQA.routes.js")
 const vendorProductVariant = require("./VendorAdministration/routes/variant.routes.js");
 const vendorProductPrice = require("./VendorAdministration/routes/productRate.routes.js");
 const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
+const transporter = require("./VendorInventory/routes/supplierTransport.routes.js");
 const vendorStock = require("./VendorInventory/routes/stock.routes.js");
 const vendorOrder = require("./VendorInventory/routes/orders.routes.js");
 
@@ -166,6 +167,7 @@ app.use("/api/vendor/price", vendorProductPrice.router);
 
 // route setup for inventory
 app.use("/api/vendor/supplier", vendorSupplier.router);
+app.use("/api/vendor/transporter", transporter.router);
 app.use("/api/vendor/stock", vendorStock.router);
 app.use("/api/vendor/order", vendorOrder.router);
 

@@ -20,7 +20,7 @@ router.get('/get/supplier/transport/:clientId/:transportId', entityAuth.authoriz
 
 router.get('/list/supplier/transport', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierTransportController.list);
 
-router.post("/activeInactiveS/create/supplier/transport", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierTransportController.activeinactive);
+router.post("/activeInactive/transport", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierTransportController.activeinactive);
 
 
 exports.router = router;
