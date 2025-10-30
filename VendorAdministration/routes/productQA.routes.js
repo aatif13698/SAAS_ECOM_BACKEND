@@ -22,6 +22,16 @@ router.get('/list/productQa', entityAuth.authorizeEntity("Administration", "Empl
 router.post("/activeInactive/productQa", entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.activeinactive);
 
 
+router.get('/list/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.listQaOut);
+
+router.get('/get/productQa/out/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getQaOutByProductMainStockId);
+
+router.put('/update/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.updateQaOut);
+
+router.post('/publish/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.publishQaOut);
+
+
+
 
 
 exports.router = router;

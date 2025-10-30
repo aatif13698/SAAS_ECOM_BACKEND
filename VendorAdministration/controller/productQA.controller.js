@@ -165,42 +165,152 @@ exports.update = async (req, res, next) => {
     }
 };
 
+exports.updateQaOut = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            qaId,
+            businessUnit,
+            branch,
+            warehouse,
+            product,
+            productStock,
+            productMainStockId,
+            question,
+            answer,
+        } = req.body;
+        const mainUser = req.user;
+        if (!productMainStockId || !clientId || !productStock || !question || !answer) {
+            return res.status(statusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema)
+        // Check if product exists
+        const productt = await ProductMainStock.findById(productMainStockId);
+        if (!productt) {
+            return res.status(statusCode.NotFound).json({ message: 'Product not found' });
+        }
+        // Validate required fields
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+        const requiredFields = [
+            clientId,
+            qaId,
+            businessUnit,
+            branch,
+            warehouse,
+            product,
+            productStock,
+            productMainStockId,
+            question,
+            answer,
+        ];
+        console.log("requiredFields", requiredFields);
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+        // Base data object
+        const dataObject = {
+            businessUnit,
+            branch,
+            warehouse,
+            product,
+            productStock,
+            productMainStockId,
+            isPredefined: false,
+            question,
+            answer,
+            isVerified: false,
+            hasAnswered: true,
+            createdBy: mainUser._id,
+        };
+        const newQA = await productQaService.update(clientId, qaId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: message.lblProductQAUpdatedSuccess,
+            data: { workingDepartmentId: newQA._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // delete
 exports.deleteOne = async (req, res, next) => {
-  try {
-    const { id } = req.params; // <-- Q&A document ID
-    const clientId = req.body.clientId || req.query.clientId;
+    try {
+        const { id } = req.params; // <-- Q&A document ID
+        const clientId = req.body.clientId || req.query.clientId;
 
-    if (!clientId) {
-      return res.status(statusCode.BadRequest).json({ message: message.lblClinetIdIsRequired });
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).json({ message: message.lblClinetIdIsRequired });
+        }
+
+        if (!id) {
+            return res.status(statusCode.BadRequest).json({ message: "Q&A ID is required." });
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema);
+
+        const qa = await ProductQA.findById(id);
+        if (!qa) {
+            return res.status(statusCode.NotFound).json({ message: "Q&A not found." });
+        }
+
+        // Optional: Soft delete (recommended)
+        // await ProductQA.findByIdAndUpdate(id, { deletedAt: new Date() });
+
+        // OR Hard delete:
+        await ProductQA.findByIdAndDelete(id);
+
+        return res.status(statusCode.OK).json({
+            message: "Q&A deleted successfully.",
+            data: { deletedId: id }
+        });
+
+    } catch (error) {
+        next(error);
     }
+};
 
-    if (!id) {
-      return res.status(statusCode.BadRequest).json({ message: "Q&A ID is required." });
+// publish Qa
+exports.publishQaOut = async (req, res, next) => {
+    try {
+        const { id } = req.params; // <-- Q&A document ID
+        const clientId = req.body.clientId || req.query.clientId;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).json({ message: message.lblClinetIdIsRequired });
+        }
+
+        if (!id) {
+            return res.status(statusCode.BadRequest).json({ message: "Q&A ID is required." });
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema);
+
+        const qa = await ProductQA.findById(id);
+        if (!qa) {
+            return res.status(statusCode.NotFound).json({ message: "Q&A not found." });
+        }
+        if (qa.isVerified) {
+            qa.isVerified = false;
+        } else {
+            qa.isVerified = true;
+        }
+
+        await qa.save()
+        return res.status(statusCode.OK).json({
+            message: "Q&A published successfully.",
+            data: { id: id }
+        });
+
+    } catch (error) {
+        next(error);
     }
-
-    const clientConnection = await getClientDatabaseConnection(clientId);
-    const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema);
-
-    const qa = await ProductQA.findById(id);
-    if (!qa) {
-      return res.status(statusCode.NotFound).json({ message: "Q&A not found." });
-    }
-
-    // Optional: Soft delete (recommended)
-    // await ProductQA.findByIdAndUpdate(id, { deletedAt: new Date() });
-
-    // OR Hard delete:
-    await ProductQA.findByIdAndDelete(id);
-
-    return res.status(statusCode.OK).json({
-      message: "Q&A deleted successfully.",
-      data: { deletedId: id }
-    });
-
-  } catch (error) {
-    next(error);
-  }
 };
 
 exports.getByProductMainStockId = async (req, res, next) => {
@@ -212,6 +322,24 @@ exports.getByProductMainStockId = async (req, res, next) => {
             });
         }
         const qa = await productQaService.getByProductMainSockId(clientId, productMainStockId);
+        return res.status(200).send({
+            message: message.lblProductQAFoundSucessfully,
+            data: qa,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+exports.getQaOutByProductMainStockId = async (req, res, next) => {
+    try {
+        const { clientId, productMainStockId } = req.params;
+        if (!clientId || !productMainStockId) {
+            return res.status(400).send({
+                message: message.lblShiftIdAndClientIdRequired,
+            });
+        }
+        const qa = await productQaService.getQaOutByProductMainSockId(clientId, productMainStockId);
         return res.status(200).send({
             message: message.lblProductQAFoundSucessfully,
             data: qa,
@@ -267,6 +395,59 @@ exports.list = async (req, res, next) => {
         const result = await productQaService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
             message: message.lblAssetFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// list QA Out
+exports.listQaOut = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            // deletedAt: null,
+            // isPredefined: false,
+            ...(keyword && {
+                $or: [
+                    { question: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+
+        // if (level == "vendor") {
+
+        // } else if (level == "business" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBuLevel: true,
+        //         businessUnit: levelId
+        //     }
+        // } else if (level == "branch" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBranchLevel: true,
+        //         branch: levelId
+        //     }
+        // } else if (level == "warehouse" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBuLevel: true,
+        //         isWarehouseLevel: levelId
+        //     }
+        // }
+
+        const result = await productQaService.listQaOut(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblProductQAFoundSucessfully,
             data: result,
         });
     } catch (error) {
