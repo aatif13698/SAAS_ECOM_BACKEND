@@ -1409,12 +1409,12 @@ exports.removeFromWishList = async (req, res, next) => {
 // post rating
 exports.postRating = async (req, res, next) => {
   try {
-    const { clientId, productMainStockId, productStock, rating, name, description } = req.body;
+    const { clientId,product, productMainStockId, productStock, rating, name, description } = req.body;
     // const customerId = req.user.id; // From auth middleware, assuming JWT with user.id as clientUsers _id
     const customerId = req.user ? req.user._id : null; // From auth middleware, if present
 
     // Validate required fields
-    if (!productMainStockId || !productStock || !rating) {
+    if (!productMainStockId || !productStock || !rating || !product) {
       return res.status(httpStatusCode.BadRequest).json({ message: 'productMainStockId and rating are required' });
     }
 
@@ -1428,8 +1428,8 @@ exports.postRating = async (req, res, next) => {
     const RatingAndReview = clientConnection.model('ratingAndReview', ratingAndReviewsSchema);
 
     // Check if product exists
-    const product = await ProductMainStock.findById(productMainStockId);
-    if (!product) {
+    const productt = await ProductMainStock.findById(productMainStockId);
+    if (!productt) {
       return res.status(httpStatusCode.NotFound).json({ message: 'Product not found' });
     }
 
@@ -1451,6 +1451,7 @@ exports.postRating = async (req, res, next) => {
 
     const dataObject = {
       customerId,
+      product,
       productStock,
       productMainStockId,
       rating: Number(rating),
