@@ -1,43 +1,35 @@
+const mongoose = require("mongoose"); 
 
+const { Schema } = mongoose; 
+const ObjectId = Schema.ObjectId; 
 
-const mongoose = require("mongoose");
+const documentRequirementSchema = new Schema( 
+    { 
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true }, 
+        branch: { type: ObjectId, ref: "branch", default: null, index: true }, 
+        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true }, 
 
-const { Schema } = mongoose;
-const ObjectId = Schema.ObjectId;
+        workDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true }, 
+        jobRole: { type: ObjectId, ref: "clientRoles", default: null, index: true }, 
 
-const documentRequirementSchema = new Schema(
-    {
-        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
-        branch: { type: ObjectId, ref: "branch", default: null, index: true },
-        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
+        isVendorLevel: { type: Boolean, default: false }, 
+        isBuLevel: { type: Boolean, default: false }, 
+        isBranchLevel: { type: Boolean, default: false }, 
+        isWarehouseLevel: { type: Boolean, default: false }, 
 
-        workDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
-        jobRole: { type: ObjectId, ref: "clientRoles", default: null, index: true },
+        name: { type: String, required: true, unique: true }, 
+        isActive: { type: Boolean, default: true }, 
 
-        isVendorLevel: { type: Boolean, default: false },
-        isBuLevel: { type: Boolean, default: false },
-        isBranchLevel: { type: Boolean, default: false },
-        isWarehouseLevel: { type: Boolean, default: false },
+        requiredFields: [{ 
+            fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'customField', default: null }, 
+        }], 
 
-        name: { type: String, required: true, unique: true },
-        isActive: { type: Boolean, default: true },
+        createdBy: { type: ObjectId, ref: "clientUsers", index: true }, 
+        updatedBy: { type: ObjectId, ref: 'clientUsers' }, 
+        updatedAt: { type: Date, default: null, index: true }, 
+        deletedAt: { type: Date, default: null, index: true }, 
+    }, 
+    { timestamps: true } 
+); 
 
-        requiredFields: [{
-            fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'customField', default: null },
-        }],
-
-        createdBy: { type: ObjectId, ref: "clientUsers", index: true },
-        updatedBy: { type: ObjectId, ref: 'clientUsers' },
-        updatedAt: { type: Date, default: null, index: true },
-        deletedAt: { type: Date, default: null, index: true },
-    },
-    { timestamps: true }
-);
-
-
-module.exports = documentRequirementSchema;
-
-
-
-
-
+module.exports = documentRequirementSchema; 

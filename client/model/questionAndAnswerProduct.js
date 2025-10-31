@@ -1,35 +1,28 @@
+const mongoose = require("mongoose");  
 
+const { Schema } = mongoose;  
+const ObjectId = Schema.ObjectId;  
 
-const mongoose = require("mongoose");
+const questionAndAnswerProductSchema = new Schema(  
+    {  
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers', required: true },  
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },  
+        branch: { type: ObjectId, ref: "branch", default: null, index: true },  
+        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },  
+        productStock: { type: ObjectId, ref: "productStock", required: true },  
+        productMainStockId: { type: ObjectId, ref: "productMainStock", required: true },  
+        isPredefined: { type: Boolean, default: false },  
 
-const { Schema } = mongoose;
-const ObjectId = Schema.ObjectId;
+        question: { type: String, default: null },  
+        answer: { type: String, default: null },  
+        isVerified: { type: Boolean, default: false },  
+        hasAnswered: { type: Boolean, default: false },  
 
-const questionAndAnswerProductSchema = new Schema(
-    {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'clientUsers', required: true },
-        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
-        branch: { type: ObjectId, ref: "branch", default: null, index: true },
-        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
-        productStock: { type: ObjectId, ref: "productStock", required: true },
-        productMainStockId: { type: ObjectId, ref: "productMainStock", required: true },
-        isPredefined: { type: Boolean, default: false },
+        createdBy: { type: ObjectId, ref: "clientUsers", index: true },  
+        deletedAt: { type: Date, default: null, index: true },  
+        updatedAt: { type: Date, default: null, index: true },  
+    },  
+    { timestamps: true }  
+);  
 
-        question: { type: String, default: null },
-        answer: { type: String, default: null },
-        isVerified: { type: Boolean, default: false },
-        hasAnswered: { type: Boolean, default: false },
-
-        createdBy: { type: ObjectId, ref: "clientUsers", index: true },
-        deletedAt: { type: Date, default: null, index: true },
-        updatedAt: { type: Date, default: null, index: true },
-    },
-    { timestamps: true }
-);
-
-module.exports = questionAndAnswerProductSchema;
-
-
-
-
-
+module.exports = questionAndAnswerProductSchema;  
