@@ -1,34 +1,24 @@
+const express = require("express");  
+let router = express.Router();  
 
+const workingDepartmentController = require("../controller/workingDepartments.controller");  
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");  
+const { uploadBranchIcon } = require("../../utils/multer");  
 
-const express = require("express");
-let router = express.Router();
+// # create, update, view, list, activate/inactive woring department  
 
+router.post('/create/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.create);  
 
+router.put('/update/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "update"), workingDepartmentController.update);  
 
-const workingDepartmentController = require("../controller/workingDepartments.controller");
-const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
-const { uploadBranchIcon } = require("../../utils/multer");
+router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.getParticular);  
 
+router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.list);  
 
-// # create, update, view, list, activate/inactive woring department
+router.get('/all/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.allDepartment);  
 
-router.post('/create/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.create);
+router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.activeinactive);  
 
-router.put('/update/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "update"), workingDepartmentController.update);
+// # create, update, view, list, activate/inactive  woring department  
 
-router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.getParticular);
-
-router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.list);
-
-router.get('/all/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.allDepartment);
-
-router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.activeinactive);
-
-// # create, update, view, list, activate/inactive  woring department
-
-
-
-
-
-
-exports.router = router;
+exports.router = router;  

@@ -1,37 +1,27 @@
+const express = require("express");  
+let router = express.Router();  
 
+const productQaController = require("../controller/productQA.controller");  
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");  
 
-const express = require("express");
-let router = express.Router();
+router.post('/create/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.create);  
 
+router.get('/get/productQa/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getByProductMainStockId);  
 
+router.put('/update/productQa', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.update);  
 
-const productQaController = require("../controller/productQA.controller");
-const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
+router.delete('/delete/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.deleteOne);  
 
+router.get('/list/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.list);  
 
-router.post('/create/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.create);
+router.post("/activeInactive/productQa", entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.activeinactive);  
 
-router.get('/get/productQa/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getByProductMainStockId);
+router.get('/list/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.listQaOut);  
 
-router.put('/update/productQa', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.update);
+router.get('/get/productQa/out/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getQaOutByProductMainStockId);  
 
-router.delete('/delete/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.deleteOne);
+router.put('/update/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.updateQaOut);  
 
-router.get('/list/productQa', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.list);
+router.post('/publish/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.publishQaOut);  
 
-router.post("/activeInactive/productQa", entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.activeinactive);
-
-
-router.get('/list/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.listQaOut);
-
-router.get('/get/productQa/out/:clientId/:productMainStockId', entityAuth.authorizeEntity("Administration", "Employee", "create"), productQaController.getQaOutByProductMainStockId);
-
-router.put('/update/productQa/out', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.updateQaOut);
-
-router.post('/publish/productQa/:id', entityAuth.authorizeEntity("Administration", "Employee", "update"), productQaController.publishQaOut);
-
-
-
-
-
-exports.router = router;
+exports.router = router;  
