@@ -33,7 +33,7 @@ const supplierSchema = new Schema(
                 message: 'Invalid phone number format.',
             },
         },
-        url : {type :  String, default:  null},
+        url: { type: String, default: null },
         city: {
             type: String,
             trim: true,
@@ -54,8 +54,24 @@ const supplierSchema = new Schema(
             type: String,
             trim: true,
         },
-        GstVanNumber :{ type: String, default : null },
+        GstVanNumber: { type: String, default: null },
         isActive: { type: Boolean, default: true },
+
+        // link items
+        items: [
+            {
+                productStock: {
+                    type: ObjectId,
+                    ref: "productStock",
+                    required: true,
+                },
+                productMainStock: {
+                    type: ObjectId,
+                    ref: "productMainStock",
+                    required: true,
+                },
+            }
+        ],
 
         // handlign created by
         createdBy: { type: ObjectId, ref: "clientUsers", default: null, index: true }, // Index for admin/user relationships

@@ -2,6 +2,7 @@
 
 
 
+const { default: mongoose } = require("mongoose");
 const customerAddressSchema = require("../../client/model/customerAddress");
 const clientRoleSchema = require("../../client/model/role");
 const supplierSchema = require("../../client/model/supplier");
@@ -145,6 +146,92 @@ exports.update = async (req, res, next) => {
         next(error);
     }
 
+};
+
+
+// add items
+exports.addItems = async (req, res, next) => {
+
+    try {
+        const {
+            clientId,
+            supplierId,
+            productStock,
+            productMainStock
+        } = req.body;
+
+        console.log("req.body", req.body);
+
+
+        const mainUser = req.user;
+
+        // Validate required fields
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+
+        const requiredFields = [
+            supplierId,
+            productStock,
+            productMainStock
+        ];
+
+        console.log("requiredFields", requiredFields);
+
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+        // Base data object
+        const dataObject = {
+            productStock,
+            productMainStock
+        };
+
+        // Create 
+        const updated = await supplierService.addItems(clientId, supplierId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: message.lblSupplierUpdatedSuccess,
+            data: { supplier: updated },
+        });
+    } catch (error) {
+        next(error);
+    }
+
+};
+
+// DELETE /supplier/remove/items
+exports.removeItems = async (req, res, next) => {
+    try {
+        const { clientId, supplierId, productStock, productMainStock } = req.body;
+
+        if (!clientId || !supplierId || !productStock || !productMainStock) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+
+        const clientConn = await getClientDatabaseConnection(clientId);
+        const Supplier = clientConn.model('supplier', supplierSchema);
+
+        const result = await Supplier.updateOne(
+            { _id: supplierId },
+            {
+                $pull: {
+                    items: {
+                        productStock: new mongoose.Types.ObjectId(productStock),
+                        productMainStock: new mongoose.Types.ObjectId(productMainStock),
+                    },
+                },
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ success: false, message: 'Item not found in supplier' });
+        }
+
+        return res.json({ success: true, message: 'Item removed' });
+    } catch (err) {
+        next(err);
+    }
 };
 
 // get particular 

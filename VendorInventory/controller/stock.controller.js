@@ -176,7 +176,7 @@ exports.update = async (req, res, next) => {
 
         } = req.body;
 
-        
+
 
         const mainUser = req.user;
 
@@ -330,37 +330,72 @@ exports.list = async (req, res, next) => {
 };
 
 // get list stock
+// exports.listStock = async (req, res, next) => {
+//     try {
+
+//         const mainUser = req.user;
+//         const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "", categoryId = null, subCategoryId = null } = req.query;
+
+//         if (!clientId) {
+//             return res.status(statusCode.BadRequest).send({
+//                 message: message.lblClinetIdIsRequired,
+//             });
+//         }
+//         let filters = {
+//             deletedAt: null,
+//         };
+//         const result = await stockService.getListStock(clientId, filters, { page, limit: perPage });
+//         return res.status(statusCode.OK).send({
+//             message: message.lblStockFoundSuccessfully,
+//             data: result,
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// };
 exports.listStock = async (req, res, next) => {
     try {
-
         const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        const {
+            clientId,
+            keyword = '',
+            page: pageStr = '1',
+            perPage: perPageStr = '10',
+            level = "vendor",
+            levelId = "",
+            categoryId = null,
+            subCategoryId = null
+        } = req.query;
+
 
         if (!clientId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblClinetIdIsRequired,
+            return res.status(400).send({
+                message: "Client ID is required",
             });
         }
-        let filters = {
-            deletedAt: null,
-            ...(keyword && {
-                $or: [
-                    // { name: { $regex: keyword.trim(), $options: "i" } },
-                    // { contactPerson: { $regex: keyword.trim(), $options: "i" } },
-                    // { emailContact: { $regex: keyword.trim(), $options: "i" } },
-                    // { contactNumber: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
-        };
-        if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                warehouse: levelId
-            }
+
+        // Convert to numbers
+        const page = parseInt(pageStr, 10);
+        const perPage = parseInt(perPageStr, 10);
+
+        if (isNaN(page) || isNaN(perPage) || page < 1 || perPage < 1) {
+            return res.status(400).send({
+                message: "Invalid pagination parameters",
+            });
         }
-        const result = await stockService.getListStock(clientId, filters, { page, limit: perPage });
-        return res.status(statusCode.OK).send({
-            message: message.lblStockFoundSuccessfully,
+
+        const result = await stockService.getListStock(
+            clientId,
+            keyword,
+            categoryId,
+            subCategoryId,
+            level,
+            levelId,
+            { page, limit: perPage }
+        );
+
+        return res.status(200).send({
+            message: "Stock found successfully",
             data: result,
         });
     } catch (error) {

@@ -7,6 +7,11 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clinetUserSchema = require("../../client/model/user");
 const supplierSchema = require("../../client/model/supplier");
+const productBlueprintSchema = require("../../client/model/productBlueprint");
+const productVariantSchema = require("../../client/model/productVariant");
+const productRateSchema = require("../../client/model/productRate");
+const productMainStockSchema = require("../../client/model/productMainStock");
+const productStockSchema = require("../../client/model/productStock");
 
 
 const create = async (clientId, data) => {
@@ -41,7 +46,7 @@ const update = async (clientId, supplierId, updateData) => {
                 { _id: { $ne: supplierId } },
                 {
                     $or: [{ emailContact: updateData.emailContact },
-                        { contactNumber: updateData?.contactNumber }
+                    { contactNumber: updateData?.contactNumber }
                     ],
                 },
             ],
@@ -50,17 +55,69 @@ const update = async (clientId, supplierId, updateData) => {
             throw new CustomError(statusCode.Conflict, message.lblSupplierAlreadyExists);
         }
         Object.assign(supplier, updateData);
-        return  await supplier.save();
+        return await supplier.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error updating supplier: ${error.message}`);
     }
 };
 
-const getById = async (clientId, supplierId) => {
+const addItems = async (clientId, supplierId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Supplier = clientConnection.model('supplier', supplierSchema)
         const supplier = await Supplier.findById(supplierId);
+        if (!supplier) {
+            throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
+        }
+        const itemExists = supplier.items.some(
+            (item) =>
+                item.productStock.toString() === updateData.productStock &&
+                item.productMainStock.toString() === updateData.productMainStock
+        );
+        if (itemExists) {
+            throw new CustomError(statusCode.Conflict, "This item is already linked to the supplier");
+        }
+        // Add new item
+        supplier.items.push({
+            productStock: updateData.productStock,
+            productMainStock: updateData.productMainStock,
+        });
+        return await supplier.save();
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error adding items: ${error.message}`);
+    }
+};
+
+
+const getById = async (clientId, supplierId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const Stock = clientConnection.model("productStock", productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const ProductRate = clientConnection.model('productRate', productRateSchema);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const ProductBluePrint = clientConnection.model(
+            "productBlueprint",
+            productBlueprintSchema
+        );
+
+        const supplier = await Supplier.findById(supplierId).populate({
+            path: "items.productStock",
+            model: Stock,
+            select: " _id product ",
+            populate: {
+                path: "product",
+                model: ProductBluePrint,
+                select: "name description images sku categoryId subCategoryId brandId",
+
+            },
+        })
+            .populate({
+                path: "items.productMainStock",
+                model: MainStock,
+                select: "name priceId description totalStock images onlineStock"
+            });
         if (!supplier) {
             throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
         }
@@ -174,5 +231,6 @@ module.exports = {
     deleted,
     restore,
     getBranchByBusiness,
-    getAllActive
+    getAllActive,
+    addItems
 };

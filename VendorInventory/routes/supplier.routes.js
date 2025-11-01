@@ -20,6 +20,11 @@ router.post('/createSupplier', entityAuth.authorizeEntity("Inventory", "Supplier
 
 router.post('/updateSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.update);
 
+router.post('/add/items', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.addItems);
+
+router.delete('/remove/items', entityAuth.authorizeEntity('Inventory', 'Supplier', 'update'), supplierContrller.removeItems);
+
+
 router.get('/Supplier/:clientId/:supplierId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.getParticular);
 
 router.get('/listSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.list);
