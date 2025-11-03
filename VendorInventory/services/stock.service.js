@@ -463,7 +463,6 @@ const getListStockOfSupplier = async (
         const productStockIds = supplier.items.map(item => item.productStock);
         const productMainStockIds = supplier.items.map(item => item.productMainStock);
 
-        console.log("productMainStockIds", productMainStockIds);
 
 
         // Build level filter
@@ -618,20 +617,9 @@ const getListStockOfSupplier = async (
 
         const stocks = await Stock.aggregate(pipeline);
 
-        for (let index = 0; index < productMainStockIds.length; index++) {
-            const element = productMainStockIds[index].toString();
-            for (let j = 0; j < stocks.length; j++) {
-                const st = stocks[j].normalSaleStock;
-                console.log("st", st);
-            }
-        }
-
-        console.log("stocks", stocks);
-
-
+       
         const filteredStock = stocks.map((item) => {
             const mainStockArrayBefore = item?.normalSaleStock;
-
             const normalSaleStockAfterFilter = mainStockArrayBefore.filter((stock) => {
                 const stockId = stock._id.toString();
                 for (let index = 0; index < productMainStockIds.length; index++) {
@@ -641,20 +629,11 @@ const getListStockOfSupplier = async (
                     }
                 }
             });
-
             return {
                 ...item,
                 normalSaleStock: normalSaleStockAfterFilter
             }
-
-            
-        })
-
-
-
-
-
-
+        });
         return {
             stocks: filteredStock,
             total,
