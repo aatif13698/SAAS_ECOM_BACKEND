@@ -1,6 +1,8 @@
 
 
 
+
+
 const defaultPersmissionsList = [
   {
     name: "Administration",
@@ -417,6 +419,7 @@ const defaultPersmissionsList = [
     ],
   },
 ];
+
 
 
 // vendor Permission list
