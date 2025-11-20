@@ -43,7 +43,7 @@ const {
 
 router.post(
     '/createStock',
-    entityAuth.authorizeEntity("Inventory", "Supplier", "create"),
+    entityAuth.authorizeEntity("Purchases", "Supplier", "create"),
     uploadProductBlueprintToS3.array("file", 5),
     async (req, res, next) => {
         try {
@@ -72,7 +72,7 @@ router.post(
 
 
 
-// router.post('/updateStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), (req, res, next) => {
+// router.post('/updateStock', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), (req, res, next) => {
 //     uploadProductBlueprint.array("file")(req, res, (err) => {
 //         if (err) {
 //             if (err instanceof multer.MulterError) {
@@ -94,7 +94,7 @@ router.post(
 
 router.post(
     '/updateStock',
-    entityAuth.authorizeEntity("Inventory", "Supplier", "create"),
+    entityAuth.authorizeEntity("Purchases", "Supplier", "create"),
     uploadProductBlueprintToS3.array("file", 5),
     async (req, res, next) => {
         try {
@@ -121,23 +121,23 @@ router.post(
     }
 );
 
-// router.post('/updateStock', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), stockContrller.update);
+// router.post('/updateStock', entityAuth.authorizeEntity("Purchases", "Supplier", "update"), stockContrller.update);
 
-router.get('/stock/:clientId/:stockId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getParticular);
+router.get('/stock/:clientId/:stockId', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.getParticular);
 
-router.get('/stockbyproduct/:clientId/:product', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getStockByProduct);
+router.get('/stockbyproduct/:clientId/:product', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.getStockByProduct);
 
-router.get('/listStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.list);
+router.get('/listStock', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.list);
 
-router.post("/activeInactiveStock", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.activeinactive);
+router.post("/activeInactiveStock", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.activeinactive);
 
-router.post("/softDeleteStock", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.softDelete);
+router.post("/softDeleteStock", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.softDelete);
 
-router.get('/getAllStock', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.getAllStock);
+router.get('/getAllStock', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.getAllStock);
 
-router.get("/listStock/all", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.listStock);
+router.get("/listStock/all", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.listStock);
 
-router.get("/listStock/all/of/supplier", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), stockContrller.listStockOfSupplier);
+router.get("/listStock/all/of/supplier", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.listStockOfSupplier);
 
 
 

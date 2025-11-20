@@ -14,32 +14,32 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // router.post('/createBranch', entityAuth.authorizeEntity("Supplier", "create"), supplierContrller.createBranchByVendor);
 
-router.post('/createSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.create);
+router.post('/createSupplier', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), supplierContrller.create);
 
 // router.put('/updateBranch', entityAuth.authorizeEntity("Supplier", "update"), supplierContrller.updateBranchByVendor);
 
-router.post('/updateSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.update);
+router.post('/updateSupplier', entityAuth.authorizeEntity("Purchases", "Supplier", "update"), supplierContrller.update);
 
-router.post('/add/items', entityAuth.authorizeEntity("Inventory", "Supplier", "update"), supplierContrller.addItems);
+router.post('/add/items', entityAuth.authorizeEntity("Purchases", "Supplier", "update"), supplierContrller.addItems);
 
-router.delete('/remove/items', entityAuth.authorizeEntity('Inventory', 'Supplier', 'update'), supplierContrller.removeItems);
+router.delete('/remove/items', entityAuth.authorizeEntity('Purchases', 'Supplier', 'update'), supplierContrller.removeItems);
 
 
-router.get('/Supplier/:clientId/:supplierId', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.getParticular);
+router.get('/Supplier/:clientId/:supplierId', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), supplierContrller.getParticular);
 
-router.get('/listSupplier', entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.list);
+router.get('/listSupplier', entityAuth.authorizeEntity("Purchases", "Supplier", "create"), supplierContrller.list);
 
-router.post("/activeInactiveSupplier", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.activeinactive);
+router.post("/activeInactiveSupplier", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), supplierContrller.activeinactive);
 
-router.post("/softDeleteSupplier", entityAuth.authorizeEntity("Inventory", "Supplier", "create"), supplierContrller.softDelete);
+router.post("/softDeleteSupplier", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), supplierContrller.softDelete);
 
-router.get("/get/active/supplier/:clientId", entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.getAllActive)
+router.get("/get/active/supplier/:clientId", entityAuth.authorizeEntity("Purchases", "Supplier", "view"), supplierContrller.getAllActive)
 
-router.post('/addNewAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.addNewAddress);
+router.post('/addNewAddress', entityAuth.authorizeEntity("Purchases", "Supplier", "view"), supplierContrller.addNewAddress);
 
-router.post('/updateAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.updateAddress);
+router.post('/updateAddress', entityAuth.authorizeEntity("Purchases", "Supplier", "view"), supplierContrller.updateAddress);
 
-router.post('/deleteAddress', entityAuth.authorizeEntity("Inventory", "Supplier", "view"), supplierContrller.deleteAddress);
+router.post('/deleteAddress', entityAuth.authorizeEntity("Purchases", "Supplier", "view"), supplierContrller.deleteAddress);
 
 router.get('/getAddresses/:clientId/:customerId', entityAuth.authorizeEntity("Administration", "Customer", "create"), supplierContrller.getAddresses);
 

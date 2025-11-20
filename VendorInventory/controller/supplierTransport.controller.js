@@ -21,7 +21,6 @@ exports.create = async (req, res, next) => {
     try {
         const {
             clientId,
-            supplierId,
             transporterName,
             transporterGstin,
             transporterPan,
@@ -44,7 +43,6 @@ exports.create = async (req, res, next) => {
         }
 
         const requiredFields = [
-            supplierId,
             clientId,
             transporterName,
             transporterGstin,
@@ -60,7 +58,6 @@ exports.create = async (req, res, next) => {
         }
         // Base data object
         const dataObject = {
-            supplierId,
             transporterName,
             transporterGstin,
             transporterPan,
@@ -91,7 +88,6 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            supplierId,
             transportId,
             transporterName,
             transporterGstin,
@@ -115,7 +111,6 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            supplierId,
             clientId,
             transportId,
             transporterName,
@@ -132,7 +127,6 @@ exports.update = async (req, res, next) => {
         }
         // Base data object
         const dataObject = {
-            supplierId,
             transporterName,
             transporterGstin,
             transporterPan,
@@ -201,6 +195,29 @@ exports.list = async (req, res, next) => {
             }),
         };
         const result = await supplierTransportService.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblSupplierTransportFoundSuccessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// list all active transporter
+exports.listAllActiveTransporter = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const filters = {
+            deletedAt: null,
+        };
+        const result = await supplierTransportService.listAllActiveTransporter(clientId, filters);
         return res.status(statusCode.OK).send({
             message: message.lblSupplierTransportFoundSuccessfully,
             data: result,

@@ -66,6 +66,19 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const listAllActiveTransporter = async (clientId, filters = {},) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SupplierTransport = clientConnection.model('supplierTransport', supplierTransportationSchema)
+        const [transports] = await Promise.all([
+            SupplierTransport.find(filters).sort({ _id: -1 }),
+        ]);
+        return { transports };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, transportId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -88,4 +101,5 @@ module.exports = {
     getById,
     list,
     activeInactive,
+    listAllActiveTransporter
 };
