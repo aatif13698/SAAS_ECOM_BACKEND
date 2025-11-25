@@ -306,6 +306,16 @@ module.exports = {
   lblHolidayIdIdAndClientIdRequired: "Holiday Id and Client Id are required!",
   lblHolidayIdIdRequired: "Holiday Id id required!",
 
+  // purchase order
+  lblPurchaseOrderAlreadyExists: "PurchaseOrder already exists with this email or phone!",
+  lblPurchaseOrderCreatedSuccess: "PurchaseOrder created successfully!",
+  lblPurchaseOrderUpdatedSuccess: "PurchaseOrder updated successfully!",
+  lblPurchaseOrderIdAndClientIdRequired: " PurchaseOrder Id and Client Id are required!",
+  lblPurchaseOrderNotFound: "PurchaseOrder not found!",
+  lblPurchaseOrderFoundSucessfully: "PurchaseOrder found successfully!",
+  lblPurchaseOrderIdIdAndClientIdRequired: "PurchaseOrder Id and Client Id are required!",
+  lblPurchaseOrderIdIdRequired: "PurchaseOrder Id id required!",
+
 
   // ledger group
   lblLedgerGroupAlreadyExists: "LedgerGroup already exists with this email or phone!",

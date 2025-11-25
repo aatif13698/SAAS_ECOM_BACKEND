@@ -1,0 +1,23 @@
+const express = require("express"); 
+let router = express.Router(); 
+
+
+const purchaseOrderController = require("../controller/purchaseOrder.controller"); 
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization"); 
+const { uploadBranchIcon } = require("../../utils/multer"); 
+
+
+// # create, update, view, list, activate/inactive purchaseOrder 
+
+router.post('/create/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.create); 
+
+router.put('/update/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseOrderController.update); 
+
+router.get('/get/:clientId/:purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.getParticular); 
+
+router.get('/list/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.list); 
+
+router.post("/activeInactive/purchaseOrder", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.activeinactive); 
+
+
+exports.router = router; 
