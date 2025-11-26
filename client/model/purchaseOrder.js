@@ -84,6 +84,7 @@ const purchaseOrderSchema = new Schema(
         paidAmount: { type: Number, default: 0, min: 0 },
         balance: { type: Number, default: 0, min: 0 },
 
+        status: { type: String, enum: ['draft', 'issued', 'invoiced', 'partially_invoiced', 'pending_approval', 'approved', 'closed', 'canceled'], default: "draft" },
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes
