@@ -11,7 +11,7 @@ const shippingAddressSchema = new Schema({
     country: { type: String, trim: true, required: true },
     state: { type: String, trim: true, required: true },
     city: { type: String, trim: true, required: true },
-    zipCode: { type: String, trim: true, required: true }, // Renamed from ZipCode for consistency
+    ZipCode: { type: String, trim: true, required: true }, // Renamed from ZipCode for consistency
     address: { type: String, trim: true, required: true },
     roadName: { type: String, trim: true, default: "" },
     nearbyLandmark: { type: String, trim: true, default: "" },

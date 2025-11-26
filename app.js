@@ -83,6 +83,9 @@ const voucherGroup = require("./VendorAccount/routes/voucherGroup.routes.js");
 const Voucher = require("./VendorAccount/routes/voucher.routes.js");
 
 
+const PurchaseOrder = require("./vendorPurchase/routes/purchaseOrder.routes.js");
+
+
 
 // routes import for staff
 const staffAuthRouter = require("./staffAuthentication/routes/staffAuth.routes.js");
@@ -181,7 +184,9 @@ app.use("/api/vendor/accounts/vo", Voucher.router);
 
 
 
+// routes setup for purchase
 
+app.use("/api/vendor/purhcase/po", PurchaseOrder.router);
 
 
 

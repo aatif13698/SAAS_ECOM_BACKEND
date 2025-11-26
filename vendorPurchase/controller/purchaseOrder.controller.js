@@ -266,7 +266,7 @@ exports.list = async (req, res, next) => {
             deletedAt: null,
             ...(keyword && {
                 $or: [
-                    { name: { $regex: keyword.trim(), $options: "i" } },
+                    // { name: { $regex: keyword.trim(), $options: "i" } },
                 ],
             }),
         };
