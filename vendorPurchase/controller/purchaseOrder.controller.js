@@ -54,16 +54,20 @@ exports.create = async (req, res, next) => {
             items,
             notes,
             bankDetails,
-            isInterState,
-            roundOff,
             paymentMethod,
             paidAmount,
             balance
         ];
 
+        console.log("requiredFields", requiredFields);
+        
+
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
+
+        console.log("coming here");
+        
 
         if (items?.length == 0) {
             return res.status(statusCode.BadRequest).send({ message: "Items is required" })

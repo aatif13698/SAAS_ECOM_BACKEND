@@ -24,7 +24,6 @@ const itemNameSchema = new Schema({
     name: { type: String, trim: true, required: true },
     productStock: { type: ObjectId, ref: "productStock", required: true },
     productMainStock: { type: ObjectId, ref: "productMainStock", required: true },
-    purchasePrice: { type: Number, default: 0, min: 0 }
 }, { _id: false });
 
 // Sub-schema for Purchase Order Item

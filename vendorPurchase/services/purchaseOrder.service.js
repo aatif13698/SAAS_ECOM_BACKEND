@@ -63,7 +63,8 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
             PurchaseOrder.find(filters).skip(skip)
                 .populate({
                     path: "supplier",
-                    model: Supplier
+                    model: Supplier,
+                    select: "-items"
             }),
             PurchaseOrder.countDocuments(filters),
         ]);
