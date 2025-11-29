@@ -40,7 +40,13 @@ const getById = async (clientId, purchaseOrderId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
-        const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId)
+            .populate({
+                path: "supplier",
+                model: Supplier,
+                select: "-items"
+            });
         if (!purchaseOrder) {
             throw new CustomError(statusCode.NotFound, message.lblHolidayNotFound);
         }
@@ -65,7 +71,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     path: "supplier",
                     model: Supplier,
                     select: "-items"
-            }),
+                }),
             PurchaseOrder.countDocuments(filters),
         ]);
         return { count: total, purchaseOrders };

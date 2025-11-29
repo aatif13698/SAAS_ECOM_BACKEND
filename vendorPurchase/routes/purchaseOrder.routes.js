@@ -1,23 +1,25 @@
-const express = require("express"); 
-let router = express.Router(); 
+const express = require("express");
+let router = express.Router();
 
 
-const purchaseOrderController = require("../controller/purchaseOrder.controller"); 
-const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization"); 
-const { uploadBranchIcon } = require("../../utils/multer"); 
+const purchaseOrderController = require("../controller/purchaseOrder.controller");
+const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
+const { uploadBranchIcon } = require("../../utils/multer");
 
 
 // # create, update, view, list, activate/inactive purchaseOrder 
 
-router.post('/create/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.create); 
+router.post('/create/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.create);
 
-router.put('/update/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseOrderController.update); 
+router.post('/issue/purchaseOrder/mail', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.issueMail)
 
-router.get('/get/:clientId/:purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.getParticular); 
+router.put('/update/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseOrderController.update);
 
-router.get('/list/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.list); 
+router.get('/get/:clientId/:purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.getParticular);
 
-router.post("/activeInactive/purchaseOrder", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.activeinactive); 
+router.get('/list/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.list);
+
+router.post("/activeInactive/purchaseOrder", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.activeinactive);
 
 
 exports.router = router; 

@@ -1,5 +1,8 @@
 const clientRoleSchema = require("../../client/model/role");
 const { getClientDatabaseConnection } = require("../../db/connection");
+const { sendPurchaseOrderEmail } = require("../../email/attachmentMail");
+const { mailSender } = require("../../email/emailSend");
+const { generatePurchaseOrderPDF } = require("../../helper/pdftGenerator");
 const roleModel = require("../../model/role");
 const userModel = require("../../model/user");
 const CustomError = require("../../utils/customeError");
@@ -60,14 +63,14 @@ exports.create = async (req, res, next) => {
         ];
 
         console.log("requiredFields", requiredFields);
-        
+
 
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
         console.log("coming here");
-        
+
 
         if (items?.length == 0) {
             return res.status(statusCode.BadRequest).send({ message: "Items is required" })
@@ -237,16 +240,69 @@ exports.update = async (req, res, next) => {
 
 };
 
+exports.issueMail = async (req, res, next) => {
+    try {
+        const { clientId, purchaseOrderId } = req.body;
+        if (!clientId || !purchaseOrderId) {
+            return res.status(400).send({
+                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
+            });
+        }
+        const purchaseOrder = await purchaseOrderService.getById(clientId, purchaseOrderId);
+
+        if (!purchaseOrder?.supplier?.emailContact) {
+            return res.status(statusCode.BadRequest).send({
+                success: false,
+                message: "Supplier email not found."
+            })
+        }
+
+        // Your company info — put this in config or DB
+        // const companyInfo = {
+        //     name: "ABC Traders Pvt Ltd",
+        //     address: "Railpar, Asansol, West Bengal - 713301",
+        //     phone: "+91 98765 43210",
+        //     email: "purchase@abctraders.com",
+        //     gstin: "19ABCDE1234F1Z5"
+        // };
+        // const pdfBuffer = await generatePurchaseOrderPDF(purchaseOrder, companyInfo);
+        // const mailOptions = {
+        //     from: process.env.EMAIL_FROM,
+        //     to: purchaseOrder?.supplier?.emailContact,
+        //     subject: "Your Purchase Order",
+        //     text: 'Please find the attached purchase order details.',
+        //     attachments: [
+        //         {
+        //             filename: 'purchase-order.pdf',
+        //             content: pdfBuffer,
+        //             contentType: 'application/pdf',
+        //         },
+        //     ],
+        // };
+        // await mailSender(mailOptions);  
+
+        // await sendPurchaseOrderEmail(purchaseOrder, purchaseOrder?.supplier?.emailContact, purchaseOrder?.supplier?.name);
+        await sendPurchaseOrderEmail(purchaseOrder, "mdaatif3033@gmail.com", purchaseOrder?.supplier?.name);
+
+        return res.status(200).send({
+            message: message.lblPurchaseOrderFoundSucessfully,
+            data: purchaseOrder,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, holidayId } = req.params;
-        if (!clientId || !holidayId) {
+        const { clientId, purchaseOrderId } = req.params;
+        if (!clientId || !purchaseOrderId) {
             return res.status(400).send({
-                message: message.lblHolidayIdIdAndClientIdRequired,
+                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
             });
         }
-        const asset = await purchaseOrderService.getById(clientId, holidayId);
+        const asset = await purchaseOrderService.getById(clientId, purchaseOrderId);
         return res.status(200).send({
             message: message.lblHolidayFoundSucessfully,
             data: asset,
