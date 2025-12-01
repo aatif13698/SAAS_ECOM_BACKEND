@@ -256,31 +256,6 @@ exports.issueMail = async (req, res, next) => {
                 message: "Supplier email not found."
             })
         }
-
-        // Your company info — put this in config or DB
-        // const companyInfo = {
-        //     name: "ABC Traders Pvt Ltd",
-        //     address: "Railpar, Asansol, West Bengal - 713301",
-        //     phone: "+91 98765 43210",
-        //     email: "purchase@abctraders.com",
-        //     gstin: "19ABCDE1234F1Z5"
-        // };
-        // const pdfBuffer = await generatePurchaseOrderPDF(purchaseOrder, companyInfo);
-        // const mailOptions = {
-        //     from: process.env.EMAIL_FROM,
-        //     to: purchaseOrder?.supplier?.emailContact,
-        //     subject: "Your Purchase Order",
-        //     text: 'Please find the attached purchase order details.',
-        //     attachments: [
-        //         {
-        //             filename: 'purchase-order.pdf',
-        //             content: pdfBuffer,
-        //             contentType: 'application/pdf',
-        //         },
-        //     ],
-        // };
-        // await mailSender(mailOptions);  
-
         // await sendPurchaseOrderEmail(purchaseOrder, purchaseOrder?.supplier?.emailContact, purchaseOrder?.supplier?.name);
         await sendPurchaseOrderEmail(purchaseOrder, "mdaatif3033@gmail.com", purchaseOrder?.supplier?.name);
 
