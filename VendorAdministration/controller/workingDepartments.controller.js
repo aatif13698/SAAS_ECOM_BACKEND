@@ -286,11 +286,14 @@ exports.list = async (req, res, next) => {
 // active inactive 
 exports.activeinactive = async (req, res, next) => { 
     try { 
-        const { keyword, page, perPage, id, status, clientId } = req.body; 
+        const { keyword, page, perPage, id, status, clientId, currentLevel, levelId } = req.body; 
         req.query.clientId = clientId; 
         req.query.keyword = keyword; 
         req.query.page = page; 
         req.query.perPage = perPage; 
+        req.query.level = currentLevel;
+        req.query.levelId = levelId;
+
         if (!clientId || !id) { 
             return res.status(400).send({ 
                 message: message.lblWorkingDepaermentIdIdAndClientIdRequired, 
