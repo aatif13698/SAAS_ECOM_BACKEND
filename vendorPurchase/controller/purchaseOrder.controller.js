@@ -57,9 +57,9 @@ exports.create = async (req, res, next) => {
             items,
             notes,
             bankDetails,
-            paymentMethod,
-            paidAmount,
-            balance
+            // paymentMethod,
+            // paidAmount,
+            // balance
         ];
 
         console.log("requiredFields", requiredFields);

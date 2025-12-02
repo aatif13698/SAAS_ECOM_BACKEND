@@ -47,10 +47,10 @@ const purchaseOrderItemSchema = new Schema({
 
 // Sub-schema for Bank Details
 const bankDetailsSchema = new Schema({
-    bankName: { type: String, trim: true, required: true },
-    accountNumber: { type: String, trim: true, required: true },
-    ifscCode: { type: String, trim: true, required: true, uppercase: true }, // Standardized to uppercase
-    branch: { type: String, trim: true, required: true }
+    bankName: { type: String, trim: true },
+    accountNumber: { type: String, trim: true },
+    ifscCode: { type: String, trim: true, uppercase: true }, // Standardized to uppercase
+    branch: { type: String, trim: true }
 }, { _id: false });
 
 const purchaseOrderSchema = new Schema(
@@ -79,7 +79,7 @@ const purchaseOrderSchema = new Schema(
         bankDetails: { type: bankDetailsSchema, default: () => ({}) },
         isInterState: { type: Boolean, default: false }, // Determines IGST vs CGST/SGST
         roundOff: { type: Boolean, default: false },
-        paymentMethod: { type: String, enum: ['cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
+        // paymentMethod: { type: String, enum: ['cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
         paidAmount: { type: Number, default: 0, min: 0 },
         balance: { type: Number, default: 0, min: 0 },
 

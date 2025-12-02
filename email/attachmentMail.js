@@ -61,7 +61,7 @@ exports.sendPurchaseOrderEmail = async (poData, supplierEmail, supplierName = "V
                 supplierName: supplierName || poData.shippingAddress.fullName,
                 totalAmount: poData.totalOrderAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
                 balance: poData.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-                paymentMethod: poData.paymentMethod.toUpperCase(),
+                paymentMethod: poData.paymentMethod?.toUpperCase(),
                 year: new Date().getFullYear(),
                 items: poData.items.map(item => ({
                     itemName: item.itemName.name,

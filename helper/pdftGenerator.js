@@ -212,6 +212,14 @@ async function generatePurchaseOrderPDF(poData, companyInfo = {}) {
       supplierZipCode: poData.supplier?.ZipCode || '',
       supplierPhone: poData.supplier?.contactNumber || '',
       supplierEmail: poData.supplier?.emailContact || '',
+
+      shippingName: poData.shippingAddress?.fullName || 'Valued Supplier',
+      shippingAddress: poData.shippingAddress?.address || '',
+      shippingCity: poData.shippingAddress?.city || '',
+      shippingState: poData.shippingAddress?.state || '',
+      shippingZipCode: poData.shippingAddress?.ZipCode || '',
+      shippingPhone: poData.shippingAddress?.phone || '',
+
       isInterState: poData.isInterState || false,
       items: poData.items.map(item => ({
         srNo: item.srNo,
