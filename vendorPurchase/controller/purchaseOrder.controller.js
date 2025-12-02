@@ -260,8 +260,7 @@ exports.issueMail = async (req, res, next) => {
         await sendPurchaseOrderEmail(purchaseOrder, "mdaatif3033@gmail.com", purchaseOrder?.supplier?.name);
 
         return res.status(200).send({
-            message: message.lblPurchaseOrderFoundSucessfully,
-            data: purchaseOrder,
+            message: "Mail sent successfully",
         });
     } catch (error) {
         next(error)
