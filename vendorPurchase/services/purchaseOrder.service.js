@@ -13,11 +13,11 @@ const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
-        const existingPo = await PurchaseOrder.findOne({poNumber: data?.poNumber}).lean();
+        const existingPo = await PurchaseOrder.findOne({ poNumber: data?.poNumber }).lean();
         console.log("existingPo", existingPo);
-        
-        if(existingPo){
-           throw new CustomError(statusCode.BadRequest, 'Purchase order number already exists.')
+
+        if (existingPo) {
+            throw new CustomError(statusCode.BadRequest, 'Purchase order number already exists.')
         }
         return await PurchaseOrder.create(data);
     } catch (error) {
@@ -69,10 +69,18 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
 
+        console.log("options", options);
+
+
         const { page, limit } = options;
-        const skip = (page - 1) * limit;
+        const skip = (Number(page) - 1) * Number(limit);
+        console.log("skip", skip);
+
         const [purchaseOrders, total] = await Promise.all([
-            PurchaseOrder.find(filters).skip(skip)
+            PurchaseOrder.find(filters)
+                .skip(skip)
+                .sort({ createdAt: -1 })  // Sort by creation date descending (latest first)
+                .limit(Number(limit))
                 .populate({
                     path: "supplier",
                     model: Supplier,
