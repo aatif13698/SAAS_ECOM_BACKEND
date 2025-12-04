@@ -55,8 +55,8 @@ exports.create = async (req, res, next) => {
             poNumber,
             poDate,
             items,
-            notes,
-            bankDetails,
+            // notes,
+            // bankDetails,
             // paymentMethod,
             // paidAmount,
             // balance

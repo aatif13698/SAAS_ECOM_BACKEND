@@ -13,6 +13,12 @@ const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const existingPo = await PurchaseOrder.findOne({poNumber: data?.poNumber}).lean();
+        console.log("existingPo", existingPo);
+        
+        if(existingPo){
+           throw new CustomError(statusCode.BadRequest, 'Purchase order number already exists.')
+        }
         return await PurchaseOrder.create(data);
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
