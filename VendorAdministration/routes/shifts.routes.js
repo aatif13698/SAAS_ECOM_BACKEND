@@ -15,6 +15,9 @@ router.put('/update/shift', entityAuth.authorizeEntity("Administration", "Shift"
 
 router.post("/activeInactive/shift", entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.activeinactive);  
 
+router.get('/all/shift', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.allShift);  
+
+
 // router.get('/shift/:clientId/:shiftId', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.getParticular);  
 
 // # create, update, view, list, activate/inactive shifts  

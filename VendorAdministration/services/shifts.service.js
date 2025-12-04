@@ -105,10 +105,25 @@ const getById = async (clientId, shiftId) => {
     }
 };
 
+
+const all = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const [shifts] = await Promise.all([
+            Shift.find(filters),
+        ]);
+        return { shifts };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing departments: ${error.message}`);
+    }
+};
+
 module.exports = {
     create,
     update,
     getById,
     list,
     activeInactive,
+    all
 };  
