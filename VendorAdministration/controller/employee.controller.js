@@ -173,6 +173,8 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
+            shift,
+            department,
             roleId,
             firstName,
             lastName,
@@ -194,7 +196,7 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [firstName, lastName, email, phone, password, gender, level, roleId];
+        const requiredFields = [firstName, lastName, email, phone, password, gender, level, roleId, shift, department];
         console.log("requiredFields", requiredFields);
 
         if (requiredFields.some((field) => !field)) {
@@ -220,6 +222,8 @@ exports.create = async (req, res, next) => {
             gender,
             role: roleId,
             roleId: role.id,
+            shift: shift,
+            workingDepartment: department,
             city,
             state,
             country,
@@ -357,6 +361,8 @@ exports.update = async (req, res, next) => {
             branch,
             warehouse,
             roleId,
+            shift,
+            department,
             firstName,
             lastName,
             email,
@@ -379,7 +385,8 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [firstName, lastName, email, phone, gender, level, roleId];
+        const requiredFields = [firstName, lastName, email, phone, gender, level, roleId, shift,
+            department,];
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
@@ -401,6 +408,8 @@ exports.update = async (req, res, next) => {
             gender,
             role: roleId,
             roleId: role.id,
+            shift: shift,
+            workingDepartment: department,
             city,
             state,
             country,

@@ -7,6 +7,9 @@ const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clinetUserSchema = require("../../client/model/user");
 const clientRoleSchema = require("../../client/model/role");
+const clientShiftSchema = require("../../client/model/shift");
+const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
+const { path } = require("pdfkit");
 
 
 const create = async (clientId, data) => {
@@ -31,8 +34,8 @@ const create = async (clientId, data) => {
 
 const update = async (clientId, employeeId, updateData) => {
 
-    console.log("updateData",updateData);
-    
+    console.log("updateData", updateData);
+
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const User = clientConnection.model('clientUsers', clinetUserSchema);
@@ -92,7 +95,8 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const User = clientConnection.model('clientUsers', clinetUserSchema);
         const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
-        
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
@@ -101,7 +105,16 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                 path: "role",
                 model: clientRole,
                 select: "id _id name"
-            }).limit(limit).sort({ _id: -1 }),
+            }).populate({
+                path: "workingDepartment",
+                model: WorkingDepartment,
+                select: "departmentName"
+            }).populate({
+                path: "shift",
+                model: Shift,
+                select: "shiftName"
+            })
+                .limit(limit).sort({ _id: -1 }),
             User.countDocuments(filters),
         ]);
         return { count: total, employees };

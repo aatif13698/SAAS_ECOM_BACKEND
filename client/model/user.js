@@ -16,7 +16,8 @@ const clinetUserSchema = new Schema(
         isBranchLevel: { type: Boolean, default: false },
         isWarehouseLevel: { type: Boolean, default: false },
 
-
+        workingDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
+        shift: { type: ObjectId, ref: "clientShift", default: null, index: true },
 
         roleId: { type: Number },
         firstName: { type: String, required: true },
