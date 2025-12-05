@@ -95,7 +95,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 };
 
 
-const activeInactive = async (clientId, purchaseOrderId, data) => {
+const changeStatus = async (clientId, purchaseOrderId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
@@ -106,7 +106,7 @@ const activeInactive = async (clientId, purchaseOrderId, data) => {
         Object.assign(purchaseOrder, data);
         return await purchaseOrder.save();
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error in changing status: ${error.message}`);
     }
 };
 
@@ -116,5 +116,5 @@ module.exports = {
     update,
     getById,
     list,
-    activeInactive,
+    changeStatus,
 }; 

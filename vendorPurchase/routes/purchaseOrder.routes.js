@@ -11,7 +11,7 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 router.post('/create/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.create);
 
-router.post('/issue/purchaseOrder/mail', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.issueMail)
+router.post('/issue/purchaseOrder/mail', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.issueMail);
 
 router.put('/update/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseOrderController.update);
 
@@ -19,7 +19,7 @@ router.get('/get/:clientId/:purchaseOrder', entityAuth.authorizeEntity("Administ
 
 router.get('/list/purchaseOrder', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.list);
 
-router.post("/activeInactive/purchaseOrder", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.activeinactive);
+router.post("/change/status/purchaseOrder", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseOrderController.changeStatus);
 
 
 exports.router = router; 

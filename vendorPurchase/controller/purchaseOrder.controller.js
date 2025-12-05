@@ -300,7 +300,7 @@ exports.list = async (req, res, next) => {
             deletedAt: null,
             ...(keyword && {
                 $or: [
-                    // { name: { $regex: keyword.trim(), $options: "i" } },
+                    { poNumber: { $regex: keyword.trim(), $options: "i" } },
                 ],
             }),
         };
@@ -336,22 +336,22 @@ exports.list = async (req, res, next) => {
 };
 
 // active inactive 
-exports.activeinactive = async (req, res, next) => {
+exports.changeStatus = async (req, res, next) => {
     try {
-        const { keyword, page, perPage, id, status, clientId } = req.body;
-        req.query.clientId = clientId;
-        req.query.keyword = keyword;
-        req.query.page = page;
-        req.query.perPage = perPage;
+        const {  id, status, clientId, } = req.body;
         if (!clientId || !id) {
             return res.status(400).send({
                 message: message.lblHolidayIdIdAndClientIdRequired,
             });
         }
-        const updated = await purchaseOrderService.activeInactive(clientId, id, {
-            isActive: status == "1",
+        const updated = await purchaseOrderService.changeStatus(clientId, id, {
+            status: status,
         });
-        this.list(req, res, next)
+
+        return res.status(statusCode.OK).send({
+            message: "Status updated successfully",
+            id: updated
+        })
     } catch (error) {
         next(error);
     }
