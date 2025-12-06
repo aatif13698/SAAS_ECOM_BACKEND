@@ -10,6 +10,7 @@ const clientRoleSchema = require("../../client/model/role");
 
 const clientChangeShiftSchema = require("../../client/model/shiftChange");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
+const clientShiftSchema = require("../../client/model/shift");
 
 const create = async (clientId, data) => {
     try {
@@ -25,6 +26,8 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ChangeShift = clientConnection.model('clientChangeShift', clientChangeShiftSchema);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
@@ -33,19 +36,24 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const [changeShifts, total] = await Promise.all([
             ChangeShift.find(filters).skip(skip)
                 .populate({
+                    path: "chosenShift",
+                    model: Shift,
+                    select: "shiftName"
+                })
+                .populate({
                     path: "businessUnit",
                     model: BusinessUnit,
-                   select: "name"
+                    select: "name"
                 })
-                 .populate({
+                .populate({
                     path: "branch",
                     model: Branch,
-                   select: "name"
+                    select: "name"
                 })
                 .populate({
                     path: "warehouse",
                     model: Warehouse,
-                   select: "name"
+                    select: "name"
                 })
             ,
             ChangeShift.countDocuments(filters),

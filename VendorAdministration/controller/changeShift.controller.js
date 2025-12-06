@@ -111,35 +111,31 @@ exports.list = async (req, res, next) => {
             });
         }
         let filters = {
+            createdBy: mainUser._id,
             deletedAt: null,
-            ...(keyword && {
-                $or: [
-                    { shiftName: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
         };
 
-        if (level == "vendor") {
+        // if (level == "vendor") {
 
-        } else if (level == "business" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true, 
-                businessUnit: levelId
-            }
-        } else if (level == "branch" && levelId) {
-            filters = {
-                ...filters,
-                // isBranchLevel: true, 
-                branch: levelId
-            }
-        } else if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true, 
-                isWarehouseLevel: levelId
-            }
-        }
+        // } else if (level == "business" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBuLevel: true, 
+        //         businessUnit: levelId
+        //     }
+        // } else if (level == "branch" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBranchLevel: true, 
+        //         branch: levelId
+        //     }
+        // } else if (level == "warehouse" && levelId) {
+        //     filters = {
+        //         ...filters,
+        //         // isBuLevel: true, 
+        //         isWarehouseLevel: levelId
+        //     }
+        // }
 
         const result = await changeShiftService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({

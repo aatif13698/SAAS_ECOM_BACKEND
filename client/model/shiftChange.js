@@ -19,7 +19,7 @@ const clientShiftChangeSchema = new Schema(
         description: { type: String, required: true },
 
         actionBy: { type: ObjectId, ref: "clientUsers", default: null },
-        status: { type: String, enum: ['approved', 'rejected',], default: 'pending' },
+        status: { type: String, enum: ['approved', 'rejected', 'pending'], default: 'pending' },
         actionRemark: { type: String, default: null },
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
