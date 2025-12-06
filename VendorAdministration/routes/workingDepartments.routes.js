@@ -7,17 +7,17 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // # create, update, view, list, activate/inactive woring department  
 
-router.post('/create/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.create);  
+router.post('/create/workingDepartment', entityAuth.authorizeEntity("Human resources", "Department", "create"), workingDepartmentController.create);  
 
-router.put('/update/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "update"), workingDepartmentController.update);  
+router.put('/update/workingDepartment', entityAuth.authorizeEntity("Human resources", "Department", "update"), workingDepartmentController.update);  
 
-router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.getParticular);  
+router.get('/shift/:clientId/:workingDepartment', entityAuth.authorizeEntity("Human resources", "Department", "create"), workingDepartmentController.getParticular);  
 
-router.get('/list/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.list);  
+router.get('/list/workingDepartment', entityAuth.authorizeEntity("Human resources", "Department", "create"), workingDepartmentController.list);  
 
-router.get('/all/workingDepartment', entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.allDepartment);  
+router.get('/all/workingDepartment', entityAuth.authorizeEntity("Human resources", "Department", "create"), workingDepartmentController.allDepartment);  
 
-router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Administration", "Department", "create"), workingDepartmentController.activeinactive);  
+router.post("/activeInactive/workingDepartment", entityAuth.authorizeEntity("Human resources", "Department", "create"), workingDepartmentController.activeinactive);  
 
 // # create, update, view, list, activate/inactive  woring department  
 

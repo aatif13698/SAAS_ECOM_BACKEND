@@ -7,18 +7,18 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // # create, update, view, list, activate/inactive, delete shifts  
 
-router.post('/create/shift', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.create);  
+router.post('/create/shift', entityAuth.authorizeEntity("Human resources", "Shift", "create"), shiftController.create);  
 
-router.get('/list/shift', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.list);  
+router.get('/list/shift', entityAuth.authorizeEntity("Human resources", "Shift", "create"), shiftController.list);  
 
-router.put('/update/shift', entityAuth.authorizeEntity("Administration", "Shift", "update"), shiftController.update);  
+router.put('/update/shift', entityAuth.authorizeEntity("Human resources", "Shift", "update"), shiftController.update);  
 
-router.post("/activeInactive/shift", entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.activeinactive);  
+router.post("/activeInactive/shift", entityAuth.authorizeEntity("Human resources", "Shift", "create"), shiftController.activeinactive);  
 
-router.get('/all/shift', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.allShift);  
+router.get('/all/shift', entityAuth.authorizeEntity("Human resources", "Shift", "create"), shiftController.allShift);  
 
 
-// router.get('/shift/:clientId/:shiftId', entityAuth.authorizeEntity("Administration", "Shift", "create"), shiftController.getParticular);  
+// router.get('/shift/:clientId/:shiftId', entityAuth.authorizeEntity("Human resources", "Shift", "create"), shiftController.getParticular);  
 
 // # create, update, view, list, activate/inactive shifts  
 
