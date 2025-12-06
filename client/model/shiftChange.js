@@ -21,6 +21,7 @@ const clientShiftChangeSchema = new Schema(
         actionBy: { type: ObjectId, ref: "clientUsers", default: null },
         status: { type: String, enum: ['approved', 'rejected', 'pending'], default: 'pending' },
         actionRemark: { type: String, default: null },
+        newJoinDate: {type: Date, default: null},
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },

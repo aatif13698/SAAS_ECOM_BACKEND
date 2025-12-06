@@ -60,6 +60,7 @@ const vendorCustomerRouter = require("./VendorAdministration/routes/customers.ro
 const vendorDepartmentRouter = require("./VendorAdministration/routes/workingDepartments.routes.js");
 const vendorShiftRouter = require("./VendorAdministration/routes/shifts.routes.js");
 const vendorChangeShiftRouter = require("./VendorAdministration/routes/changeShift.routes.js");
+const vendorRequestShiftRouter = require("./VendorAdministration/routes/requestShifts.routes.js");
 const documentRouter = require("./VendorAdministration/routes/documentRequirements.routes.js");
 const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
 const leaveCategoryRoute = require("./VendorHr/routes/leaveCategories.route.js");
@@ -148,6 +149,7 @@ app.use("/api/vendor/auth/", vendorAuthRouter.router);
 app.use("/api/vendor/department", vendorDepartmentRouter.router);
 app.use("/api/vendor/shift", vendorShiftRouter.router);
 app.use("/api/vendor/changeShift", vendorChangeShiftRouter.router);
+app.use("/api/vendor/requestShift", vendorRequestShiftRouter.router);
 app.use("/api/vendor/business/", vendorBusinessRouter.router);
 app.use("/api/vendor/branch/", vendorBranchRouter.router);
 app.use("/api/vendor/warehouse/", vendorWarehouseRouter.router);
