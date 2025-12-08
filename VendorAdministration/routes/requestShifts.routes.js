@@ -10,7 +10,7 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 router.get('/list/requestShift', entityAuth.authorizeEntity("Human resources", "Shift", "create"), requestShiftController.list);  
 
-router.put('/update/requestShift', entityAuth.authorizeEntity("Human resources", "Shift", "update"), requestShiftController.update);  
+router.post('/action/requestShift', entityAuth.authorizeEntity("Human resources", "Shift", "update"), requestShiftController.action);  
 
 router.post("/activeInactive/requestShift", entityAuth.authorizeEntity("Human resources", "Shift", "create"), requestShiftController.activeinactive);  
 

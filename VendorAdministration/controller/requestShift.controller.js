@@ -55,25 +55,17 @@ exports.list = async (req, res, next) => {
 };
 
 // update   
-exports.update = async (req, res, next) => {
+exports.action = async (req, res, next) => {
 
     try {
         const {
             clientId,
-            shiftId,
-            level,
-            businessUnit,
-            branch,
-            warehouse,
-
-            shiftName,
-            startTime,
-            endTime,
-            shiftType,
+            shiftChangeId,
             status,
-            requiredEmployees,
-            notes,
-            recurring,
+            actionRemark,
+            newJoinDate,
+
+
         } = req.body;
 
         const mainUser = req.user;
@@ -84,73 +76,23 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            shiftName,
-            startTime,
-            endTime,
-            shiftType,
             status,
-            requiredEmployees,
-            notes,
-            recurring];
+            actionRemark,
+        ];
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-
         // Base data object 
         const dataObject = {
-            shiftName,
-            startTime,
-            endTime,
-            shiftType,
             status,
-            requiredEmployees,
-            notes,
-            recurring,
-            createdBy: mainUser._id,
+            actionRemark,
+            newJoinDate,
+            actionBy: mainUser._id,
         };
-
-        const levelConfig = {
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
-        };
-
-        if (!levelConfig[level]) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
-        }
-
-        Object.assign(dataObject, levelConfig[level]);
-
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
-        }
-
-        if (['branch', 'warehouse'].includes(level) && !branch) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
-        }
-
-        if (level === 'warehouse' && !warehouse) {
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
-        }
-
-        // Add optional fields based on level 
-        if (businessUnit && businessUnit !== "null") {
-            dataObject.businessUnit = businessUnit;
-        }
-        if (branch && branch !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-        }
-        if (warehouse && warehouse !== "null") {
-            dataObject.businessUnit = businessUnit;
-            dataObject.branch = branch;
-            dataObject.warehouse = warehouse;
-        }
 
         // update  
-        const updated = await requestShiftService.update(clientId, shiftId, dataObject);
+        const updated = await requestShiftService.update(clientId, shiftChangeId, dataObject);
 
         return res.status(statusCode.OK).send({
             message: message.lblShiftUpdatedSuccess,

@@ -31,6 +31,8 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [changeShifts, total] = await Promise.all([
@@ -55,6 +57,11 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     model: Warehouse,
                     select: "name"
                 })
+                .populate({
+                    path: "createdBy",
+                    model: User,
+                    select: "firstName lastName email"
+                })
             ,
             ChangeShift.countDocuments(filters),
         ]);
@@ -68,17 +75,17 @@ const update = async (clientId, shiftId, updateData) => {
 
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Shift = clientConnection.model('clientChangeShift', clientChangeShiftSchema);
-        const shift = await Shift.findById(shiftId);
-        if (!shift) {
-            throw new CustomError(statusCode.NotFound, message.lblShiftNotFound);
+        const ChangeShift = clientConnection.model('clientChangeShift', clientChangeShiftSchema);
+        const changeShift = await ChangeShift.findById(shiftId);
+        if (!changeShift) {
+            throw new CustomError(statusCode.NotFound, "Shift request not found");
         }
-        Object.assign(shift, updateData);
-        await shift.save();
-        return shift
+        Object.assign(changeShift, updateData);
+        await changeShift.save();
+        return changeShift
 
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error updating shift: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error updating: ${error.message}`);
     }
 };
 
