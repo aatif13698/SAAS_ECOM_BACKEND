@@ -68,8 +68,8 @@ const purchaseInvoiceSchema = new Schema(
         // Core PO fields
         supplier: { type: ObjectId, ref: "supplier", required: true, index: true }, // Assumed ref to Supplier model
         shippingAddress: { type: shippingAddressSchema, required: true },
-        poNumber: { type: String, trim: true, required: true, unique: true, index: true }, // Unique for business integrity
-        poDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
+        piNumber: { type: String, trim: true, required: true, unique: true, index: true }, // Unique for business integrity
+        piDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
 
         // Items array
         items: [purchaseOrderItemSchema],

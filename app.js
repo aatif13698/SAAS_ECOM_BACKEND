@@ -86,6 +86,7 @@ const Voucher = require("./VendorAccount/routes/voucher.routes.js");
 
 
 const PurchaseOrder = require("./vendorPurchase/routes/purchaseOrder.routes.js");
+const PurchaseInvoice = require("./vendorPurchase/routes/purchaseInvoice.routes.js");
 
 
 
@@ -191,6 +192,7 @@ app.use("/api/vendor/accounts/vo", Voucher.router);
 // routes setup for purchase
 
 app.use("/api/vendor/purhcase/po", PurchaseOrder.router);
+app.use("/api/vendor/purhcase/pi", PurchaseInvoice.router);
 
 
 

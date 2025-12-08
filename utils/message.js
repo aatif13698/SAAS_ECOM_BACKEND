@@ -316,6 +316,17 @@ module.exports = {
   lblPurchaseOrderIdIdAndClientIdRequired: "PurchaseOrder Id and Client Id are required!",
   lblPurchaseOrderIdIdRequired: "PurchaseOrder Id id required!",
 
+  // purchase invoice
+  lblPurchaseInvoiceAlreadyExists: "PurchaseInvoice already exists with this email or phone!",
+  lblPurchaseInvoiceCreatedSuccess: "PurchaseInvoice created successfully!",
+  lblPurchaseInvoiceUpdatedSuccess: "PurchaseInvoice updated successfully!",
+  lblPurchaseInvoiceIdAndClientIdRequired: " PurchaseInvoice Id and Client Id are required!",
+  lblPurchaseInvoiceNotFound: "PurchaseInvoice not found!",
+  lblPurchaseInvoiceFoundSucessfully: "PurchaseInvoice found successfully!",
+  lblPurchaseInvoiceIdIdAndClientIdRequired: "PurchaseInvoice Id and Client Id are required!",
+  lblPurchaseInvoiceIdIdRequired: "PurchaseInvoice Id id required!",
+
+
 
   // ledger group
   lblLedgerGroupAlreadyExists: "LedgerGroup already exists with this email or phone!",
