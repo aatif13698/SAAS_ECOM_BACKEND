@@ -71,15 +71,23 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
-const update = async (clientId, shiftId, updateData) => {
+const update = async (clientId, shiftId, updateData, newShift) => {
 
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const ChangeShift = clientConnection.model('clientChangeShift', clientChangeShiftSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
         const changeShift = await ChangeShift.findById(shiftId);
         if (!changeShift) {
             throw new CustomError(statusCode.NotFound, "Shift request not found");
         }
+        const emp = await User.findOne({ _id: changeShift.createdBy});
+
+        if(!emp){
+            return new CustomError(statusCode.NotFound, "Employee not found");
+        }
+        emp.shift = newShift;
+        await emp.save();
         Object.assign(changeShift, updateData);
         await changeShift.save();
         return changeShift

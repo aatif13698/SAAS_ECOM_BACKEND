@@ -248,7 +248,7 @@ module.exports = {
   // shift
   lblShiftAlreadyExists: "Shift already exists with this email or phone!",
   lblShiftCreatedSuccess: "Shift created successfully!",
-  lblShiftUpdatedSuccess: "Business unit updated successfully!",
+  lblShiftUpdatedSuccess: "Shift updated successfully!",
   lblShiftIdAndClientIdRequired: " Shift Id and Client Id are required!",
   lblShiftNotFound: "Shift not found!",
   lblShiftFoundSucessfully: "Shift found successfully!",

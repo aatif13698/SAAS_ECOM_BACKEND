@@ -64,7 +64,7 @@ exports.action = async (req, res, next) => {
             status,
             actionRemark,
             newJoinDate,
-
+            newShift
 
         } = req.body;
 
@@ -83,16 +83,21 @@ exports.action = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
+        if (status == "approved" && !newShift) {
+            return res.status(statusCode.BadRequest).send({ message: "New Shift is required." });
+        }
+
         // Base data object 
         const dataObject = {
             status,
             actionRemark,
             newJoinDate,
             actionBy: mainUser._id,
+            newShift: status == "approved" ? newShift : ""
         };
 
         // update  
-        const updated = await requestShiftService.update(clientId, shiftChangeId, dataObject);
+        const updated = await requestShiftService.update(clientId, shiftChangeId, dataObject, newShift);
 
         return res.status(statusCode.OK).send({
             message: message.lblShiftUpdatedSuccess,
