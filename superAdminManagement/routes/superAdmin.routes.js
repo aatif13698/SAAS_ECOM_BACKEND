@@ -29,7 +29,7 @@ router.post('/forgetpassword', supersuperAdminController.forgetPassword );
 router.post('/resetpassword', supersuperAdminController.resetPassword );
 
 // create and update profile for admin
-router.post('/superAdminProfile', auth.superAdminAuth, (req, res, next) => {
+router.post('/superAdminProfile', (req, res, next) => {
     uploadProfileToS3.single("profileImage")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {

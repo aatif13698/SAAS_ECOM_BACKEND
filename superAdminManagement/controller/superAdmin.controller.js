@@ -24,6 +24,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
 const { getClientDatabaseConnection } = require("../../db/connection");
+const clinetUserSchema = require("../../client/model/user");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -590,7 +591,7 @@ exports.updateProfile = async (req, res) => {
     } catch (error) {
         console.error("Update Profile Error:", error);
         return res.status(statusCode.InternalServerError).send({
-            message: errorMessage.lblInternalServerError
+            message: message.lblInternalServerError
         });
     }
 };
