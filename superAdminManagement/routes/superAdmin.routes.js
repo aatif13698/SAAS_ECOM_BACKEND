@@ -9,7 +9,8 @@ const statusCode = require("../../utils/http-status-code")
 
 
 const {
-    uploadProfile, 
+    uploadProfile,
+    uploadProfileToS3, 
 } = require('../../utils/multer');
 
 const supersuperAdminController = require("../controller/superAdmin.controller");
@@ -29,7 +30,7 @@ router.post('/resetpassword', supersuperAdminController.resetPassword );
 
 // create and update profile for admin
 router.post('/superAdminProfile', auth.superAdminAuth, (req, res, next) => {
-    uploadProfile.single("profileImage")(req, res, (err) => {
+    uploadProfileToS3.single("profileImage")(req, res, (err) => {
         if (err) {
             if (err instanceof multer.MulterError) {
                 // MulterError: File too large

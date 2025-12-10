@@ -20,6 +20,52 @@ const PRIVATEKEY = process.env.PRIVATEKEY;
 
 
 
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+const { getClientDatabaseConnection } = require("../../db/connection");
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadIconToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/employee/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname
+        }
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName
+        };
+    } catch (error) {
+        console.log("error in s3", error);
+
+        throw new Error(`Failed to upload to S3: ${error.message}`);
+    }
+};
+
+
+
 
 
 
@@ -496,101 +542,49 @@ exports.updateProfile = async (req, res) => {
     try {
         const user = req.user;
         const {
-            firstName, middleName, lastName, password, gender, dateOfBirth,
-            optionalEmail, emergencyPhone, phone, city, state,country, ZipCode, address,
-            removeProfileImage
+            clientId, useId, firstName, lastName, gender,
+            phone, city, state, country
         } = req.body;
 
         // Validate required fields
-        if (!firstName || !lastName || !dateOfBirth) {
+        if (!firstName || !lastName || !useId) {
             return res.status(statusCode.BadRequest).send({
-                message: "First name, last name, and date of birth are required."
+                message: "First name, last name, and useId are required."
             });
         }
-
-        let parsedDateOfBirth = dateOfBirth;
-        // if (typeof dateOfBirth === 'string') {
-        //     parsedDateOfBirth = parseDate(dateOfBirth); 
-        //     if (!parsedDateOfBirth) {
-        //         return res.status(statusCode.BadRequest).send({
-        //             message: "Invalid date format. Please use dd/mm/yyyy format or a valid ISO date."
-        //         });
-        //     }
-        // }
-        // else if (dateOfBirth instanceof Date && !isNaN(dateOfBirth)) {
-        //     parsedDateOfBirth = dateOfBirth;
-        // } else {
-        //     return res.status(statusCode.BadRequest).send({
-        //         message: "Invalid date format. Please provide a valid date."
-        //     });
-        // }
 
         // Build the update profile object
         const profileUpdates = {
-            firstName,
-            middleName,
-            lastName,
-            gender,
-            dateOfBirth: parsedDateOfBirth, 
-            optionalEmail,
-            emergencyPhone,
-            phone,
-            city,
-            state,
-            country,
-            ZipCode,
-            address,
+            firstName, lastName, gender,
+            phone, city, state, country,
             profileCreated: true,
         };
 
-        // Update profile image if provided
-        if (req.file?.filename) {
-            profileUpdates.profileImage = req.file.filename;
-        }
 
-        // Remove profile image if requested
-        if (removeProfileImage === "true") {
-            profileUpdates.profileImage = null;
-        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
 
-        // Hash password if provided
-        if (password) {
-            profileUpdates.password = await bcrypt.hash(password, 10);
-        }
+        const profile = await User.findById(useId);
 
-        const updatedUser = await User.findOneAndUpdate(
-            { email: user.email },
-            { $set: profileUpdates },
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedUser) {
+        if (!profile) {
             return res.status(statusCode.NotFound).send({
-                message: "User not found."
-            });
+                success: false,
+                message: "Profile not found."
+            })
         }
 
-        // Return the updated profile
-        const updatedProfile = {
-            firstName: updatedUser.firstName,
-            middleName: updatedUser.middleName,
-            lastName: updatedUser.lastName,
-            gender: updatedUser.gender,
-            dateOfBirth: updatedUser.dateOfBirth,
-            optionalEmail: updatedUser.optionalEmail,
-            emergencyPhone: updatedUser.emergencyPhone,
-            phone: updatedUser.phone,
-            city: updatedUser.city,
-            state: updatedUser.state,
-            country : updatedUser.country,
-            ZipCode: updatedUser.ZipCode,
-            address: updatedUser.address,
-            profileImage: updatedUser.profileImage
-        };
+         if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            profileUpdates.profileImage = uploadResult.url;
+            profileUpdates.iconKey = uploadResult.key; // Store S3 key for potential future deletion
+        }
 
+        Object.assign(profile, profileUpdates);
+
+        await profile.save()
         return res.status(statusCode.OK).send({
             message: "Profile updated successfully.",
-            data: updatedProfile
+            data: profile
         });
 
     } catch (error) {
