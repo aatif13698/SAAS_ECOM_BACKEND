@@ -22,6 +22,10 @@ exports.create = async (req, res, next) => {
     try {
         const {
             clientId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
 
             name,
             contactPerson,
@@ -44,7 +48,9 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [name,
+        const requiredFields = [
+            level,
+            name,
             contactPerson,
             emailContact,
             contactNumber,
@@ -69,6 +75,46 @@ exports.create = async (req, res, next) => {
             ZipCode,
             address,
         };
+
+        // Level-specific validation and assignment
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
+
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
+
+        Object.assign(dataObject, levelConfig[level]);
+
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
+
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
+
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
+
+        // Add optional fields based on level
+        if (businessUnit) {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
 
         // Create 
         const created = await supplierService.create(clientId, dataObject);
@@ -88,7 +134,10 @@ exports.update = async (req, res, next) => {
         const {
             clientId,
             supplierId,
-
+            level,
+            businessUnit,
+            branch,
+            warehouse,
             name,
             contactPerson,
             emailContact,
@@ -110,7 +159,9 @@ exports.update = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
 
-        const requiredFields = [name,
+        const requiredFields = [
+            name,
+            level,
             contactPerson,
             emailContact,
             contactNumber,
@@ -135,6 +186,45 @@ exports.update = async (req, res, next) => {
             ZipCode,
             address,
         };
+
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
+
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
+
+        Object.assign(dataObject, levelConfig[level]);
+
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
+
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
+
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
+
+        // Add optional fields based on level
+        if (businessUnit && businessUnit !== "null") {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch && branch !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse && warehouse !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
 
         // Create 
         const updated = await supplierService.update(clientId, supplierId, dataObject);

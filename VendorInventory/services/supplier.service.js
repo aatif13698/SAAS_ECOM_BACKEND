@@ -12,6 +12,7 @@ const productVariantSchema = require("../../client/model/productVariant");
 const productRateSchema = require("../../client/model/productRate");
 const productMainStockSchema = require("../../client/model/productMainStock");
 const productStockSchema = require("../../client/model/productStock");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 const create = async (clientId, data) => {
@@ -97,6 +98,9 @@ const getById = async (clientId, supplierId) => {
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
         const ProductRate = clientConnection.model('productRate', productRateSchema);
         const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const ProductBluePrint = clientConnection.model(
             "productBlueprint",
             productBlueprintSchema
@@ -117,7 +121,21 @@ const getById = async (clientId, supplierId) => {
                 path: "items.productMainStock",
                 model: MainStock,
                 select: "name priceId description totalStock images onlineStock"
-            });
+            }).populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                });
         if (!supplier) {
             throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
         }
@@ -130,11 +148,29 @@ const getById = async (clientId, supplierId) => {
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Supplier = clientConnection.model('supplier', supplierSchema)
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [suppliers, total] = await Promise.all([
-            Supplier.find(filters).skip(skip).limit(limit).sort({ _id: -1 }),
+            Supplier.find(filters).skip(skip).limit(limit).sort({ _id: -1 })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                }),
             Supplier.countDocuments(filters),
         ]);
         return { count: total, suppliers };

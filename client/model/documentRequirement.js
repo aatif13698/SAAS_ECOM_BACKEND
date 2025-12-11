@@ -21,7 +21,7 @@ const documentRequirementSchema = new Schema(
         isActive: { type: Boolean, default: true }, 
 
         requiredFields: [{ 
-            fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'customField', default: null }, 
+            fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'documentCustomField', default: null }, 
         }], 
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true }, 

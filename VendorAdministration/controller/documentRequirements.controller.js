@@ -1,530 +1,744 @@
-const clientRoleSchema = require("../../client/model/role");  
-const { getClientDatabaseConnection } = require("../../db/connection");  
-const roleModel = require("../../model/role");  
-const userModel = require("../../model/user");  
-const CustomError = require("../../utils/customeError");  
-const httpStatusCode = require("../../utils/http-status-code");  
-const statusCode = require("../../utils/http-status-code");  
-const message = require("../../utils/message");  
-const documentRequirementService = require("../services/documentRequirements.service")  
-const bcrypt = require("bcrypt");  
-const documentCustomFieldSchema = require("../../client/model/documentCustomField");  
+const clientRoleSchema = require("../../client/model/role");
+const { getClientDatabaseConnection } = require("../../db/connection");
+const roleModel = require("../../model/role");
+const userModel = require("../../model/user");
+const CustomError = require("../../utils/customeError");
+const httpStatusCode = require("../../utils/http-status-code");
+const statusCode = require("../../utils/http-status-code");
+const message = require("../../utils/message");
+const documentRequirementService = require("../services/documentRequirements.service")
+const bcrypt = require("bcrypt");
+const documentCustomFieldSchema = require("../../client/model/documentCustomField");
 
-const { default: mongoose } = require("mongoose");  
+const { default: mongoose } = require("mongoose");
+const clinetUserSchema = require("../../client/model/user");
+const documentCustomDataSchema = require("../../client/model/documentCustomData");
+
+
+// S3 bucket configuration
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadFilesToS3 = async (file, clientId) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/customFiles/${uuidv4()}${fileExtension}`;
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: "public-read", // Consider changing to 'private' for sensitive files
+        ContentType: file.mimetype || "application/octet-stream", // Fallback for unknown MIME types
+        ContentDisposition: "attachment", // Prevent execution of uploaded files
+        Metadata: {
+            "original-filename": file.originalname,
+        },
+    };
+    try {
+        const { Location } = await s3.upload(params).promise();
+        return {
+            success: true,
+            url: Location,
+            key: fileName,
+            fieldName: file.fieldname,
+            originalName: file.originalname,
+            mimeType: file.mimetype || "application/octet-stream",
+            size: file.size,
+        };
+    } catch (error) {
+        throw new Error(`Failed to upload file: ${error.message}`);
+    }
+};
 
 // create  
-exports.create = async (req, res, next) => {  
-    try {  
-        const {  
-            clientId,  
-            level,  
-            businessUnit,  
-            branch,  
-            warehouse,  
-            workDepartment,  
-            jobRole,  
+exports.create = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
+            workDepartment,
+            jobRole,
 
-            name,  
-        } = req.body;  
-        const mainUser = req.user;  
+            name,
+        } = req.body;
+        const mainUser = req.user;
         // Validate required fields  
-        if (!clientId) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });  
-        }  
-        const requiredFields = [  
-            name,  
-            workDepartment,  
-            jobRole,  
-        ];  
-        console.log("requiredFields", requiredFields);  
-        
-        if (requiredFields.some((field) => !field)) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });  
-        }  
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+        const requiredFields = [
+            name,
+            workDepartment,
+            jobRole,
+        ];
+        console.log("requiredFields", requiredFields);
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
         // Base data object  
-        const dataObject = {  
-            workDepartment,  
-            jobRole,  
-            name,  
-            createdBy: mainUser._id,  
-        };  
+        const dataObject = {
+            workDepartment,
+            jobRole,
+            name,
+            createdBy: mainUser._id,
+        };
         // Level-specific validation and assignment  
-        const levelConfig = {  
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },  
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },  
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },  
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },  
-        };  
-        if (!levelConfig[level]) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });  
-        }  
-        Object.assign(dataObject, levelConfig[level]);  
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });  
-        }  
-        if (['branch', 'warehouse'].includes(level) && !branch) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });  
-        }  
-        if (level === 'warehouse' && !warehouse) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });  
-        }  
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
+        Object.assign(dataObject, levelConfig[level]);
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
         // Add optional fields based on level  
-        if (businessUnit) {  
-            dataObject.businessUnit = businessUnit;  
-        }  
-        if (branch) {  
-            dataObject.businessUnit = businessUnit;  
-            dataObject.branch = branch;  
-        }  
-        if (warehouse) {  
-            dataObject.businessUnit = businessUnit;  
-            dataObject.branch = branch;  
-            dataObject.warehouse = warehouse;  
-        }  
-        const newDocumentRequirement = await documentRequirementService.create(clientId, dataObject, mainUser);  
-        return res.status(statusCode.OK).send({  
-            message: message.lblDocumentRequirementCreatedSuccess,  
-            data: { document: newDocumentRequirement },  
-        });  
-    } catch (error) {  
-        next(error);  
-    }  
-};  
+        if (businessUnit) {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
+        const newDocumentRequirement = await documentRequirementService.create(clientId, dataObject, mainUser);
+        return res.status(statusCode.OK).send({
+            message: message.lblDocumentRequirementCreatedSuccess,
+            data: { document: newDocumentRequirement },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // update    
-exports.update = async (req, res, next) => {  
-    try {  
-        const {  
-            clientId,  
-            documentRequirementId,  
-            level,  
-            businessUnit,  
-            branch,  
-            warehouse,  
+exports.update = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            documentRequirementId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
 
-            workDepartment,  
-            jobRole,  
+            workDepartment,
+            jobRole,
 
-            name,  
-        } = req.body;  
+            name,
+        } = req.body;
 
-        console.log("req.body", req.body);  
+        console.log("req.body", req.body);
 
-        const mainUser = req.user;  
+        const mainUser = req.user;
         // Validate required fields  
-        if (!clientId) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });  
-        }  
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
 
-        const requiredFields = [  
-            workDepartment,  
-            jobRole,  
+        const requiredFields = [
+            workDepartment,
+            jobRole,
 
-            name,  
-        ];  
+            name,
+        ];
 
-        if (requiredFields.some((field) => !field)) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });  
-        }  
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
 
         // Base data object  
-        const dataObject = {  
-            workDepartment,  
-            jobRole,  
+        const dataObject = {
+            workDepartment,
+            jobRole,
 
-            name,  
-            createdBy: mainUser._id,  
-        };  
+            name,
+            createdBy: mainUser._id,
+        };
 
-        const levelConfig = {  
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },  
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },  
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },  
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },  
-        };  
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
 
-        if (!levelConfig[level]) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });  
-        }  
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
 
-        Object.assign(dataObject, levelConfig[level]);  
+        Object.assign(dataObject, levelConfig[level]);
 
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });  
-        }  
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
 
-        if (['branch', 'warehouse'].includes(level) && !branch) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });  
-        }  
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
 
-        if (level === 'warehouse' && !warehouse) {  
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });  
-        }  
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
 
         // Add optional fields based on level  
-        if (businessUnit && businessUnit !== "null") {  
-            dataObject.businessUnit = businessUnit;  
-        }  
-        if (branch && branch !== "null") {  
-            dataObject.businessUnit = businessUnit;  
-            dataObject.branch = branch;  
-        }  
-        if (warehouse && warehouse !== "null") {  
-            dataObject.businessUnit = businessUnit;  
-            dataObject.branch = branch;  
-            dataObject.warehouse = warehouse;  
-        }  
+        if (businessUnit && businessUnit !== "null") {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch && branch !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse && warehouse !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
 
         // update   
-        const updated = await documentRequirementService.update(clientId, documentRequirementId, dataObject);  
-        return res.status(statusCode.OK).send({  
-            message: message.lblDocumentRequirementUpdatedSuccess,  
-        });  
+        const updated = await documentRequirementService.update(clientId, documentRequirementId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: message.lblDocumentRequirementUpdatedSuccess,
+        });
 
-    } catch (error) {  
-        next(error);  
-    }  
+    } catch (error) {
+        next(error);
+    }
 
-};  
+};
 
 // list  
-exports.list = async (req, res, next) => {  
-    try {  
+exports.list = async (req, res, next) => {
+    try {
 
-        const mainUser = req.user;  
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;  
-        if (!clientId) {  
-            return res.status(statusCode.BadRequest).send({  
-                message: message.lblClinetIdIsRequired,  
-            });  
-        }  
-        let filters = {  
-            deletedAt: null,  
-        };  
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+        };
 
-        if (level == "vendor") {  
+        if (level == "vendor") {
 
-        } else if (level == "business" && levelId) {  
-            filters = {  
-                ...filters,  
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
                 // isBuLevel: true,  
-                businessUnit: levelId  
-            }  
-        } else if (level == "branch" && levelId) {  
-            filters = {  
-                ...filters,  
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
                 // isBranchLevel: true,  
-                branch: levelId  
-            }  
-        } else if (level == "warehouse" && levelId) {  
-            filters = {  
-                ...filters,  
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
                 // isBuLevel: true,  
-                isWarehouseLevel: levelId  
-            }  
-        }  
+                isWarehouseLevel: levelId
+            }
+        }
 
-        const result = await documentRequirementService.list(clientId, filters, { page, limit: perPage });  
-        return res.status(statusCode.OK).send({  
-            message: message.lblDocumentRequirementFoundSucessfully,  
-            data: result,  
-        });  
-    } catch (error) {  
-        next(error);  
-    }  
-};  
+        const result = await documentRequirementService.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblDocumentRequirementFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // active inactive  
-exports.activeinactive = async (req, res, next) => {  
-    try {  
-        const { keyword, page, perPage, id, status, clientId } = req.body;  
-        req.query.clientId = clientId;  
-        req.query.keyword = keyword;  
-        req.query.page = page;  
-        req.query.perPage = perPage;  
-        if (!clientId || !id) {  
-            return res.status(400).send({  
-                message: message.lblDocumentRequirementIdIdAndClientIdRequired,  
-            });  
-        }  
-        const updated = await documentRequirementService.activeInactive(clientId, id, {  
-            isActive: status == "1",  
-        });  
-        this.list(req, res, next)  
-    } catch (error) {  
-        next(error);  
-    }  
-};  
+exports.activeinactive = async (req, res, next) => {
+    try {
+        const { keyword, page, perPage, id, status, clientId } = req.body;
+        req.query.clientId = clientId;
+        req.query.keyword = keyword;
+        req.query.page = page;
+        req.query.perPage = perPage;
+        if (!clientId || !id) {
+            return res.status(400).send({
+                message: message.lblDocumentRequirementIdIdAndClientIdRequired,
+            });
+        }
+        const updated = await documentRequirementService.activeInactive(clientId, id, {
+            isActive: status == "1",
+        });
+        this.list(req, res, next)
+    } catch (error) {
+        next(error);
+    }
+};
 
 // all field  
-exports.allField = async (req, res, next) => {  
-    try {  
-        const mainUser = req.user;  
-        const { clientId, documentRequirementId } = req.query;  
-        if (!clientId) {  
-            return res.status(statusCode.BadRequest).send({  
-                message: message.lblClinetIdIsRequired,  
-            });  
-        }  
-        if (!documentRequirementId) {  
-            return res.status(statusCode.BadRequest).send({  
-                message: message.lblDocumentRequirementIdIdRequired,  
-            });  
-        }  
-        const result = await documentRequirementService.allField(clientId, documentRequirementId);  
-        return res.status(statusCode.OK).send({  
-            message: "Fields found successfully.",  
-            data: result,  
-        });  
-    } catch (error) {  
-        next(error);  
-    }  
-};  
+exports.allField = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, documentRequirementId } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!documentRequirementId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblDocumentRequirementIdIdRequired,
+            });
+        }
+        const result = await documentRequirementService.allField(clientId, documentRequirementId);
+        return res.status(statusCode.OK).send({
+            message: "Fields found successfully.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-exports.createField = async (req, res, next) => {  
-    try {  
-        const user = req.user;  
-        const {  
-            name,  
-            label,  
-            type,  
-            options,  
-            isRequired,  
-            placeholder,  
-            validation,  
-            aspectRation,  
-            gridConfig,  
+exports.docRequiremntByRoleId = async (req, res, next) => {
+    try {
+        const { clientId, roleId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!roleId) {
+            return res.status(statusCode.BadRequest).send({
+                message: "RoleId is required",
+            });
+        }
+        const result = await documentRequirementService.docRequiremtnByRole(clientId, roleId);
+        return res.status(statusCode.OK).send({
+            message: "Fields found successfully.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
-            documentRequirementId,  
-            clientId  
-        } = req.body;  
+exports.submitCustomDocData = async (req, res, next) => {
+    let session = null;
+    let clientConnection = null;
 
-        if (!clientId) {  
-            return res.status(statusCode.BadRequest).send({  
-                message: message.lblClinetIdIsRequired,  
-            });  
-        }  
+    console.log("coming here");
 
-        if (!name || !label || !type) {  
-            return res.status(400).send({ error: 'Name, label, and type are required' });  
-        }  
-        if (!documentRequirementId) {  
-            return res.status(httpStatusCode.BadRequest).send({  
-                success: false,  
-                message: message.lblDocumentRequirementIdIdRequired,  
-                errorCode: "ID_MISSIING",  
-            });  
-        }  
+    try {
+        const {
+            clientId,
+            userId,
+        } = req.body;
 
-        const clientConnection = await getClientDatabaseConnection(clientId);  
-        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)  
+        console.log("clientId", clientId);
+
+        const mainUser = req.user;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+
+        const requiredFields = [
+            userId,
+        ];
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+
+
+
+
+        // Get client connection and start session
+        clientConnection = await getClientDatabaseConnection(clientId);
+        session = await clientConnection.startSession();
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+
+        session.startTransaction();
+
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            await session.abortTransaction();
+            await session.endSession();
+            return res.status(statusCode.NotFound).send({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+
+        const otherThanFiles = {};
+        for (const [key, value] of Object.entries(req.body)) {
+            if (key !== "clientId"
+                && key !== "userId"
+            ) {
+                if (typeof value === "string" && !value.startsWith("https://billionforms-files") && !value.startsWith("https://blr1.digitaloceanspaces.com/billionforms-files")) {
+                    otherThanFiles[key] = value;
+                }
+            }
+        }
+        const DocData = clientConnection.model("documentCustomData", documentCustomDataSchema);
+        const files = [];
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const uploadResult = await uploadFilesToS3(file, clientId);
+                files.push({
+                    fieldName: uploadResult.fieldName,
+                    fileUrl: uploadResult.url,
+                    originalName: uploadResult.originalName,
+                    mimeType: uploadResult.mimeType,
+                    size: uploadResult.size,
+                    key: uploadResult.key,
+                });
+            }
+        }
+
+        const docData = new DocData({
+            otherThanFiles: new Map(Object.entries(otherThanFiles || {})),
+            files,
+            userId: userId
+        });
+        await docData.save({ session });
+        await session.commitTransaction();
+        return res.status(httpStatusCode.OK).json({
+            success: true,
+            message: "Submitted successfully",
+            data: {
+                data: { docId: docData._id },
+            },
+        });
+
+    } catch (error) {
+        if (session) {
+            await session.abortTransaction();
+            await session.endSession();
+        }
+        console.error("Form creation error:", error);
+        return res.status(httpStatusCode.InternalServerError).json({
+            success: false,
+            message: "Internal server error",
+            errorCode: "SERVER_ERROR",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
+    } finally {
+        if (clientConnection) {
+            // Ensure client connection is closed if necessary
+            // Adjust based on how getClientDatabaseConnection manages connections
+            // await clientConnection.close();
+        }
+    }
+};
+
+
+exports.getDocCustomData = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, userId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!userId) {
+            return res.status(statusCode.BadRequest).send({
+                message: "UserId is required.",
+            });
+        }
+        const result = await documentRequirementService.getDocCustomData(clientId, userId);
+        return res.status(statusCode.OK).send({
+            message: message.lblLedgerFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.createField = async (req, res, next) => {
+    try {
+        const user = req.user;
+        const {
+            name,
+            label,
+            type,
+            options,
+            isRequired,
+            placeholder,
+            validation,
+            aspectRation,
+            gridConfig,
+
+            documentRequirementId,
+            clientId
+        } = req.body;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        if (!name || !label || !type) {
+            return res.status(400).send({ error: 'Name, label, and type are required' });
+        }
+        if (!documentRequirementId) {
+            return res.status(httpStatusCode.BadRequest).send({
+                success: false,
+                message: message.lblDocumentRequirementIdIdRequired,
+                errorCode: "ID_MISSIING",
+            });
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)
         // Check for duplicate field name (optional, depending on your requirements)  
-        const existingField = await CustomField.findOne({ name, documentRequirementId });  
-        if (existingField) {  
-            return res.status(400).send({ error: 'A field with this name already exists' });  
-        }  
+        const existingField = await CustomField.findOne({ name, documentRequirementId });
+        if (existingField) {
+            return res.status(400).send({ error: 'A field with this name already exists' });
+        }
         // Validate gridConfig  
         let finalGridConfig = { span: 12, order: 1 }; // Default  
 
-        if (gridConfig) {  
-            if (gridConfig.span < 1 || gridConfig.span > 12) {  
-                return res.status(400).send({ error: 'Grid span must be between 1 and 12' });  
-            }  
-            if (typeof gridConfig.order !== 'number') {  
-                return res.status(400).send({ error: 'Grid order must be a number' });  
-            }  
-        }  
-        const maxOrderField = await CustomField.findOne(  
-            { documentRequirementId },  
-            { "gridConfig.order": 1 }  
-        )  
-            .sort({ "gridConfig.order": -1 })  
-            .lean();  
-        finalGridConfig.order = maxOrderField ? maxOrderField.gridConfig.order + 1 : 1;  
+        if (gridConfig) {
+            if (gridConfig.span < 1 || gridConfig.span > 12) {
+                return res.status(400).send({ error: 'Grid span must be between 1 and 12' });
+            }
+            if (typeof gridConfig.order !== 'number') {
+                return res.status(400).send({ error: 'Grid order must be a number' });
+            }
+        }
+        const maxOrderField = await CustomField.findOne(
+            { documentRequirementId },
+            { "gridConfig.order": 1 }
+        )
+            .sort({ "gridConfig.order": -1 })
+            .lean();
+        finalGridConfig.order = maxOrderField ? maxOrderField.gridConfig.order + 1 : 1;
         // Validate options for select/multiselect  
-        if (['select', 'multiselect'].includes(type) && (!options || !Array.isArray(options) || options.length === 0)) {  
-            return res.status(400).send({ error: 'Options are required for select and multiselect types' });  
-        }  
+        if (['select', 'multiselect'].includes(type) && (!options || !Array.isArray(options) || options.length === 0)) {
+            return res.status(400).send({ error: 'Options are required for select and multiselect types' });
+        }
         // Validate file type specific fields  
-        if (type === 'file') {  
-            if (validation && validation.fileTypes && !Array.isArray(validation.fileTypes)) {  
-                return res.status(400).send({ error: 'fileTypes must be an array' });  
-            }  
-            if (validation && validation.maxSize && (typeof validation.maxSize !== 'number' || validation.maxSize <= 0)) {  
-                return res.status(400).send({ error: 'maxSize must be a positive number' });  
-            }  
-        }  
+        if (type === 'file') {
+            if (validation && validation.fileTypes && !Array.isArray(validation.fileTypes)) {
+                return res.status(400).send({ error: 'fileTypes must be an array' });
+            }
+            if (validation && validation.maxSize && (typeof validation.maxSize !== 'number' || validation.maxSize <= 0)) {
+                return res.status(400).send({ error: 'maxSize must be a positive number' });
+            }
+        }
         // Create new custom field  
-        const customField = new CustomField({  
-            name,  
-            label,  
-            type,  
-            options: options || [],  
-            isRequired: isRequired || false,  
-            placeholder,  
-            valictRation: aspectRation,  
-            gridConfig: finalGridConfig,  
-            creadation: validation || {},  
-            aspetedBy: req.user._id,  
-            documentRequirementId: documentRequirementId  
-        });  
+        const customField = new CustomField({
+            name,
+            label,
+            type,
+            options: options || [],
+            isRequired: isRequired || false,
+            placeholder,
+            valictRation: aspectRation,
+            gridConfig: finalGridConfig,
+            creadation: validation || {},
+            aspetedBy: req.user._id,
+            documentRequirementId: documentRequirementId
+        });
         // Save to database  
-        const savedField = await customField.save();  
-        res.status(201).send({  
-            message: 'Custom field created successfully',  
-            data: savedField  
-        });  
-    } catch (error) {  
-        console.error('Error creating custom field:', error);  
-        res.status(500).send({ error: 'Internal server error', details: error.message });  
-    }  
-};  
+        const savedField = await customField.save();
+        res.status(201).send({
+            message: 'Custom field created successfully',
+            data: savedField
+        });
+    } catch (error) {
+        console.error('Error creating custom field:', error);
+        res.status(500).send({ error: 'Internal server error', details: error.message });
+    }
+};
 
 // delete field  
-exports.deleteField = async (req, res, next) => {  
-    try {  
-        const user = req.user;  
-        const { documentRequirementId, clientId, fieldId } = req.params;  
-        if (!documentRequirementId || !fieldId) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: message.lblRequiredFieldMissing,  
-                errorCode: "FIELD_MISSING",  
-            });  
-        }  
-        if (  
-            !mongoose.Types.ObjectId.isValid(documentRequirementId) ||  
-            !mongoose.Types.ObjectId.isValid(fieldId)  
-        ) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: "Invalid ID format",  
-                errorCode: "INVALID_ID",  
-            });  
-        }  
-        const clientConnection = await getClientDatabaseConnection(clientId);  
-        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)  
+exports.deleteField = async (req, res, next) => {
+    try {
+        const user = req.user;
+        const { documentRequirementId, clientId, fieldId } = req.params;
+        if (!documentRequirementId || !fieldId) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: message.lblRequiredFieldMissing,
+                errorCode: "FIELD_MISSING",
+            });
+        }
+        if (
+            !mongoose.Types.ObjectId.isValid(documentRequirementId) ||
+            !mongoose.Types.ObjectId.isValid(fieldId)
+        ) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Invalid ID format",
+                errorCode: "INVALID_ID",
+            });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)
 
-        const field = await CustomField.findOne({  
-            _id: fieldId,  
-            documentRequirementId: documentRequirementId  
-        });  
+        const field = await CustomField.findOne({
+            _id: fieldId,
+            documentRequirementId: documentRequirementId
+        });
 
-        if (!field) {  
-            return res.status(httpStatusCode.NotFound).json({  
-                success: false,  
-                message: "Field not found",  
-                errorCode: "NOT_FOUND",  
-            });  
-        }  
-        await CustomField.deleteOne({ _id: fieldId });  
-        return res.status(httpStatusCode.OK).json({  
-            success: true,  
-            message: "Field deleted successfully",  
-        });  
-    } catch (error) {  
-        console.error("Field deletion error:", error);  
-        return res.status(httpStatusCode.InternalServerError).json({  
-            success: false,  
-            message: message.lblInternalServerError,  
-            errorCode: "SERVER_ERROR",  
-            error: process.env.NODE_ENV === "development" ? error.message : undefined,  
-        });  
-    }  
-};  
+        if (!field) {
+            return res.status(httpStatusCode.NotFound).json({
+                success: false,
+                message: "Field not found",
+                errorCode: "NOT_FOUND",
+            });
+        }
+        await CustomField.deleteOne({ _id: fieldId });
+        return res.status(httpStatusCode.OK).json({
+            success: true,
+            message: "Field deleted successfully",
+        });
+    } catch (error) {
+        console.error("Field deletion error:", error);
+        return res.status(httpStatusCode.InternalServerError).json({
+            success: false,
+            message: message.lblInternalServerError,
+            errorCode: "SERVER_ERROR",
+            error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
+    }
+};
 
-exports.updateFieldOrder = async (req, res, next) => {  
-    try {  
-        const { clientId, documentRequirementId } = req.params;  
-        const { fields } = req.body;  
-        const user = req.user;  
+exports.updateFieldOrder = async (req, res, next) => {
+    try {
+        const { clientId, documentRequirementId } = req.params;
+        const { fields } = req.body;
+        const user = req.user;
 
-        if (!documentRequirementId || !clientId) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: message.lblRequiredFieldMissing,  
-                errorCode: "FIELD_MISSING",  
-            });  
-        }  
+        if (!documentRequirementId || !clientId) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: message.lblRequiredFieldMissing,
+                errorCode: "FIELD_MISSING",
+            });
+        }
 
-        if (!clientId || !documentRequirementId || !fields || !Array.isArray(fields) || fields.length === 0) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: message?.lblRequiredFieldMissing,  
-                errorCode: "FIELD_MISSING",  
-            });  
-        }  
+        if (!clientId || !documentRequirementId || !fields || !Array.isArray(fields) || fields.length === 0) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: message?.lblRequiredFieldMissing,
+                errorCode: "FIELD_MISSING",
+            });
+        }
 
-        if (  
-            !mongoose.Types.ObjectId.isValid(documentRequirementId) ||  
-            !fields.every((f) => mongoose.Types.ObjectId.isValid(f.fieldId))  
-        ) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: "Invalid ID format",  
-                errorCode: "INVALID_ID",  
-            });  
-        }  
+        if (
+            !mongoose.Types.ObjectId.isValid(documentRequirementId) ||
+            !fields.every((f) => mongoose.Types.ObjectId.isValid(f.fieldId))
+        ) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Invalid ID format",
+                errorCode: "INVALID_ID",
+            });
+        }
 
-        if (  
-            !fields.every((f) => typeof f.order === "number" && f.order >= 1 && Number.isInteger(f.order))  
-        ) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: "Invalid fields data",  
-                errorCode: "INVALID_FIELDS",  
-            });  
-        }  
+        if (
+            !fields.every((f) => typeof f.order === "number" && f.order >= 1 && Number.isInteger(f.order))
+        ) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Invalid fields data",
+                errorCode: "INVALID_FIELDS",
+            });
+        }
 
-        const orders = fields.map((f) => f.order);  
-        if (new Set(orders).size !== orders.length) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: "DUPLICATE_ORDERS",  
-                errorCode: "DUPLICATE_ORDERS",  
-            });  
-        }  
+        const orders = fields.map((f) => f.order);
+        if (new Set(orders).size !== orders.length) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "DUPLICATE_ORDERS",
+                errorCode: "DUPLICATE_ORDERS",
+            });
+        }
 
-        const fieldIds = fields.map((f) => f.fieldId);  
+        const fieldIds = fields.map((f) => f.fieldId);
 
-        const clientConnection = await getClientDatabaseConnection(clientId);  
-        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)  
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CustomField = clientConnection.model("documentCustomField", documentCustomFieldSchema)
 
-        const existingFields = await CustomField.find({  
-            _id: { $in: fieldIds },  
-            documentRequirementId: documentRequirementId  
-        });  
+        const existingFields = await CustomField.find({
+            _id: { $in: fieldIds },
+            documentRequirementId: documentRequirementId
+        });
 
-        if (existingFields.length !== fields.length) {  
-            return res.status(httpStatusCode.BadRequest).json({  
-                success: false,  
-                message: "Some fields do not belong to this ledger group",  
-                errorCode: "NOT_FOUND",  
-            });  
-        }  
+        if (existingFields.length !== fields.length) {
+            return res.status(httpStatusCode.BadRequest).json({
+                success: false,
+                message: "Some fields do not belong to this ledger group",
+                errorCode: "NOT_FOUND",
+            });
+        }
 
-        const updatePromises = fields.map(({ fieldId, order }) =>  
-            CustomField.updateOne(  
-                { _id: fieldId, documentRequirementId },  
-                { $set: { "gridConfig.order": order } }  
-            )  
-        );  
-        await Promise.all(updatePromises);  
+        const updatePromises = fields.map(({ fieldId, order }) =>
+            CustomField.updateOne(
+                { _id: fieldId, documentRequirementId },
+                { $set: { "gridConfig.order": order } }
+            )
+        );
+        await Promise.all(updatePromises);
 
-        return res.status(httpStatusCode.OK).json({  
-            success: true,  
-            message: "Field order updated successfully",  
-        });  
-    } catch (error) {  
-        console.error("Error updating field order:", error);  
-        return res.status(httpStatusCode.InternalServerError).json({  
-            success: false,  
-            message: message.lblInternalServerError,  
-            errorCode: SERVER_ERROR,  
-            error: process.env.NODE_ENV === "development" ? error.message : undefined,  
-        });  
-    }  
-};  
+        return res.status(httpStatusCode.OK).json({
+            success: true,
+            message: "Field order updated successfully",
+        });
+    } catch (error) {
+        console.error("Error updating field order:", error);
+        return res.status(httpStatusCode.InternalServerError).json({
+            success: false,
+            message: message.lblInternalServerError,
+            errorCode: SERVER_ERROR,
+            error: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
+    }
+};
 
 
 
