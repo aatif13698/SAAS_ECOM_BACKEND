@@ -7,7 +7,7 @@ let router = express.Router();
 
 const vendorBusinessUnitContrller = require("../controller/businessUnit.controller");
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization");
-const { uploadBusinesUnitIcon, uploadIconToS3 } = require("../../utils/multer");
+const { uploadBusinesUnitIcon, uploadIconToS3, uploadDocuments } = require("../../utils/multer");
 
 
 // # create, update, view, list, activate/inactive, delete Business unit by vendor routes starts here
@@ -37,15 +37,24 @@ const { uploadBusinesUnitIcon, uploadIconToS3 } = require("../../utils/multer");
 router.post(
     '/createBusinessUnit',
     entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"),
-    uploadIconToS3.single("icon"),
+    uploadDocuments.fields([
+        { name: 'icon', maxCount: 1 },
+        { name: 'tinDocument', maxCount: 1 },
+        { name: 'cinDocument', maxCount: 1 },
+        { name: 'tanDocument', maxCount: 1 },
+        { name: 'businessLicenseDocument', maxCount: 1 },
+        { name: 'panDocument', maxCount: 1 }
+    ]),
     async (req, res, next) => {
         try {
-            // Validate file upload
-            if (req.file) {
-                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                if (!allowedMimetypes.includes(req.file.mimetype)) {
+            // Validate file uploads
+            const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            const files = req.files;
+            for (const field in files) {
+                const file = files[field][0];
+                if (!allowedMimetypes.includes(file.mimetype)) {
                     return res.status(400).send({
-                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                        message: `Invalid file type for ${field}. Only JPEG, PNG, WEBP and GIF are allowed.`
                     });
                 }
             }
@@ -84,15 +93,24 @@ router.post(
 router.put(
     '/updateBusinessUnit',
     entityAuth.authorizeEntity("Administration", "BusinessUnit", "update"),
-    uploadIconToS3.single("icon"),
+    uploadDocuments.fields([
+        { name: 'icon', maxCount: 1 },
+        { name: 'tinDocument', maxCount: 1 },
+        { name: 'cinDocument', maxCount: 1 },
+        { name: 'tanDocument', maxCount: 1 },
+        { name: 'businessLicenseDocument', maxCount: 1 },
+        { name: 'panDocument', maxCount: 1 }
+    ]),
     async (req, res, next) => {
         try {
-            // Validate file upload
-            if (req.file) {
-                const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                if (!allowedMimetypes.includes(req.file.mimetype)) {
+            // Validate file uploads
+            const allowedMimetypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            const files = req.files;
+            for (const field in files) {
+                const file = files[field][0];
+                if (!allowedMimetypes.includes(file.mimetype)) {
                     return res.status(400).send({
-                        message: 'Invalid file type. Only JPEG, PNG, WEBP and GIF are allowed.'
+                        message: `Invalid file type for ${field}. Only JPEG, PNG, WEBP and GIF are allowed.`
                     });
                 }
             }
@@ -122,7 +140,7 @@ router.post("/restoreBusinessUnit", entityAuth.authorizeEntity("Administration",
 
 router.get('/getActiveBusinessUnit',
     //  entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"),
-      vendorBusinessUnitContrller.getActiveBusinessUnit);
+    vendorBusinessUnitContrller.getActiveBusinessUnit);
 
 
 

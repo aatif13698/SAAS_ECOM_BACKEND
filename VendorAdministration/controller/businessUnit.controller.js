@@ -56,41 +56,101 @@ const uploadIconToS3 = async (file, clientId) => {
 // create business unit by vendor
 exports.createBusinessUnitByVendor = async (req, res, next) => {
     try {
-        const { clientId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, city, state, country, ZipCode, address } = req.body;
+        const { clientId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !ZipCode || !address) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !ZipCode || !address || !panNumber) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
+            });
+        }
+
+        if (!req.files['panDocument']) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'PAN document is required.',
+            });
+        }
+
+        if (tinNumber && !req.files['tinDocument']) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'TIN document is required if TIN number is provided.',
+            });
+        }
+        if (cinNumber && !req.files['cinDocument']) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'CIN document is required if CIN number is provided.',
+            });
+        }
+        if (tanNumber && !req.files['tanDocument']) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'TAN document is required if TAN number is provided.',
+            });
+        }
+        if (businessLicenseNumber && !req.files['businessLicenseDocument']) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'Business License document is required if Business License number is provided.',
             });
         }
 
         let dataObject = {
             name,
             emailContact,
-            contactNumber, tinNumber, businessLicenseNumber,
-            city, state, country, ZipCode, address,
+            contactNumber,
+            tinNumber,
+            businessLicenseNumber,
+            cinNumber,
+            tanNumber,
+            panNumber,
+            city,
+            state,
+            country,
+            ZipCode,
+            address,
+            houseOrFlat,
+            streetOrLocality,
+            landmark,
             createdBy: mainUser._id,
         }
 
-        // if (req.file && req.file.filename) {
-        //     dataObject = {
-        //         ...dataObject,
-        //         icon: req.file.filename
-
-        //     }
-        // }
-
-        if (req.file) {
-            const uploadResult = await uploadIconToS3(req.file, clientId);
+        if (req.files['icon']) {
+            const uploadResult = await uploadIconToS3(req.files['icon'][0], clientId, 'icon');
             dataObject.icon = uploadResult.url;
-            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
+            dataObject.iconKey = uploadResult.key;
         }
 
+        if (req.files['tinDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['tinDocument'][0], clientId, 'tinDocument');
+            dataObject.tinDocument = uploadResult.url;
+            dataObject.tinDocumentKey = uploadResult.key;
+        }
+
+        if (req.files['cinDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['cinDocument'][0], clientId, 'cinDocument');
+            dataObject.cinDocument = uploadResult.url;
+            dataObject.cinDocumentKey = uploadResult.key;
+        }
+
+        if (req.files['tanDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['tanDocument'][0], clientId, 'tanDocument');
+            dataObject.tanDocument = uploadResult.url;
+            dataObject.tanDocumentKey = uploadResult.key;
+        }
+
+        if (req.files['businessLicenseDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['businessLicenseDocument'][0], clientId, 'businessLicenseDocument');
+            dataObject.businessLicenseDocument = uploadResult.url;
+            dataObject.businessLicenseDocumentKey = uploadResult.key;
+        }
+
+        if (req.files['panDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['panDocument'][0], clientId, 'panDocument');
+            dataObject.panDocument = uploadResult.url;
+            dataObject.panDocumentKey = uploadResult.key;
+        }
 
         const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
@@ -105,42 +165,113 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
 // update  business unit by vendor
 exports.updateBusinessUnitByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, city, state, country, ZipCode, address } = req.body;
-        if (!clientId || !businessUnitId) {
-            return res.status(400).send({
-                message: message.lblBusinessUnitIdIdAndClientIdRequired,
-            });
-        }
-        if (!name || !emailContact || !contactNumber || !city || !state || !ZipCode || !address) {
+        const { clientId,businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const mainUser = req.user;
+
+        if (!clientId) {
             return res.status(statusCode.BadRequest).send({
-                message: message.lblRequiredFieldMissing,
+                message: message.lblClinetIdIsRequired,
             });
         }
 
-        let dataObject = {
-            name, emailContact, contactNumber, tinNumber, businessLicenseNumber, city, state, country, ZipCode, address
+        if (!businessUnitId) {
+            return res.status(statusCode.BadRequest).send({
+                message: 'Business Unit ID is required.',
+            });
         }
 
-        // if (req.file && req.file.filename) {
-        //     dataObject = {
-        //         ...dataObject,
-        //         icon: req.file.filename
+        // For update, fields are optional except perhaps key ones, but validate if provided
+        let dataObject = {};
+        if (name) dataObject.name = name;
+        if (emailContact) dataObject.emailContact = emailContact;
+        if (contactNumber) dataObject.contactNumber = contactNumber;
+        if (tinNumber !== undefined) dataObject.tinNumber = tinNumber;
+        if (businessLicenseNumber !== undefined) dataObject.businessLicenseNumber = businessLicenseNumber;
+        if (cinNumber !== undefined) dataObject.cinNumber = cinNumber;
+        if (tanNumber !== undefined) dataObject.tanNumber = tanNumber;
+        if (panNumber) dataObject.panNumber = panNumber;
+        if (city) dataObject.city = city;
+        if (state) dataObject.state = state;
+        if (country) dataObject.country = country;
+        if (ZipCode) dataObject.ZipCode = ZipCode;
+        if (address) dataObject.address = address;
+        if (houseOrFlat !== undefined) dataObject.houseOrFlat = houseOrFlat;
+        if (streetOrLocality !== undefined) dataObject.streetOrLocality = streetOrLocality;
+        if (landmark !== undefined) dataObject.landmark = landmark;
+        dataObject.updatedBy = mainUser._id;
+
+        // Handle file uploads if provided
+        if (req.files['icon']) {
+            const uploadResult = await uploadIconToS3(req.files['icon'][0], clientId);
+            dataObject.icon = uploadResult.url;
+            dataObject.iconKey = uploadResult.key;
+        }
+
+        if (req.files['tinDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['tinDocument'][0], clientId);
+            dataObject.tinDocument = uploadResult.url;
+            dataObject.tinDocumentKey = uploadResult.key;
+        } 
+        // else if (tinNumber && !dataObject.tinDocument) { // Assuming we fetch existing, but for simplicity, optional
+        //     // If tinNumber provided without document, error if required
+        //     if (tinNumber) {
+        //         return res.status(statusCode.BadRequest).send({
+        //             message: 'TIN document is required if TIN number is provided.',
+        //         });
         //     }
         // }
 
-        if (req.file) {
-            const uploadResult = await uploadIconToS3(req.file, clientId);
-            dataObject.icon = uploadResult.url;
-            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
-        }
+        if (req.files['cinDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['cinDocument'][0], clientId);
+            dataObject.cinDocument = uploadResult.url;
+            dataObject.cinDocumentKey = uploadResult.key;
+        } 
+        // else if (cinNumber) {
+        //     return res.status(statusCode.BadRequest).send({
+        //         message: 'CIN document is required if CIN number is provided.',
+        //     });
+        // }
 
-        const updated = await businessUnitService.update(clientId, businessUnitId, { ...dataObject });
+        if (req.files['tanDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['tanDocument'][0], clientId);
+            dataObject.tanDocument = uploadResult.url;
+            dataObject.tanDocumentKey = uploadResult.key;
+        } 
+        // else if (tanNumber) {
+        //     return res.status(statusCode.BadRequest).send({
+        //         message: 'TAN document is required if TAN number is provided.',
+        //     });
+        // }
+
+        if (req.files['businessLicenseDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['businessLicenseDocument'][0], clientId);
+            dataObject.businessLicenseDocument = uploadResult.url;
+            dataObject.businessLicenseDocumentKey = uploadResult.key;
+        } 
+        // else if (businessLicenseNumber) {
+        //     return res.status(statusCode.BadRequest).send({
+        //         message: 'Business License document is required if Business License number is provided.',
+        //     });
+        // }
+
+        if (req.files['panDocument']) {
+            const uploadResult = await uploadIconToS3(req.files['panDocument'][0], clientId);
+            dataObject.panDocument = uploadResult.url;
+            dataObject.panDocumentKey = uploadResult.key;
+        }
+        //  else if (panNumber) {
+        //     return res.status(statusCode.BadRequest).send({
+        //         message: 'PAN document is required if PAN number is updated.',
+        //     });
+        // }
+
+        const updatedBusinessUnit = await businessUnitService.update(clientId, businessUnitId, dataObject);
         return res.status(statusCode.OK).send({
-            message: message.lblBusinessUnitUpdatedSuccess,
-            data: { businessUnitId: updated._id },
+            message: 'Business Unit updated successfully.',
+            data: { businessUnitId: updatedBusinessUnit._id },
         });
     } catch (error) {
-        next(error);
+        next(error)
     }
 };
 
