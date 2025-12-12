@@ -612,6 +612,56 @@ exports.list = async (req, res, next) => {
     }
 };
 
+exports.listAllByCurrentLevel = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, level = "", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            _id: { $ne: mainUser?._id },
+            roleId: { $gt: 1, $ne: 0 },
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+
+        console.log("filters", filters);
+
+        const result = await employeeService.listAllByCurrentLevel(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: message.lblBranchFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 exports.activeinactive = async (req, res, next) => {
     try {
         const { keyword, page, perPage, id, status, clientId } = req.body;

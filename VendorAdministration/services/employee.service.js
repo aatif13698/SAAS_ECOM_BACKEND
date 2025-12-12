@@ -123,6 +123,35 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const listAllByCurrentLevel = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+        const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const [employees] = await Promise.all([
+            User.find(filters).populate({
+                path: "role",
+                model: clientRole,
+                select: "id _id name"
+            }).populate({
+                path: "workingDepartment",
+                model: WorkingDepartment,
+                select: "departmentName"
+            }).populate({
+                path: "shift",
+                model: Shift,
+                select: "shiftName"
+            })
+            .sort({ _id: -1 }),
+        ]);
+        return { employees };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, employeeId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -196,6 +225,7 @@ module.exports = {
     update,
     getById,
     list,
+    listAllByCurrentLevel,
     activeInactive,
     deleted,
     restore,

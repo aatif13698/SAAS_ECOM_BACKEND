@@ -114,13 +114,16 @@ const clinetUserSchema = new Schema(
 
 
         // business informations
-        isBusinessAccount:{ type: Boolean, default: false },
+        isBusinessAccount: { type: Boolean, default: false },
         businessName: { type: String },
         tanNumber: { type: String },
         licenseNumber: { type: String },
         gstin: { type: String },
         businessAddress: { type: String },
 
+        assignedAssets: [{
+            assetId: { type: ObjectId, ref: "clientAsset", default: null }
+        }],
 
         // handlign created by
         createdBy: { type: ObjectId, ref: "clientUsers", index: true }, // Index for admin/user relationships

@@ -7,6 +7,9 @@ const clientAssetSchema = require("../../client/model/asset");
 const clientUserSchema = require("../../client/model/user");
 const httpStatusCode = require("../../utils/http-status-code");
 const clientAssetRequestSchema = require("../../client/model/assetRequest");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 const create = async (clientId, data) => {
@@ -57,10 +60,28 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [assets, total] = await Promise.all([
-            Asset.find(filters).skip(skip),
+            Asset.find(filters).skip(skip).sort({ _id: -1 })
+            .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                   select: "name"
+                })
+                 .populate({
+                    path: "branch",
+                    model: Branch,
+                   select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                   select: "name"
+                }),
             Asset.countDocuments(filters),
         ]);
         return { count: total, assets };

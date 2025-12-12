@@ -117,6 +117,8 @@ router.get('/employee/:clientId/:employeeId', entityAuth.authorizeEntity("Admini
 
 router.get('/listEmployee', entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.list);
 
+router.get('/list/all/employee/current/level', entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.listAllByCurrentLevel);
+
 router.post("/activeInactiveEmployee", entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.activeinactive);
 
 router.post("/softDeleteEmployee", entityAuth.authorizeEntity("Administration", "Employee", "create"), employeeContrller.softDelete);
