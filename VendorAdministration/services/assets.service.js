@@ -60,6 +60,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema)
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
@@ -67,20 +68,25 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const skip = (page - 1) * limit;
         const [assets, total] = await Promise.all([
             Asset.find(filters).skip(skip).sort({ _id: -1 })
-            .populate({
+                .populate({
                     path: "businessUnit",
                     model: BusinessUnit,
-                   select: "name"
+                    select: "name"
                 })
-                 .populate({
+                .populate({
                     path: "branch",
                     model: Branch,
-                   select: "name"
+                    select: "name"
                 })
                 .populate({
                     path: "warehouse",
                     model: Warehouse,
-                   select: "name"
+                    select: "name"
+                })
+                .populate({
+                    path: "assignedTo",
+                    model: User,
+                    select: "firstName lastName email phone profileImage"
                 }),
             Asset.countDocuments(filters),
         ]);
@@ -109,12 +115,11 @@ const activeInactive = async (clientId, assetId, data) => {
 
 
 
-const assignToEmployee = async (clientId, useId, assetId) => {
+const assignToEmployee = async (clientId, assetId, empId, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Asset = clientConnection.model('clientAsset', clientAssetSchema);
         const User = clientConnection.model('clientUsers', clientUserSchema)
-
         const asset = await Asset.findById(assetId);
         if (!asset) {
             throw new CustomError(statusCode.NotFound, message.lblAssetNotFound);
@@ -122,14 +127,14 @@ const assignToEmployee = async (clientId, useId, assetId) => {
         if (asset.status !== 'available') {
             throw new CustomError(statusCode.BadRequest, "Asset not available");
         }
-        const employee = await User.findById(useId);
+        const employee = await User.findById(empId);
         if (!employee) {
             throw new CustomError(statusCode.NotFound, "Employee not found");
         }
-        asset.assignedTo = useId;
+        asset.assignedTo = empId;
         asset.status = 'assigned';
-        employee.assignedAssets.push(asset._id);
-        asset.auditLogs.push({ action: 'assigned', user: req.body.createdBy, date: new Date() });
+        employee.assignedAssets.push({ assetId: asset._id });
+        asset.auditLogs.push({ action: 'assigned', user: mainUser._id, date: new Date() });
         await asset.save();
         await employee.save();
         return asset

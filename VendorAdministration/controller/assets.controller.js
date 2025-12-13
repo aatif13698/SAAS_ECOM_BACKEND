@@ -63,7 +63,7 @@ exports.create = async (req, res, next) => {
         ];
 
         console.log("requiredFields", requiredFields);
-        
+
 
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
@@ -356,18 +356,19 @@ exports.activeinactive = async (req, res, next) => {
 };
 
 // assign
-// exports.assign = async (req, res, next) => {
-//     try {
-//         const { useId } = req.body;
-//         const newAssigned = await assetService.assignToEmployee(clientId, useId, req.params.assetId);
-//         return res.status(statusCode.OK).send({
-//             message: message.lblAssetCreatedSuccess,
-//             data: { newAssigned: newAssigned._id },
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
+exports.assign = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { assetId, empId, clientId } = req.body;
+        const newAssigned = await assetService.assignToEmployee(clientId, assetId, empId, mainUser);
+        return res.status(statusCode.OK).send({
+            message: message.lblAssetCreatedSuccess,
+            data: { newAssigned: newAssigned._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // unassign
 // exports.unAssign = async (req, res, next) => {

@@ -22,7 +22,7 @@ router.get('/list/asset', entityAuth.authorizeEntity("Administration", "Employee
 
 router.post("/activeInactive/asset", entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.activeinactive);
 
-// router.post('/asset/:assetId/assign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.assign );
+router.post('/assign/asset', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.assign );
 
 // router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.unAssign );
 
