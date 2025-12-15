@@ -3,16 +3,14 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const clinetBusinessUnitSchema = require("../../client/model/businessUnit")
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
-const CustomError = require("../../utils/customeError")
+const CustomError = require("../../utils/customeError");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
-
-
-
         const existing = await BusinessUnit.findOne({
             $or: [{ emailContact: data.emailContact },
             { contactNumber: data?.contactNumber }
@@ -23,7 +21,12 @@ const create = async (clientId, data) => {
             throw new CustomError(statusCode.Conflict, message.lblBusinessUnitAlreadyExists);
         }
 
-        return await BusinessUnit.create(data);
+        const newBusiness =  await BusinessUnit.create(data);
+        
+        await generateLedgerGroup(newBusiness._id, null, null, "business", mainUser, clientId);
+
+        return newBusiness;
+
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating business unit: ${error.message}`);
     }

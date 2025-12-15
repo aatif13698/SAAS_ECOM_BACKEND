@@ -152,7 +152,7 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
             dataObject.panDocumentKey = uploadResult.key;
         }
 
-        const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject });
+        const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject}, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblBusinessUnitCreatedSuccess,
             data: { businessUnitId: newBusinessUnit._id },
