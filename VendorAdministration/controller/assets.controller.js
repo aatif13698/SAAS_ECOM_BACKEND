@@ -264,16 +264,17 @@ exports.update = async (req, res, next) => {
 // get particular 
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, assetId } = req.params;
-        if (!clientId || !assetId) {
+        const { clientId, asset } = req.params;
+        
+        if (!clientId || !asset) {
             return res.status(400).send({
-                message: message.lblShiftIdAndClientIdRequired,
+                message: message.lblAssetIdAndClientIdRequired,
             });
         }
-        const asset = await assetService.getById(clientId, assetId);
+        const assetDetail = await assetService.getById(clientId, asset);
         return res.status(200).send({
             message: message.lblAssetFoundSucessfully,
-            data: asset,
+            data: assetDetail,
         });
     } catch (error) {
         next(error)

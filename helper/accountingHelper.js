@@ -74,78 +74,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
         //     model: LedgerGroup,
         // });
 
-        const fieldArray2 = [
-            {
-                name: "Capital Account",
-                subGroups: [
-                    {
-                        name: "Surplus",
-                        fields: [
-                            {
-                                name: "nickName",
-                                label: "Nick Name",
-                                type: "text",
-                                isRequired: true,
-                                placeholder: "Enter Nick Name.",
-                                gridConfig: {
-                                    span: 12,
-                                    order: 1
-                                },
-                                isDeleteAble: false,
-                                createdBy: mainUser?._id,
-                            },
 
-                            {
-                                name: "Dasu",
-                                label: "dasu",
-                                type: "text",
-                                isRequired: true,
-                                placeholder: "Enter Nick Name.",
-                                gridConfig: {
-                                    span: 12,
-                                    order: 1
-                                },
-                                isDeleteAble: false,
-                                createdBy: mainUser?._id,
-                            },
-
-                        ]
-                    },
-
-                ],
-                fields: [
-                    {
-                        name: "nickName",
-                        label: "Nick Name",
-                        type: "text",
-                        isRequired: true,
-                        placeholder: "Enter Nick Name.",
-                        gridConfig: {
-                            span: 12,
-                            order: 1
-                        },
-                        isDeleteAble: false,
-                        createdBy: mainUser?._id,
-                    },
-
-                    {
-                        name: "abc",
-                        label: "ABC",
-                        type: "text",
-                        isRequired: true,
-                        placeholder: "Enter Nick Name.",
-                        gridConfig: {
-                            span: 12,
-                            order: 1
-                        },
-                        isDeleteAble: false,
-                        createdBy: mainUser?._id,
-                    },
-
-
-                ]
-            }
-        ]
 
         const fieldArray = [
             {
@@ -163,16 +92,28 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         isDeleteAble: false,
                         createdBy: mainUser?._id,
                     },
-
                     {
-                        name: "abc",
-                        label: "ABC",
+                        name: "Owner/Partner",
+                        label: "Owner/Partner",
                         type: "text",
                         isRequired: true,
-                        placeholder: "Enter abc.",
+                        placeholder: "Enter Owner/Partner.",
                         gridConfig: {
                             span: 12,
-                            order: 1
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "SharePercentage",
+                        label: "Share Percentage",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Share Percentage.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
                         },
                         isDeleteAble: false,
                         createdBy: mainUser?._id,
@@ -237,8 +178,141 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                     console.log("a", a);
                 }
             })
-        })
+        });
 
+        const childLedgerArray = [
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Reserves and Surplus",
+                hasParent: true,
+                createdBy: mainUser._id,
+                parentGroup: "Capital Account"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Bank Account",
+                hasParent: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Asset"
+            },
+        ];
+
+
+        const newInsetArrayForChildLedger = childLedgerArray.map((child) => {
+            const parentName = child?.parentGroup;
+            let parentId = null;
+            ledgerGruop.map((parent) => {
+                if (parent?.groupName == parentName) {
+                    parentId = parent._id
+                }
+            });
+            return {
+                ...child,
+                parentGroup: parentId
+            }
+        });
+
+        const dataArrayChildLedger = newInsetArrayForChildLedger.map((item) => {
+            const newMapedData = { ...item }
+            return Object.assign(newMapedData, levelConfig[level])
+        });
+
+
+        const childLedgerGruop = await LedgerGroup.insertMany(dataArrayChildLedger);
+
+        const childLedgerFieldArray = [
+            {
+                "Reserves and Surplus": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+
+                    {
+                        name: "mno",
+                        label: "mno",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter mno.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+
+                ]
+            },
+
+            {
+                "Bank Account": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "pqr",
+                        label: " pqr",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter pqr.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+
+                ]
+            }
+
+
+        ]
+
+        childLedgerGruop.map((item) => {
+            const name = item.groupName;
+            const id = item._id
+            childLedgerFieldArray.map(async (field) => {
+                const gName = Object.keys(field)[0];
+                if (gName === name) {
+                    const fieldsArray = field[gName];
+                    console.log("fieldsArray", fieldsArray);
+
+                    const newFieldArray = fieldsArray.map((f) => {
+                        return {
+                            ...f,
+                            groupId: id
+                        }
+                    });
+                    console.log("newFieldArray", newFieldArray);
+                    const b = await CustomField.insertMany(newFieldArray);
+                }
+            })
+        });
 
 
     } catch (error) {

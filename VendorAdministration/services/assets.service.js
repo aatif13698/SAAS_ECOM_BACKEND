@@ -45,7 +45,36 @@ const getById = async (clientId, assetId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Asset = clientConnection.model('clientAsset', clientAssetSchema);
-        const asset = await Asset.findById(assetId);
+        const User = clientConnection.model('clientUsers', clientUserSchema)
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const asset = await Asset.findById(assetId)
+            .populate({
+                path: "businessUnit",
+                model: BusinessUnit,
+                select: "name"
+            })
+            .populate({
+                path: "branch",
+                model: Branch,
+                select: "name"
+            })
+            .populate({
+                path: "warehouse",
+                model: Warehouse,
+                select: "name"
+            })
+            .populate({
+                path: "assignedTo",
+                model: User,
+                select: "firstName lastName email phone profileImage"
+            })
+            .populate({
+                path: "auditLogs.user",
+                model: User,
+                select: "firstName lastName email profileImage"
+            });
         if (!asset) {
             throw new CustomError(statusCode.NotFound, message.lblAssetNotFound);
         }
