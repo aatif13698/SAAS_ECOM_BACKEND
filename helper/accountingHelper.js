@@ -196,7 +196,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "SharePercentage",
                         label: "Share Percentage",
                         type: "number",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Share Percentage.",
                         gridConfig: {
                             span: 12,
@@ -226,7 +226,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Asset Typ",
                         label: " Asset Typ",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Asset Typ.",
                         gridConfig: {
                             span: 12,
@@ -239,7 +239,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -269,7 +269,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Liability Type",
                         label: "Liability Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Liability Type.",
                         gridConfig: {
                             span: 12,
@@ -282,7 +282,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -312,7 +312,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Expense Type",
                         label: "Expense Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Expense Type.",
                         gridConfig: {
                             span: 12,
@@ -325,7 +325,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -356,7 +356,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Income Type",
                         label: "Income Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Income Type.",
                         gridConfig: {
                             span: 12,
@@ -369,7 +369,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -400,7 +400,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Assets Type",
                         label: "Assets Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Assets Type.",
                         gridConfig: {
                             span: 12,
@@ -413,7 +413,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -444,7 +444,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Expense Type",
                         label: "Expense Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Expense Type.",
                         gridConfig: {
                             span: 12,
@@ -457,7 +457,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -488,7 +488,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Income Type",
                         label: "Income Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Income Type.",
                         gridConfig: {
                             span: 12,
@@ -501,7 +501,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -532,7 +532,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Investments Type",
                         label: "Investments Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Investments Type.",
                         gridConfig: {
                             span: 12,
@@ -545,7 +545,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -576,7 +576,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Loans Type",
                         label: "Loans Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Loans Type.",
                         gridConfig: {
                             span: 12,
@@ -589,7 +589,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -783,7 +783,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -796,7 +796,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Photo",
                         label: "Upload Photo",
                         type: "file",
-                        isRequired: true,
+                        isRequired: false,
                         validation: {
                             fileTypes: [
                                 "image/jpeg",
@@ -922,7 +922,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Cash Type",
                         label: "Cash Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Cash Type.",
                         gridConfig: {
                             span: 12,
@@ -935,7 +935,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -965,7 +965,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Deposits Type",
                         label: "Deposits Type",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Deposits Type.",
                         gridConfig: {
                             span: 12,
@@ -978,7 +978,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -1038,7 +1038,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -1084,7 +1084,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -1197,7 +1197,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Contact Person",
                         label: "Contact Person",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Contact Person.",
                         gridConfig: {
                             span: 12,
@@ -1236,7 +1236,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -1266,7 +1266,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
@@ -1379,7 +1379,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Contact Person",
                         label: "Contact Person",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Contact Person.",
                         gridConfig: {
                             span: 12,
@@ -1418,7 +1418,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         name: "Description",
                         label: "Description",
                         type: "text",
-                        isRequired: true,
+                        isRequired: false,
                         placeholder: "Enter Description.",
                         gridConfig: {
                             span: 12,
