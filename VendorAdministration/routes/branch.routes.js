@@ -38,7 +38,7 @@ const { uploadBranchIcon, uploadIconToS3 } = require("../../utils/multer");
 router.post(
     '/createBranch',
     entityAuth.authorizeEntity("Administration", "Branch", "create"),
-    uploadIconToS3.single("icon"),
+    uploadIconToS3.single("gstDocument"),
     async (req, res, next) => {
         try {
             // Validate file upload
@@ -87,7 +87,7 @@ router.post(
 router.put(
     '/updateBranch',
     entityAuth.authorizeEntity("Administration", "Branch", "update"),
-    uploadIconToS3.single("icon"),
+    uploadIconToS3.single("gstDocument"),
     async (req, res, next) => {
         try {
             // Validate file upload

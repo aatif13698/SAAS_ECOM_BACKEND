@@ -56,7 +56,7 @@ const uploadIconToS3 = async (file, clientId) => {
 // create warehouse by vendor
 exports.createWarehouseByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnit, branchId, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address } = req.body;
+        const { clientId, businessUnit, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
@@ -68,29 +68,19 @@ exports.createWarehouseByVendor = async (req, res, next) => {
                 message: message.lblRequiredFieldMissing,
             });
         }
-
         let dataObject = {
             businessUnit, branchId,
-            name, incorporationName,
+            name,
             emailContact,
             contactNumber,
-            city, state, country, ZipCode, address,
+            city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark,
             createdBy: mainUser._id,
         }
-
-        // if (req.file && req.file.filename) {
-        //     dataObject = {
-        //         ...dataObject,
-        //         icon: req.file.filename
-        //     }
-        // }
-
         if (req.file) {
             const uploadResult = await uploadIconToS3(req.file, clientId);
             dataObject.icon = uploadResult.url;
             dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
-
         const newData = await warehouseService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
             message: message.lblWarehouseCreatedSuccess,
@@ -104,7 +94,7 @@ exports.createWarehouseByVendor = async (req, res, next) => {
 // update  warehouse by vendor
 exports.updateWarehouseByVendor = async (req, res, next) => {
     try {
-        const { clientId, warehouseId, businessUnitId, branchId, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address } = req.body;
+        const { clientId, warehouseId, businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         if (!clientId || !warehouseId) {
             return res.status(400).send({
                 message: message.lblWarehouseIdIdAndClientIdRequired,
@@ -117,7 +107,7 @@ exports.updateWarehouseByVendor = async (req, res, next) => {
         }
 
         let dataObject = {
-            businessUnitId, branchId, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address
+            businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark
         }
 
         // if (req.file && req.file.filename) {
@@ -156,7 +146,7 @@ exports.getParticularWarehouseByVendor = async (req, res, next) => {
         }
         const branch = await warehouseService.getById(clientId, warehouseId);
         return res.status(200).send({
-            message: message.lblBranchFoundSucessfully,
+            message: message.lblWarehouseFoundSucessfully,
             data: branch,
         });
     } catch (error) {

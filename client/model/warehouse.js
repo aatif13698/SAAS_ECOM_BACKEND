@@ -8,14 +8,13 @@ const clinetWarehouseSchema = new Schema(
     {
 
 
-        businessUnit: { type: ObjectId, ref: "businessUnit", default:null, index: true }, 
-        branchId: { type: ObjectId, ref: "branch", default:null, index: true }, 
-        warehouseHead: { type: ObjectId, ref: "clientUsers", default:null, index: true }, 
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
+        branchId: { type: ObjectId, ref: "branch", default: null, index: true },
+        warehouseHead: { type: ObjectId, ref: "clientUsers", default: null, index: true },
 
         name: { type: String, required: true },
-        incorporationName: { type: String, required: true },
-        icon :{ type: String, default : null },
-        iconKey : { type: String, default : null },
+        icon: { type: String, default: null },
+        iconKey: { type: String, default: null },
 
         emailContact: {
             type: String,
@@ -42,6 +41,11 @@ const clinetWarehouseSchema = new Schema(
                 message: 'Invalid phone number format.',
             },
         },
+
+        houseOrFlat: { type: String, trim: true },
+        streetOrLocality: { type: String, trim: true },
+        landmark: { type: String, trim: true },
+
 
         city: {
             type: String,
@@ -72,11 +76,11 @@ const clinetWarehouseSchema = new Schema(
         isActive: { type: Boolean, default: false },
 
         // handlign created by
-        createdBy: { type: ObjectId, ref: "clientUsers", default:null, index: true }, // Index for admin/user relationships
+        createdBy: { type: ObjectId, ref: "clientUsers", default: null, index: true }, // Index for admin/user relationships
 
         deletedAt: { type: Date, default: null, index: true }, // Index for soft-delete functionality
     },
-    
+
     { timestamps: true }
 );
 

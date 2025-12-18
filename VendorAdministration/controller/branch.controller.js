@@ -55,46 +55,44 @@ const uploadIconToS3 = async (file, clientId) => {
 // create Branch by vendor
 exports.createBranchByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnit, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address } = req.body;
+        const { clientId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         const mainUser = req.user;
+        console.log("body", req.body);
+
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
 
         let dataObject = {
-            businessUnit, name, incorporationName,
+            businessUnit, name,
             emailContact,
             contactNumber,
+            gstInNumber,
             city, state, country, ZipCode, address,
+            houseOrFlat,
+            streetOrLocality,
+            landmark,
             createdBy: mainUser._id,
         }
 
-        // if (req.file && req.file.filename) {
-        //     dataObject = {
-        //         ...dataObject,
-        //         icon: req.file.filename
-
-        //     }
-        // }
-
         if (req.file) {
             const uploadResult = await uploadIconToS3(req.file, clientId);
-            dataObject.icon = uploadResult.url;
-            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
+            dataObject.gstInDocument = uploadResult.url;
+            dataObject.gstInDocumentKey = uploadResult.key; // Store S3 key for potential future deletion
         }
 
 
-        const newBusinessUnit = await branchService.create(clientId, { ...dataObject });
+        const newBranch = await branchService.create(clientId, { ...dataObject });
         return res.status(statusCode.OK).send({
             message: message.lblBranchCreatedSuccess,
-            data: { businessUnitId: newBusinessUnit._id },
+            data: { businessUnitId: newBranch._id },
         });
     } catch (error) {
         next(error)
@@ -104,35 +102,25 @@ exports.createBranchByVendor = async (req, res, next) => {
 // update  Branch by vendor
 exports.updateBranchByVendor = async (req, res, next) => {
     try {
-        const { clientId, branchId, businessUnit, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address } = req.body;
+        const { clientId, branchId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         if (!clientId || !branchId) {
             return res.status(400).send({
                 message: message.lblBranchIdIdAndClientIdRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
-
-
         let dataObject = {
-            businessUnit, name, incorporationName, emailContact, contactNumber, city, state, country, ZipCode, address
+            gstInNumber, businessUnit, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark
         }
-
-        // if (req.file && req.file.filename) {
-        //     dataObject = {
-        //         ...dataObject,
-        //         icon: req.file.filename
-        //     }
-        // }
-
 
         if (req.file) {
             const uploadResult = await uploadIconToS3(req.file, clientId);
-            dataObject.icon = uploadResult.url;
-            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
+            dataObject.gstInDocument = uploadResult.url;
+            dataObject.gstInDocumentKey = uploadResult.key; // Store S3 key for potential future deletion
         }
 
 
