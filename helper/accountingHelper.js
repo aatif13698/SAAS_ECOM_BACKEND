@@ -34,6 +34,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Capital Account",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -42,6 +43,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Current Asset",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -50,6 +52,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Current Liabilities",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -58,6 +61,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Direct Expense",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -66,6 +70,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Direct Income",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -74,6 +79,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Fixed Assets",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -82,6 +88,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Indirect Expense",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -90,6 +97,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Indirect Income",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -98,6 +106,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Investments",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
             {
@@ -106,6 +115,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Loans (Liability)",
                 hasParent: false,
+                isMaster: true,
                 createdBy: mainUser._id,
             },
         ]
@@ -632,6 +642,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Reserves and Surplus",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Capital Account"
             },
@@ -641,6 +652,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Bank Account",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -650,6 +662,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Cash-in-hand",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -659,6 +672,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Deposits (Asset)",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -668,6 +682,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Loans & Advances (Asset)",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -686,6 +701,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Sundry Debtors",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -695,6 +711,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Duties & Taxes",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Liabilities"
             },
@@ -704,6 +721,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Sundry Creditor",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Liabilities"
             },

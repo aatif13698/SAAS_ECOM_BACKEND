@@ -89,7 +89,7 @@ exports.createBranchByVendor = async (req, res, next) => {
         }
 
 
-        const newBranch = await branchService.create(clientId, { ...dataObject });
+        const newBranch = await branchService.create(clientId, { ...dataObject }, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblBranchCreatedSuccess,
             data: { businessUnitId: newBranch._id },

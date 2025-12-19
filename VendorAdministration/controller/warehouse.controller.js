@@ -81,7 +81,7 @@ exports.createWarehouseByVendor = async (req, res, next) => {
             dataObject.icon = uploadResult.url;
             dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
         }
-        const newData = await warehouseService.create(clientId, { ...dataObject });
+        const newData = await warehouseService.create(clientId, { ...dataObject }, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblWarehouseCreatedSuccess,
             data: { businessUnitId: newData._id },

@@ -4,10 +4,11 @@ const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 const clinetBranchSchema = require("../../client/model/branch");
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
-const CustomError = require("../../utils/customeError")
+const CustomError = require("../../utils/customeError");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
@@ -19,7 +20,10 @@ const create = async (clientId, data) => {
         if (existing) {
             throw new CustomError(statusCode.Conflict, message.lblBranchAlreadyExists);
         }
-        return await Branch.create(data);
+        const newBranch = await Branch.create(data);
+        await generateLedgerGroup(newBranch.businessUnit, newBranch._id, null, "branch", mainUser, clientId);
+        return newBranch;
+
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating branch : ${error.message}`);
     }
@@ -145,7 +149,7 @@ const getBranchByBusiness = async (clientId, businessUnitId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
-        const branch = await Branch.find({ businessUnit: businessUnitId, isActive : true });
+        const branch = await Branch.find({ businessUnit: businessUnitId, isActive: true });
         // if (branch?.length == 0) {
         //     throw new CustomError(statusCode.NotFound, message.lblBranchNotFound);
         // }

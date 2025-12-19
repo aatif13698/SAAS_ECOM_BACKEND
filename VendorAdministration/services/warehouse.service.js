@@ -4,10 +4,11 @@ const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse")
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
-const CustomError = require("../../utils/customeError")
+const CustomError = require("../../utils/customeError");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
@@ -19,7 +20,9 @@ const create = async (clientId, data) => {
         if (existing) {
             throw new CustomError(statusCode.Conflict, message.lblWarehouseAlreadyExists);
         }
-        return await Warehouse.create(data);
+        const newWarehouse = await Warehouse.create(data);
+        await generateLedgerGroup(newWarehouse.businessUnit, newWarehouse.branchId, newWarehouse._id, "warehouse", mainUser, clientId);
+        return newWarehouse
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating warehouse : ${error.message}`);
     }
@@ -76,7 +79,7 @@ const getByBranch = async (clientId, branchId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
-        const warehouse = await Warehouse.find({branchId : branchId});
+        const warehouse = await Warehouse.find({ branchId: branchId });
         if (!warehouse) {
             throw new CustomError(statusCode.NotFound, message.lblWarehouseNotFound);
         }

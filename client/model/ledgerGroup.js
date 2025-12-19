@@ -25,6 +25,8 @@ const clientLedgerGroupSchema = new Schema(
             fieldId: { type: mongoose.Schema.Types.ObjectId, ref: 'customField', default: null },
         }],
 
+        isMaster: {type: Boolean, default: false},
+
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
         updatedAt: { type: Date, default: null, index: true },

@@ -125,8 +125,7 @@ router.put(
     }
 );
 
-
-
+router.post("/refresh/master/group", entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"), vendorBusinessUnitContrller.refreshMasterGroupForBusinessUnit);
 
 router.get('/businessUnit/:clientId/:businessUnitId', entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"), vendorBusinessUnitContrller.getParticularBusinessUnitByVendor);
 

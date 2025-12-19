@@ -11,6 +11,9 @@ const businessUnitService = require("../../client/service/businessUnit.service")
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const { getClientDatabaseConnection } = require("../../db/connection");
+const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -152,7 +155,7 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
             dataObject.panDocumentKey = uploadResult.key;
         }
 
-        const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject}, mainUser);
+        const newBusinessUnit = await businessUnitService.create(clientId, { ...dataObject }, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblBusinessUnitCreatedSuccess,
             data: { businessUnitId: newBusinessUnit._id },
@@ -165,7 +168,7 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
 // update  business unit by vendor
 exports.updateBusinessUnitByVendor = async (req, res, next) => {
     try {
-        const { clientId,businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
         const mainUser = req.user;
 
         if (!clientId) {
@@ -211,7 +214,7 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
             const uploadResult = await uploadIconToS3(req.files['tinDocument'][0], clientId);
             dataObject.tinDocument = uploadResult.url;
             dataObject.tinDocumentKey = uploadResult.key;
-        } 
+        }
         // else if (tinNumber && !dataObject.tinDocument) { // Assuming we fetch existing, but for simplicity, optional
         //     // If tinNumber provided without document, error if required
         //     if (tinNumber) {
@@ -225,7 +228,7 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
             const uploadResult = await uploadIconToS3(req.files['cinDocument'][0], clientId);
             dataObject.cinDocument = uploadResult.url;
             dataObject.cinDocumentKey = uploadResult.key;
-        } 
+        }
         // else if (cinNumber) {
         //     return res.status(statusCode.BadRequest).send({
         //         message: 'CIN document is required if CIN number is provided.',
@@ -236,7 +239,7 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
             const uploadResult = await uploadIconToS3(req.files['tanDocument'][0], clientId);
             dataObject.tanDocument = uploadResult.url;
             dataObject.tanDocumentKey = uploadResult.key;
-        } 
+        }
         // else if (tanNumber) {
         //     return res.status(statusCode.BadRequest).send({
         //         message: 'TAN document is required if TAN number is provided.',
@@ -247,7 +250,7 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
             const uploadResult = await uploadIconToS3(req.files['businessLicenseDocument'][0], clientId);
             dataObject.businessLicenseDocument = uploadResult.url;
             dataObject.businessLicenseDocumentKey = uploadResult.key;
-        } 
+        }
         // else if (businessLicenseNumber) {
         //     return res.status(statusCode.BadRequest).send({
         //         message: 'Business License document is required if Business License number is provided.',
@@ -340,6 +343,33 @@ exports.getActiveBusinessUnit = async (req, res, next) => {
             message: message.lblBusinessUnitFoundSuccessfully,
             data: result,
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// refre master group for business unit
+exports.refreshMasterGroupForBusinessUnit = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { businessUnitId, clientId } = req.body;
+        if (!clientId || !businessUnitId) {
+            return res.status(400).send({
+                message: message.lblBusinessUnitIdIdAndClientIdRequired,
+            });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const existingMaster = await LedgerGroup.findOne({ businessUnit: businessUnitId, groupName: "Capital Account" });
+        if (existingMaster) {
+            return res.status(400).send({
+                message: "Master Gruops already refreshed.",
+            });
+        }
+        await generateLedgerGroup(businessUnitId, null, null, "business", mainUser, clientId);
+        return res.status(statusCode.OK).send({
+            message: "Group refreshed Successfully"
+        })
     } catch (error) {
         next(error);
     }
