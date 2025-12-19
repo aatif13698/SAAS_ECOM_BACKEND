@@ -11,6 +11,10 @@ const warehouseService = require("../services/warehouse.service");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const clinetWarehouseSchema = require("../../client/model/warehouse");
+const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
+const { getClientDatabaseConnection } = require("../../db/connection");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -222,6 +226,40 @@ exports.activeinactiveWarehouseByVendor = async (req, res, next) => {
             isActive: status == "1",
         });
         this.listWarehouse(req, res, next)
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.refreshMasterGroup = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { warehouseId, clientId } = req.body;
+        if (!clientId || !warehouseId) {
+            return res.status(400).send({
+                message: message.lblWarehouseIdAndClientIdRequired,
+            });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const warehouse = await Warehouse.findById(warehouseId);
+
+        if (!warehouse) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Warehouse not found"
+            })
+        }
+        const existingMaster = await LedgerGroup.findOne({ businessUnit: warehouse.businessUnit, branch: warehouse.branchId, warehouse: warehouseId, isWarehouseLevel: true, groupName: "Capital Account" });
+        if (existingMaster) {
+            return res.status(400).send({
+                message: "Master Gruops already refreshed.",
+            });
+        }
+        await generateLedgerGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
+        return res.status(statusCode.OK).send({
+            message: "Group refreshed Successfully"
+        })
     } catch (error) {
         next(error);
     }

@@ -118,6 +118,8 @@ router.get('/listWarehouse', entityAuth.authorizeEntity("Administration", "Wareh
 
 router.post("/activeInactiveWarehouse", entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.activeinactiveWarehouseByVendor);
 
+router.post("/refresh/master/group", entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"), vendorWarehouseContrller.refreshMasterGroup);
+
 router.post("/softDeleteWarehouse", entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.softDeleteWarehouseByVendor);
 
 router.post("/restoreWarehouse", entityAuth.authorizeEntity("Administration", "Warehouse", "create"), vendorWarehouseContrller.restoreWarehouseByVendor);

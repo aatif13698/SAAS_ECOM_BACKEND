@@ -11,6 +11,10 @@ const branchService = require("../services/branch.service");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const { getClientDatabaseConnection } = require("../../db/connection");
+const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
+const clinetBranchSchema = require("../../client/model/branch");
+const { generateLedgerGroup } = require("../../helper/accountingHelper");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -202,6 +206,40 @@ exports.activeinactiveBranchByVendor = async (req, res, next) => {
             isActive: status == "1",
         });
         this.listBranch(req, res, next)
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.refreshMasterGroupForBusinessUnit = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { branchId, clientId } = req.body;
+        if (!clientId || !branchId) {
+            return res.status(400).send({
+                message: message.lblBranchIdIdAndClientIdRequired,
+            });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const branch = await Branch.findById(branchId);
+
+        if (!branch) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Branch not found"
+            })
+        }
+        const existingMaster = await LedgerGroup.findOne({ businessUnit: branch.businessUnit, branch: branchId, isBranchLevel: true, groupName: "Capital Account" });
+        if (existingMaster) {
+            return res.status(400).send({
+                message: "Master Gruops already refreshed.",
+            });
+        }
+        await generateLedgerGroup(branch.businessUnit, branchId, null, "branch", mainUser, clientId);
+        return res.status(statusCode.OK).send({
+            message: "Group refreshed Successfully"
+        })
     } catch (error) {
         next(error);
     }

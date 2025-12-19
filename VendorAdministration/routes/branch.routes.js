@@ -116,6 +116,8 @@ router.get('/listBranch', entityAuth.authorizeEntity("Administration", "Branch",
 
 router.post("/activeInactiveBranch", entityAuth.authorizeEntity("Administration", "Branch", "create"), vendorBranchContrller.activeinactiveBranchByVendor);
 
+router.post("/refresh/master/group", entityAuth.authorizeEntity("Administration", "BusinessUnit", "create"), vendorBranchContrller.refreshMasterGroupForBusinessUnit);
+
 router.post("/softDeleteBranch", entityAuth.authorizeEntity("Administration", "Branch", "create"), vendorBranchContrller.softDeleteBranchByVendor);
 
 router.post("/restoreBranch", entityAuth.authorizeEntity("Administration", "Branch", "create"), vendorBranchContrller.restoreBranchByVendor);
