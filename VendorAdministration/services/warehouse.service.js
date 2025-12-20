@@ -5,8 +5,7 @@ const clinetWarehouseSchema = require("../../client/model/warehouse")
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
-const { generateLedgerGroup } = require("../../helper/accountingHelper");
-
+const { generateLedgerGroup, generateVoucherGroup } = require("../../helper/accountingHelper");
 
 const create = async (clientId, data, mainUser) => {
     try {
@@ -22,6 +21,7 @@ const create = async (clientId, data, mainUser) => {
         }
         const newWarehouse = await Warehouse.create(data);
         await generateLedgerGroup(newWarehouse.businessUnit, newWarehouse.branchId, newWarehouse._id, "warehouse", mainUser, clientId);
+        await generateVoucherGroup(newWarehouse.businessUnit, newWarehouse.branchId, newWarehouse._id, "warehouse", mainUser, clientId);
         return newWarehouse
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating warehouse : ${error.message}`);

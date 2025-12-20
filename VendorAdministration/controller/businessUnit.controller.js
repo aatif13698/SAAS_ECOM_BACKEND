@@ -13,7 +13,8 @@ const path = require('path');
 const AWS = require('aws-sdk');
 const { getClientDatabaseConnection } = require("../../db/connection");
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
-const { generateLedgerGroup } = require("../../helper/accountingHelper");
+const { generateLedgerGroup, generateVoucherGroup } = require("../../helper/accountingHelper");
+const clientVoucharGroupSchema = require("../../client/model/voucherGroup");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -360,13 +361,19 @@ exports.refreshMasterGroupForBusinessUnit = async (req, res, next) => {
         }
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
-        const existingMaster = await LedgerGroup.findOne({ businessUnit: businessUnitId, groupName: "Capital Account" });
-        if (existingMaster) {
-            return res.status(400).send({
-                message: "Master Gruops already refreshed.",
-            });
+
+        const existingLedgerGroupMaster = await LedgerGroup.findOne({ businessUnit: businessUnitId, isBuLevel: true, groupName: "Capital Account" });
+        if (!existingLedgerGroupMaster) {
+            await generateLedgerGroup(businessUnitId, null, null, "business", mainUser, clientId);
         }
-        await generateLedgerGroup(businessUnitId, null, null, "business", mainUser, clientId);
+
+        const VoucherGroup = clientConnection.model("voucherGroup", clientVoucharGroupSchema);
+        const existingVoucherGroupMaster = await VoucherGroup.findOne({ businessUnit: businessUnitId, isBuLevel: true, name: "Payment" });
+        if (!existingVoucherGroupMaster) {
+            await generateVoucherGroup(businessUnitId, null, null, "business", mainUser, clientId);
+        }
+
+
         return res.status(statusCode.OK).send({
             message: "Group refreshed Successfully"
         })

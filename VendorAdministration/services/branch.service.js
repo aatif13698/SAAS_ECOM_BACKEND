@@ -5,7 +5,7 @@ const clinetBranchSchema = require("../../client/model/branch");
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
-const { generateLedgerGroup } = require("../../helper/accountingHelper");
+const { generateLedgerGroup, generateVoucherGroup } = require("../../helper/accountingHelper");
 
 
 const create = async (clientId, data, mainUser) => {
@@ -22,6 +22,7 @@ const create = async (clientId, data, mainUser) => {
         }
         const newBranch = await Branch.create(data);
         await generateLedgerGroup(newBranch.businessUnit, newBranch._id, null, "branch", mainUser, clientId);
+        await generateVoucherGroup(newBranch.businessUnit, newBranch._id, null, "branch", mainUser, clientId);
         return newBranch;
 
     } catch (error) {

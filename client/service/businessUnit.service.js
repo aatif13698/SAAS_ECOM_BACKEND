@@ -4,7 +4,7 @@ const clinetBusinessUnitSchema = require("../../client/model/businessUnit")
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
-const { generateLedgerGroup } = require("../../helper/accountingHelper");
+const { generateLedgerGroup, generateVoucherGroup } = require("../../helper/accountingHelper");
 
 
 const create = async (clientId, data, mainUser) => {
@@ -24,6 +24,8 @@ const create = async (clientId, data, mainUser) => {
         const newBusiness =  await BusinessUnit.create(data);
         
         await generateLedgerGroup(newBusiness._id, null, null, "business", mainUser, clientId);
+
+        await generateVoucherGroup(newBusiness._id, null, null, "business", mainUser, clientId);
 
         return newBusiness;
 

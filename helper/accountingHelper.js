@@ -1,5 +1,6 @@
 const customFieldSchema = require("../client/model/customField");
 const clientLedgerGroupSchema = require("../client/model/ledgerGroup");
+const clientVoucharGroupSchema = require("../client/model/voucherGroup");
 const { getClientDatabaseConnection } = require("../db/connection");
 const httpStatusCode = require("../utils/http-status-code");
 
@@ -1475,10 +1476,188 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
     }
 }
 
+async function generateVoucherGroup(businessId, branchId, warehouseId, level = "business", mainUser, clientId) {
+    try {
+
+        if (level == "business" && !businessId) {
+            throw new CustomError(httpStatusCode.Conflict, "Business unit id is required for default ledger group creation")
+        }
+
+        if (level == "branch") {
+            if (!businessId || !branchId) {
+                throw new CustomError(httpStatusCode.Conflict, "Business unit and Branch id is required for default ledger group creation")
+            }
+        }
+
+        if (level == "warehouse") {
+            if (!businessId || !branchId || !warehouseId) {
+                throw new CustomError(httpStatusCode.Conflict, "Business unit, Branch and warehouse id is required for default ledger group creation")
+            }
+        }
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
+        const data = [
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Payment",
+                code: "PAY",
+                category: "Accounting",
+                description: "Voucher used for payments to vendors, employees and more.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Receipt",
+                code: "REC",
+                category: "Accounting",
+                description: "Voucher used for receiving cash or payments from customers.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Contra",
+                code: "CONTRA",
+                category: "Accounting",
+                description: "Voucher used for internal transfers like bank to cash and vice versa.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Sales",
+                code: "SALE",
+                category: "Accounting",
+                description: "Voucher used for recording sales transactions.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Purchase",
+                code: "PURCHASE",
+                category: "Accounting",
+                description: "Voucher used for recording purchases from vendors.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Journal",
+                code: "JOURNAL",
+                category: "Accounting",
+                description: "Voucher used for non-cash transactions like adjustments, depreciation, etc.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Credit Note",
+                code: "CREDIT_NOTE",
+                category: "Accounting",
+                description: "Issued for sales returns or adjustments.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Debit Note",
+                code: "DEBIT_NOTE",
+                category: "Accounting",
+                description: "Issued for purchase returns or adjustments.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Expense",
+                code: "EXPENSE",
+                category: "Accounting",
+                description: "Voucher used for recording business expenses.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Income",
+                code: "INCOME",
+                category: "Accounting",
+                description: "Voucher used for recording non-sales income transactions.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                name: "Proforma",
+                code: "PROFORMA",
+                category: "Accounting",
+                description: "Provisional voucher used for draft or pre-approval purposes.",
+                resetFrequency: "yearly",
+                isMaster: true,
+                createdBy: mainUser._id,
+            },
+
+        ]
+
+        const dataArray = data.map((item) => {
+            const newMapedData = { ...item }
+            return Object.assign(newMapedData, levelConfig[level])
+        });
+
+        console.log("dataArray", dataArray);
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const VoucherGroup = clientConnection.model("voucherGroup", clientVoucharGroupSchema);
+        await VoucherGroup.insertMany(dataArray);
+
+
+
+    } catch (error) {
+        console.log("error while generating the ledger group", error);
+    }
+}
 
 
 
 
 module.exports = {
-    generateLedgerGroup
+    generateLedgerGroup,
+    generateVoucherGroup
 };

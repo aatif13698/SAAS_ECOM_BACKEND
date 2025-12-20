@@ -13,8 +13,9 @@ const path = require('path');
 const AWS = require('aws-sdk');
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
-const { generateLedgerGroup } = require("../../helper/accountingHelper");
+const { generateLedgerGroup, generateVoucherGroup } = require("../../helper/accountingHelper");
 const { getClientDatabaseConnection } = require("../../db/connection");
+const clientVoucharGroupSchema = require("../../client/model/voucherGroup");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -252,11 +253,15 @@ exports.refreshMasterGroup = async (req, res, next) => {
         }
         const existingMaster = await LedgerGroup.findOne({ businessUnit: warehouse.businessUnit, branch: warehouse.branchId, warehouse: warehouseId, isWarehouseLevel: true, groupName: "Capital Account" });
         if (existingMaster) {
-            return res.status(400).send({
-                message: "Master Gruops already refreshed.",
-            });
+            await generateLedgerGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
         }
-        await generateLedgerGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
+
+        const VoucherGroup = clientConnection.model("voucherGroup", clientVoucharGroupSchema);
+        const existingVoucherGroupMaster = await VoucherGroup.findOne({ businessUnit: warehouse.businessUnit, branch: warehouse.branchId, warehouse: warehouseId, isWarehouseLevel: true, name: "Payment" });
+        if (!existingVoucherGroupMaster) {
+            await generateVoucherGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
+        }
+
         return res.status(statusCode.OK).send({
             message: "Group refreshed Successfully"
         })
