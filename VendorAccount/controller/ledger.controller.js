@@ -218,6 +218,8 @@ exports.create = async (req, res, next) => {
 
             await ledgerCustomData.save({ session });
 
+            
+
             await session.commitTransaction();
 
             return res.status(httpStatusCode.OK).json({

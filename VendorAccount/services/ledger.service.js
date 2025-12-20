@@ -44,6 +44,10 @@ const create = async (clientId, data, mainUser, options = {}) => {
             throw new CustomError(statusCode.BadRequest, "Curreny has not been setup yet. Please setup currency first.");
         }
         const ledger = await Ledger.create([{ ...data, currency: currentCurrency.code, currencySymbol: currentCurrency.symbol }], { session });
+
+        
+
+
         return ledger[0];
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating ledger: ${error.message}`);
