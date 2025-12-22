@@ -16,7 +16,7 @@ const supplierSchema = new Schema(
         isWarehouseLevel: { type: Boolean, default: false },
 
         name: { type: String, required: true },
-        contactPerson: { type: String, required: true },
+        contactPerson: { type: String, default: null },
         emailContact: {
             type: String,
             unique: true,
