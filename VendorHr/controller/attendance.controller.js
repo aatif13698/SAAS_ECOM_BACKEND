@@ -13,6 +13,12 @@ const bcrypt = require("bcrypt")
 const { DateTime } = require('luxon'); // Recommended: install luxon for reliable timezone handling
 
 
+
+function getUTCForISTDate(dateStr, isStart = true) {  // dateStr = "2025-12-22"
+    const dt = DateTime.fromFormat(dateStr, 'yyyy-MM-dd', { zone: 'Asia/Kolkata' });
+    return (isStart ? dt.startOf('day') : dt.endOf('day')).toUTC().toJSDate();
+}
+
 exports.punchIn = async (req, res, next) => {
     const { employeeId, clientId } = req.body;
     // const nowInIST = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
@@ -33,7 +39,7 @@ exports.punchIn = async (req, res, next) => {
     const tomorrowStartIST = todayStartIST.plus({ days: 1 });
 
     // Convert to UTC Date objects for MongoDB query (stored in UTC)
-    const todayDate = todayStartIST.toUTC().toJSDate();
+    const todayDate = new Date();
 
     try {
 
@@ -90,17 +96,7 @@ exports.punchIn = async (req, res, next) => {
 
 };
 
-function convertDateFormat(inputDate) {
-    // Split the input: "22/12/2025" → ['22', '12', '2025']
-    const [day, month, year] = inputDate.split('/');
 
-    // Create a Date object in UTC to avoid local timezone shifts
-    // Note: months are 0-indexed in JavaScript Date
-    const date = new Date(Date.UTC(year, month - 1, day, 18, 30, 0, 0));
-
-    // Return ISO string (will end with Z since it's UTC)
-    return date.toISOString(); // → "2025-12-22T18:30:00.000Z"
-}
 
 
 
@@ -218,21 +214,29 @@ function convertDateFormat(inputDate) {
 // }
 
 
+function convertDateFormat(inputDate) {
+    // Split the input: "22/12/2025" → ['22', '12', '2025']
+    const [day, month, year] = inputDate.split('/');
+
+    // Create a Date object in UTC to avoid local timezone shifts
+    // Note: months are 0-indexed in JavaScript Date
+    const date = new Date(Date.UTC(year, month - 1, day, 18, 30, 0, 0));
+
+    // Return ISO string (will end with Z since it's UTC)
+    return date.toISOString(); // → "2025-12-22T18:30:00.000Z"
+}
+
+
 exports.canPunchIn = async (req, res, next) => {
     const { employeeId, clientId } = req.params;
 
     try {
-        // === Get today's date in IST (midnight) ===
-        const nowInIST = DateTime.now().setZone('Asia/Kolkata');
-        const todayStartIST = nowInIST.startOf('day'); // Midnight in IST
-        const tomorrowStartIST = todayStartIST.plus({ days: 1 });
 
-        // Convert to UTC Date objects for MongoDB query (stored in UTC)
-        const todayStartUTC = todayStartIST.toUTC().toJSDate();
-        const tomorrowStartUTC = tomorrowStartIST.toUTC().toJSDate();
+        const today = new Date();
+        const a = new Date(today);
+        const tomorrow = new Date(today.getDate() + 1);
 
-        console.log("Today in IST:", todayStartIST.toISODate()); // e.g., 2025-12-22
-        console.log("Query range (UTC):", todayStartUTC, "to", tomorrowStartUTC);
+
 
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attendance = clientConnection.model('attendance', attendanceSchema);
@@ -244,12 +248,16 @@ exports.canPunchIn = async (req, res, next) => {
             return res.status(404).json({ canPunch: false, message: 'Employee not found' });
         }
 
+
+        console.log("todayDate", today);
+        console.log("tomorrowDate", tomorrow);
+
         // Base holiday query: holidays active and starting today (in IST date)
         let holidayQuery = {
             isActive: true,
             startDate: {
-                $gte: todayStartUTC,
-                $lt: tomorrowStartUTC
+                $gte: today,
+                $lte: tomorrow
             }
         };
 
@@ -284,28 +292,20 @@ exports.canPunchIn = async (req, res, next) => {
             });
         }
 
-        console.log("todayStartUTC", todayStartUTC);
-        console.log("tomorrowStartUTC", tomorrowStartUTC);
-
-
         // Optional: Check if already punched in
         // Note: You need to store 'date' as midnight UTC corresponding to IST date
         const attendance = await Attendance.findOne({
             employeeId,
-            date: { $gte: todayStartUTC, $lt: tomorrowStartUTC } // assuming 'date' field in attendance is also midnight UTC
+            date: { $gte: today, $lt: tomorrow } // assuming 'date' field in attendance is also midnight UTC
         });
-
-        // const attendance = await Attendance.findOne({ employeeId, date: todayStartUTC });
 
         console.log("attendance", attendance);
 
-
-
         if (attendance && attendance.punchIn) {
-            return res.json({ canPunch: false, message: 'Already punched in today' });
+            return res.json({ canPunch: true, canPunchIn: false, message: 'Already punched in today', attendance: attendance });
         }
 
-        return res.status(200).json({ canPunch: true, message: 'Can punch in' });
+        return res.status(200).json({ canPunch: true, canPunchIn: true, message: 'Can punch in', attendance: null });
 
     } catch (error) {
         console.error("Error in canPunchIn:", error);
@@ -313,3 +313,75 @@ exports.canPunchIn = async (req, res, next) => {
     }
 
 }
+
+
+
+
+
+
+// const { DateTime } = require('luxon');  // Ensure Luxon is imported
+
+// exports.punchIn = async (req, res, next) => {
+//     const { employeeId, clientId } = req.body;
+//     const TZ = 'Asia/Kolkata';  // Centralize TZ for easy changes (e.g., for multi-region apps)
+
+//     const nowInIST = DateTime.now().setZone(TZ);
+//     const todayStartIST = nowInIST.startOf('day');  // Midnight IST
+//     const todayDateUTC = todayStartIST.toUTC().toJSDate();  // Midnight IST in UTC
+//     const todayStr = todayStartIST.toFormat('yyyy-MM-dd');  // "2025-12-22" in IST
+//     const nowUTC = nowInIST.toUTC().toJSDate();  // Actual current time in UTC
+
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const Attendance = clientConnection.model('attendance', attendanceSchema);
+//         const User = clientConnection.model('clientUsers', clinetUserSchema);
+
+//         const employee = await User.findById(employeeId);
+//         if (!employee) return res.status(404).send({ message: 'Employee not found' });
+
+//         // Check existing attendance using dateStr for consistency
+//         let attendance = await Attendance.findOne({ employeeId, dateStr: todayStr });
+//         if (attendance && attendance.punchIn) {
+//             return res.status(400).send({ message: 'Already punched in today' });
+//         }
+
+//         if (!attendance) {
+//             attendance = new Attendance({
+//                 employeeId,
+//                 date: todayDateUTC,  // UTC midnight for IST day
+//                 dateStr: todayStr,   // Local date string
+//                 status: 'present',
+//             });
+//         }
+
+//         attendance.punchIn = nowUTC;  // Actual punch time in UTC
+
+//         // Uncomment and fix late calculation (using Luxon for accuracy)
+//         // const shiftStartIST = DateTime.fromObject({
+//         //     year: todayStartIST.year,
+//         //     month: todayStartIST.month,
+//         //     day: todayStartIST.day,
+//         //     hour: parseInt(employee.shiftId.startTime.split(':')[0]),
+//         //     minute: parseInt(employee.shiftId.startTime.split(':')[1]),
+//         // }, { zone: TZ });
+//         // const graceEndIST = shiftStartIST.plus({ minutes: employee.shiftId.gracePeriodMinutes });
+//         // if (nowInIST > graceEndIST) {
+//         //     attendance.lateInMinutes = Math.ceil(nowInIST.diff(shiftStartIST, 'minutes').minutes);
+//         //     attendance.status = 'late';
+//         // }
+
+//         await attendance.save();
+//         // For response, convert times to IST for user-friendliness
+//         const response = {
+//             message: 'Punched in successfully',
+//             attendance: {
+//                 ...attendance.toObject(),
+//                 punchInIST: DateTime.fromJSDate(attendance.punchIn).setZone(TZ).toISO(),
+//                 dateIST: todayStr,
+//             }
+//         };
+//         res.status(200).json(response);
+//     } catch (error) {
+//         next(error);
+//     }
+// };
