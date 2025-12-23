@@ -14,6 +14,8 @@ const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
+const supplierSchema = require("../../client/model/supplier");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -59,6 +61,7 @@ const uploadFilesToS3 = async (file, clientId) => {
 
 // create
 exports.create = async (req, res, next) => {
+
     try {
         const {
             clientId,
@@ -186,10 +189,14 @@ exports.create = async (req, res, next) => {
 
         // All validations passed; now start the DB transaction on the client-specific connection
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const session = await clientConnection.startSession();
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema)
+
+        const session = await clientConnection.startSession(ledgerGroupId);
         session.startTransaction();
 
         try {
+
             // Create ledger with session
             const newLedger = await ledgerService.create(clientId, dataObject, mainUser, { session });
 
@@ -216,9 +223,36 @@ exports.create = async (req, res, next) => {
                 ledgerId: newLedger._id
             });
 
-            await ledgerCustomData.save({ session });
 
-            
+            const existingGroup = await LedgerGroup.findById(ledgerGroupId).session(session);
+            if (!existingGroup) {
+                await session.abortTransaction();
+                return res.status(statusCode.BadRequest).send({
+                    success: false,
+                    message: "Group not found"
+                })
+            }
+            if (existingGroup.groupName == "Sundry Debtors" && isSupplier) {
+                const newSupplier = await Supplier.create(
+                    [{
+                        businessUnit: dataObject.businessUnit,
+                        branch: dataObject.branch,
+                        warehouse: dataObject.warehouse,
+                        isVendorLevel: dataObject.isVendorLevel,
+                        isBuLevel: dataObject.isBuLevel,
+                        isBranchLevel: dataObject.isBranchLevel,
+                        isWarehouseLevel: dataObject.isWarehouseLevel,
+                        name: ledgerName,
+                        contactPerson: otherThanFiles["Contact Person"],
+                        emailContact: otherThanFiles["Email"],
+                        contactNumber: otherThanFiles["Phone"],
+                        ledgerLinkedId: newLedger._id
+                    }],
+                    { session }  // Pass the session in options
+                );
+            }
+
+            await ledgerCustomData.save({ session });
 
             await session.commitTransaction();
 
@@ -368,7 +402,7 @@ exports.update = async (req, res, next) => {
         }
 
         console.log("dataObject", dataObject);
-        
+
 
         // Get client connection and start session
         clientConnection = await getClientDatabaseConnection(clientId);
