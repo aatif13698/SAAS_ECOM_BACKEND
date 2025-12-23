@@ -1,298 +1,330 @@
-const clientRoleSchema = require("../../client/model/role"); 
-const { getClientDatabaseConnection } = require("../../db/connection"); 
-const roleModel = require("../../model/role"); 
-const userModel = require("../../model/user"); 
-const CustomError = require("../../utils/customeError"); 
-const statusCode = require("../../utils/http-status-code"); 
-const message = require("../../utils/message"); 
-const holidayService = require("../service/holiday.service"); 
-const bcrypt = require("bcrypt") 
-
+const clientRoleSchema = require("../../client/model/role");
+const { getClientDatabaseConnection } = require("../../db/connection");
+const roleModel = require("../../model/role");
+const userModel = require("../../model/user");
+const CustomError = require("../../utils/customeError");
+const statusCode = require("../../utils/http-status-code");
+const message = require("../../utils/message");
+const holidayService = require("../service/holiday.service");
+const bcrypt = require("bcrypt")
+const { DateTime } = require('luxon');
 
 // create 
-exports.create = async (req, res, next) => { 
-    try { 
-        const { 
-            clientId, 
-            level, 
-            businessUnit, 
-            branch, 
-            warehouse, 
-
-            name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-            isHalfDay, 
-
-        } = req.body; 
+exports.create = async (req, res, next) => {
+    try {
 
 
-        const mainUser = req.user; 
+        const {
+            clientId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
+
+            name,
+            code,
+            description,
+            startDate,
+            endDate,
+            isHalfDay,
+
+        } = req.body;
+
+        const mainUser = req.user;
 
         // Validate required fields 
-        if (!clientId) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired }); 
-        } 
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
 
-        const requiredFields = [ 
-            name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-        ]; 
+        const requiredFields = [
+            name,
+            code,
+            description,
+            startDate,
+            endDate,
+        ];
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+        // const dt1 = DateTime.fromISO(startDate);
+        // const dtInIndia1 = dt1.setZone('Asia/Kolkata');
+
+        // const dt2 = DateTime.fromISO(endDate);
+        // const dtInIndia2 = dt2.setZone('Asia/Kolkata');
 
 
-        if (requiredFields.some((field) => !field)) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing }); 
-        } 
+
+        const startDateDt = DateTime.fromFormat(startDate, 'yyyy-MM-dd', { zone: 'Asia/Kolkata' });
+        const endDateDt = DateTime.fromFormat(endDate, 'yyyy-MM-dd', { zone: 'Asia/Kolkata' });
+        // const startDateDt = DateTime.fromFormat(startDate.toFormat('dd MMMM yyyy, hh:mm a'), 'yyyy-MM-dd HH:mm', { zone: 'Asia/Kolkata' });
+        // const endDateDt = DateTime.fromFormat(endDate.toFormat('dd MMMM yyyy, hh:mm a'), 'yyyy-MM-dd HH:mm', { zone: 'Asia/Kolkata' });
+        const startDateFormated = startDateDt.toUTC();
+        const endDateFormated = endDateDt.toUTC();
+
+        const start = startDateFormated.toJSDate();
+        const end = endDateFormated.toJSDate();
 
         // Base data object 
-        const dataObject = { 
-            name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-            isHalfDay, 
-            createdBy: mainUser._id, 
-        }; 
+        const dataObject = {
+            name,
+            code,
+            description,
+            startDate: start,
+            endDate: end,
+            isHalfDay,
+            createdBy: mainUser._id,
+        };
+
+        console.log("dataObject", dataObject);
+
 
         // Level-specific validation and assignment 
-        const levelConfig = { 
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false }, 
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false }, 
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false }, 
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true }, 
-        }; 
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
 
-        if (!levelConfig[level]) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel }); 
-        } 
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
 
-        Object.assign(dataObject, levelConfig[level]); 
+        Object.assign(dataObject, levelConfig[level]);
 
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired }); 
-        } 
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
 
-        if (['branch', 'warehouse'].includes(level) && !branch) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired }); 
-        } 
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
 
-        if (level === 'warehouse' && !warehouse) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired }); 
-        } 
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
 
         // Add optional fields based on level 
-        if (businessUnit) { 
-            dataObject.businessUnit = businessUnit; 
-        } 
-        if (branch) { 
-            dataObject.businessUnit = businessUnit; 
-            dataObject.branch = branch; 
-        } 
-        if (warehouse) { 
-            dataObject.businessUnit = businessUnit; 
-            dataObject.branch = branch; 
-            dataObject.warehouse = warehouse; 
-        } 
+        if (businessUnit) {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
 
-        const newLeaveCategory = await holidayService.create(clientId, dataObject); 
-        return res.status(statusCode.OK).send({ 
-            message: message.lblHolidayCreatedSuccess, 
-            data: { holidayId: newLeaveCategory._id }, 
-        }); 
-    } catch (error) { 
-        next(error); 
-    } 
-}; 
+        const newLeaveCategory = await holidayService.create(clientId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: message.lblHolidayCreatedSuccess,
+            data: { holidayId: newLeaveCategory._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // update   
-exports.update = async (req, res, next) => { 
+exports.update = async (req, res, next) => {
 
-    try { 
-        const { 
-            clientId, 
-            holidayId, 
-            level, 
-            businessUnit, 
-            branch, 
-            warehouse, 
+    try {
+        const {
+            clientId,
+            holidayId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
 
-            name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-            isHalfDay, 
-        } = req.body; 
+            name,
+            code,
+            description,
+            startDate,
+            endDate,
+            isHalfDay,
+        } = req.body;
 
-        const mainUser = req.user; 
+        const mainUser = req.user;
         // Validate required fields 
-        if (!clientId) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired }); 
-        } 
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
 
-        const requiredFields = [ 
-            name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-        ]; 
-        if (requiredFields.some((field) => !field)) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing }); 
-        } 
+        const requiredFields = [
+            name,
+            code,
+            description,
+            startDate,
+            endDate,
+        ];
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+
+        const startDateDt = DateTime.fromFormat(startDate, 'yyyy-MM-dd', { zone: 'Asia/Kolkata' });
+        const endDateDt = DateTime.fromFormat(endDate, 'yyyy-MM-dd', { zone: 'Asia/Kolkata' });
+        // const startDateDt = DateTime.fromFormat(startDate.toFormat('dd MMMM yyyy, hh:mm a'), 'yyyy-MM-dd HH:mm', { zone: 'Asia/Kolkata' });
+        // const endDateDt = DateTime.fromFormat(endDate.toFormat('dd MMMM yyyy, hh:mm a'), 'yyyy-MM-dd HH:mm', { zone: 'Asia/Kolkata' });
+        const startDateFormated = startDateDt.toUTC();
+        const endDateFormated = endDateDt.toUTC();
+
+        const start = startDateFormated.toJSDate();
+        const end = endDateFormated.toJSDate();
 
         // Base data object 
-        const dataObject = { 
-           name, 
-            code, 
-            description, 
-            startDate, 
-            endDate, 
-            isHalfDay, 
-            createdBy: mainUser._id, 
-        }; 
+        const dataObject = {
+            name,
+            code,
+            description,
+            startDate: start,
+            endDate: end,
+            isHalfDay,
+            createdBy: mainUser._id,
+        };
 
-        const levelConfig = { 
-            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false }, 
-            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false }, 
-            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false }, 
-            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true }, 
-        }; 
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
 
-        if (!levelConfig[level]) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel }); 
-        } 
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
 
-        Object.assign(dataObject, levelConfig[level]); 
+        Object.assign(dataObject, levelConfig[level]);
 
-        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired }); 
-        } 
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
 
-        if (['branch', 'warehouse'].includes(level) && !branch) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired }); 
-        } 
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
 
-        if (level === 'warehouse' && !warehouse) { 
-            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired }); 
-        } 
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
 
         // Add optional fields based on level 
-        if (businessUnit && businessUnit !== "null") { 
-            dataObject.businessUnit = businessUnit; 
-        } 
-        if (branch && branch !== "null") { 
-            dataObject.businessUnit = businessUnit; 
-            dataObject.branch = branch; 
-        } 
-        if (warehouse && warehouse !== "null") { 
-            dataObject.businessUnit = businessUnit; 
-            dataObject.branch = branch; 
-            dataObject.warehouse = warehouse; 
-        } 
+        if (businessUnit && businessUnit !== "null") {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch && branch !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse && warehouse !== "null") {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
         // update  
-        const updated = await holidayService.update(clientId, holidayId, dataObject); 
-        return res.status(statusCode.OK).send({ 
-            message: message.lblHolidayUpdatedSuccess, 
-        }); 
-    } catch (error) { 
-        next(error); 
-    } 
+        const updated = await holidayService.update(clientId, holidayId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: message.lblHolidayUpdatedSuccess,
+        });
+    } catch (error) {
+        next(error);
+    }
 
-}; 
+};
 
 // get particular  
-exports.getParticular = async (req, res, next) => { 
-    try { 
-        const { clientId, holidayId } = req.params; 
-        if (!clientId || !holidayId) { 
-            return res.status(400).send({ 
-                message: message.lblHolidayIdIdAndClientIdRequired, 
-            }); 
-        } 
-        const asset = await holidayService.getById(clientId, holidayId); 
-        return res.status(200).send({ 
-            message: message.lblHolidayFoundSucessfully, 
-            data: asset, 
-        }); 
-    } catch (error) { 
-        next(error) 
-    } 
-}; 
+exports.getParticular = async (req, res, next) => {
+    try {
+        const { clientId, holidayId } = req.params;
+        if (!clientId || !holidayId) {
+            return res.status(400).send({
+                message: message.lblHolidayIdIdAndClientIdRequired,
+            });
+        }
+        const asset = await holidayService.getById(clientId, holidayId);
+        return res.status(200).send({
+            message: message.lblHolidayFoundSucessfully,
+            data: asset,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
 
 // list 
-exports.list = async (req, res, next) => { 
-    try { 
-        const mainUser = req.user; 
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query; 
-        if (!clientId) { 
-            return res.status(statusCode.BadRequest).send({ 
-                message: message.lblClinetIdIsRequired, 
-            }); 
-        } 
-        let filters = { 
-            deletedAt: null, 
-            ...(keyword && { 
-                $or: [ 
-                    { name: { $regex: keyword.trim(), $options: "i" } }, 
-                ], 
-            }), 
-        }; 
-        if (level == "vendor") { 
+exports.list = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            ...(keyword && {
+                $or: [
+                    { name: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+        if (level == "vendor") {
 
-        } else if (level == "business" && levelId) { 
-            filters = { 
-                ...filters, 
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
                 // isBuLevel: true, 
-                businessUnit: levelId 
-            } 
-        } else if (level == "branch" && levelId) { 
-            filters = { 
-                ...filters, 
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
                 // isBranchLevel: true, 
-                branch: levelId 
-            } 
-        } else if (level == "warehouse" && levelId) { 
-            filters = { 
-                ...filters, 
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
                 // isBuLevel: true, 
-                warehouse: levelId 
-            } 
-        } 
-        const result = await holidayService.list(clientId, filters, { page, limit: perPage }); 
-        return res.status(statusCode.OK).send({ 
-            message: message.lblHolidayFoundSucessfully, 
-            data: result, 
-        }); 
-    } catch (error) { 
-        next(error); 
-    } 
-}; 
+                warehouse: levelId
+            }
+        }
+        const result = await holidayService.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblHolidayFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 // active inactive 
-exports.activeinactive = async (req, res, next) => { 
-    try { 
-        const { keyword, page, perPage, id, status, clientId } = req.body; 
-        req.query.clientId = clientId; 
-        req.query.keyword = keyword; 
-        req.query.page = page; 
-        req.query.perPage = perPage; 
-        if (!clientId || !id) { 
-            return res.status(400).send({ 
-                message: message.lblHolidayIdIdAndClientIdRequired, 
-            }); 
-        } 
-        const updated = await holidayService.activeInactive(clientId, id, { 
-            isActive: status == "1", 
-        }); 
-        this.list(req, res, next) 
-    } catch (error) { 
-        next(error); 
-    } 
+exports.activeinactive = async (req, res, next) => {
+    try {
+        const { keyword, page, perPage, id, status, clientId } = req.body;
+        req.query.clientId = clientId;
+        req.query.keyword = keyword;
+        req.query.page = page;
+        req.query.perPage = perPage;
+        if (!clientId || !id) {
+            return res.status(400).send({
+                message: message.lblHolidayIdIdAndClientIdRequired,
+            });
+        }
+        const updated = await holidayService.activeInactive(clientId, id, {
+            isActive: status == "1",
+        });
+        this.list(req, res, next)
+    } catch (error) {
+        next(error);
+    }
 }; 
