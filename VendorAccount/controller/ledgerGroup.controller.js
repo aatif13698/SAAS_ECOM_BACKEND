@@ -316,7 +316,7 @@ exports.all = async (req, res, next) => {
             });
         }
         let filters = {
-            hasParent: false,
+            isPrimary: false,
         };
 
         if (level == "vendor") {

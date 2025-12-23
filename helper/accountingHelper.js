@@ -28,112 +28,190 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
             branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
             warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
         };
-        const data = [
+
+
+        const primaryGroup = [
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Assets",
+                hasParent: false,
+                isMaster: true,
+                isPrimary: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Liabilities",
+                hasParent: false,
+                isMaster: true,
+                isPrimary: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Income",
+                hasParent: false,
+                isMaster: true,
+                isPrimary: true,
+                createdBy: mainUser._id,
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Expense",
+                hasParent: false,
+                isMaster: true,
+                isPrimary: true,
+                createdBy: mainUser._id,
+            },
+
+        ];
+
+        const priamryDataArray = primaryGroup.map((item) => {
+            const newMapedData = { ...item }
+            return Object.assign(newMapedData, levelConfig[level])
+        });
+
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const CustomField = clientConnection.model("customField", customFieldSchema);
+        const primaryLedgerGruop = await LedgerGroup.insertMany(priamryDataArray);
+
+
+        const nonPrimaryData = [
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Capital Account",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Liabilities"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Current Asset",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Assets"
+
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Current Liabilities",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Liabilities"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Direct Expense",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Expense"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Direct Income",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Income"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Fixed Assets",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Assets"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Indirect Expense",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Expense"
+
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Indirect Income",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Income"
+
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Investments",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Assets"
             },
             {
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
                 groupName: "Loans (Liability)",
-                hasParent: false,
+                hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
+                parentGroup: "Liabilities"
             },
-        ]
+        ];
 
-        const dataArray = data.map((item) => {
+        const newInsetArrayForNonPrimaryLedger = nonPrimaryData.map((child) => {
+            const parentName = child?.parentGroup;
+            let parentId = null;
+            primaryLedgerGruop.map((parent) => {
+                if (parent?.groupName == parentName) {
+                    parentId = parent._id
+                }
+            });
+            return {
+                ...child,
+                parentGroup: parentId
+            }
+        });
+
+        const dataArrayNonPrimaryLedgerGroup = newInsetArrayForNonPrimaryLedger.map((item) => {
             const newMapedData = { ...item }
             return Object.assign(newMapedData, levelConfig[level])
         });
 
-        console.log("dataArray", dataArray);
-
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
-        const CustomField = clientConnection.model("customField", customFieldSchema);
-        const ledgerGruop = await LedgerGroup.insertMany(dataArray);
-
-        console.log("ledgerGruop default", ledgerGruop);
+        const nonPrimaryLedgerGruop = await LedgerGroup.insertMany(dataArrayNonPrimaryLedgerGroup);
 
         const fieldArray = [
             {
@@ -614,7 +692,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
             }
         ]
 
-        ledgerGruop.map((item) => {
+        nonPrimaryLedgerGruop.map((item) => {
             const name = item.groupName;
             const id = item._id
             fieldArray.map(async (field) => {
@@ -693,6 +771,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 warehouse: warehouseId,
                 groupName: "Stock-in-hand",
                 hasParent: true,
+                isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Asset"
             },
@@ -731,7 +810,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
         const newInsetArrayForChildLedger = childLedgerArray.map((child) => {
             const parentName = child?.parentGroup;
             let parentId = null;
-            ledgerGruop.map((parent) => {
+            nonPrimaryLedgerGruop.map((parent) => {
                 if (parent?.groupName == parentName) {
                     parentId = parent._id
                 }

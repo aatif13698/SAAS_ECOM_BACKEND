@@ -26,6 +26,7 @@ const clientLedgerGroupSchema = new Schema(
         }],
 
         isMaster: {type: Boolean, default: false},
+        isPrimary: {type: Boolean, default: false},
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
