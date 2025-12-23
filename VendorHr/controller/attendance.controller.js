@@ -21,25 +21,13 @@ function getUTCForISTDate(dateStr, isStart = true) {  // dateStr = "2025-12-22"
 
 exports.punchIn = async (req, res, next) => {
     const { employeeId, clientId } = req.body;
-    // const nowInIST = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-    // // Parse the IST string to get local date components
-    // const todayInIST = new Date(nowInIST);
-    // // Create todayDate using LOCAL components (not UTC)
-    // const todayDate1 = new Date(
-    //     todayInIST.getFullYear(),    // 2025 (local year)
-    //     todayInIST.getMonth(),       // 11 (December, local month)
-    //     todayInIST.getDate(),        // 22 (local date)
-    //     0, 0, 0, 0                   // Midnight local time
-    // );
-    // const todayDate = convertDateFormat(todayDate1.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" }));
-
 
     const nowInIST = DateTime.now().setZone('Asia/Kolkata');
-    const todayStartIST = nowInIST.startOf('day'); // Midnight in IST
-    const tomorrowStartIST = todayStartIST.plus({ days: 1 });
+    const todayDateFormated = nowInIST.toUTC();
+    const todayDate = todayDateFormated.toJSDate();
 
-    // Convert to UTC Date objects for MongoDB query (stored in UTC)
-    const todayDate = new Date();
+    // const todayDate = new Date();
+
 
     try {
 
@@ -96,135 +84,70 @@ exports.punchIn = async (req, res, next) => {
 
 };
 
+exports.punchOut = async (req, res, next) => {
+    const { employeeId, clientId } = req.body;
+    const nowInIST = DateTime.now().setZone('Asia/Kolkata');
+    const todayDateFormated = nowInIST.toUTC();
+    const todayDate = todayDateFormated.toJSDate();
+
+    try {
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Attendance = clientConnection.model('attendance', attendanceSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+
+
+        const todayIst = DateTime.now().setZone('Asia/Kolkata').minus({ days: 1 });
+        const todayUtc = todayIst.toUTC();
+        const tomorrowTimeIst = DateTime.now().setZone('Asia/Kolkata')
+        const tomorrowUtc = tomorrowTimeIst.toUTC();
+
+        const query = {
+            employeeId,
+            date: { $gte: todayUtc.toJSDate(), $lt: tomorrowUtc.toJSDate() } // assuming 'date' field in attendance is also midnight UTC
+        }
+
+        console.log("query", query);
 
 
 
+        const attendance = await Attendance.findOne(query);
+        if (!attendance) return res.status(404).json({ message: 'No punch in record today' });
+        if (attendance.punchOut) return res.status(400).json({ message: 'Already punched out' });
 
-// exports.canPunchIn = async (req, res, next) => {
-//     const { employeeId, clientId } = req.params;
-//     // Fix: Use Indian Standard Time (IST) for "today"
-//     // Get current time in IST
-//     // const nowInIST = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
-//     // const today = new Date(nowInIST);
+        attendance.punchOut = todayDate;
 
-//     // // Strip time to get midnight in IST (correct date only)
-//     // const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        // Calculate totalWorkedMinutes (simplified, exclude breaks if implemented)
+        // attendance.totalWorkedMinutes = Math.floor((today - attendance.punchIn) / 60000);
 
-//     // console.log("todayDate", todayDate);
+        // // Fetch shift
+        // const employee = await Employee.findById(employeeId).populate('shiftId');
+        // const expectedEnd = new Date(todayDate);
+        // const [endHour, endMin] = employee.shiftId.endTime.split(':').map(Number);
+        // expectedEnd.setHours(endHour, endMin, 0, 0);
 
+        // // Early out
+        // const graceStart = new Date(expectedEnd.getTime() - employee.shiftId.gracePeriodMinutes * 60000);
+        // if (today < graceStart) {
+        //     attendance.earlyOutMinutes = Math.ceil((expectedEnd - today) / 60000);
+        //     attendance.status = attendance.status === 'late' ? 'late_and_early_out' : 'early_out';
+        // }
 
-//     // // Log formatted for clarity (shows "2025-12-22" in IST)
-//     // console.log("todayDate (IST formatted)", todayDate.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" }));
+        // // Overtime (if worked more)
+        // if (attendance.totalWorkedMinutes > employee.shiftId.dailyWorkingMinutes) {
+        //     attendance.overtimeMinutes = attendance.totalWorkedMinutes - employee.shiftId.dailyWorkingMinutes;
+        //     attendance.overtimeType = 'normal'; // Adjust based on day
+        // }
 
-//     // Get current time in IST as string
-//     const nowInIST = new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+        await attendance.save();
+        return res.status(statusCode.OK).send({ message: 'Punched out successfully', attendance });
+    } catch (error) {
+        next(error);
+    }
 
-//     // Parse the IST string to get local date components
-//     const todayInIST = new Date(nowInIST);
-
-//     // Create todayDate using LOCAL components (not UTC)
-//     const todayDate1 = new Date(
-//         todayInIST.getFullYear(),    // 2025 (local year)
-//         todayInIST.getMonth(),       // 11 (December, local month)
-//         todayInIST.getDate(),        // 22 (local date)
-//         0, 0, 0, 0                   // Midnight local time
-//     );
-
-//     // console.log("todayDate (IST formatted)", convertDateFormat(todayDate1.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })));
-
-//     const todayDate = convertDateFormat(todayDate1.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" }));
-
-//     console.log("todayDate", todayDate);
-
-
-
-//     try {
-//         const clientConnection = await getClientDatabaseConnection(clientId);
-//         const Attendance = clientConnection.model('attendance', attendanceSchema);
-//         const User = clientConnection.model('clientUsers', clinetUserSchema);
-//         const Holiday = clientConnection.model('holiday', holidaySchema);
-
-//         const employee = await User.findById(employeeId);
-//         if (!employee) return res.status(statusCode.NotFound).json({ canPunch: false, message: 'Employee not found' });
-
-//         let holidayQuery = {
-//             isActive: true,
-//             startDate: {
-//                 $gte: todayDate,
-//                 $lt: tomorrowStart
-//             },
-//             // endDate: { $gte: todayDate },
-//         };
-
-//         if (employee.isBuLevel) {
-//             holidayQuery = {
-//                 ...holidayQuery,
-//                 businessUnit: employee.businessUnit
-//             }
-//         } else if (employee.isBranchLevel) {
-//             holidayQuery = {
-//                 ...holidayQuery,
-//                 businessUnit: employee.businessUnit,
-//                 branch: employee.branch
-//             }
-//         } else if (employee.isWarehouseLevel) {
-//             holidayQuery = {
-//                 ...holidayQuery,
-//                 businessUnit: employee.businessUnit,
-//                 branch: employee.branch,
-//                 warehouse: employee.warehouse
-//             }
-//         }
-
-//         console.log("holidayQuery", holidayQuery);
-
-
-
-//         const holiday = await Holiday.findOne(holidayQuery);
-
-//         console.log("holiday", holiday);
-
-
-//         // // Check holiday
-//         // const holiday = await Holiday.findOne({ date: todayDate });
-//         // if (holiday && holiday.applicableToAll) {
-//         //     return res.json({ canPunch: false, message: 'Today is a holiday' });
-//         // }
-
-//         // Check weekend/non-working day
-//         // const dayOfWeek = today.getDay();
-//         // if (!employee.shiftId.workingDays.includes(dayOfWeek)) {
-//         //     return res.json({ canPunch: false, message: 'Today is a non-working day' });
-//         // }
-
-//         // Check if already punched in (optional, for better UX)
-//         const attendance = await Attendance.findOne({ employeeId, date: todayDate });
-
-//         console.log("attendance", attendance);
-
-
-//         if (attendance && attendance.punchIn) {
-//             return res.json({ canPunch: false, message: 'Already punched in today' });
-//         }
-
-//         return res.status(statusCode.OK).send({ canPunch: true });
-//     } catch (error) {
-//         next(error);
-//     }
-// }
-
-
-function convertDateFormat(inputDate) {
-    // Split the input: "22/12/2025" → ['22', '12', '2025']
-    const [day, month, year] = inputDate.split('/');
-
-    // Create a Date object in UTC to avoid local timezone shifts
-    // Note: months are 0-indexed in JavaScript Date
-    const date = new Date(Date.UTC(year, month - 1, day, 18, 30, 0, 0));
-
-    // Return ISO string (will end with Z since it's UTC)
-    return date.toISOString(); // → "2025-12-22T18:30:00.000Z"
 }
+
+
 
 
 exports.canPunchIn = async (req, res, next) => {
@@ -232,9 +155,10 @@ exports.canPunchIn = async (req, res, next) => {
 
     try {
 
-        const today = new Date();
-        const a = new Date(today);
-        const tomorrow = new Date(today.getDate() + 1);
+        const todayIst = DateTime.now().setZone('Asia/Kolkata').minus({ days: 1 });
+        const todayUtc = todayIst.toUTC();
+        const tomorrowTimeIst = DateTime.now().setZone('Asia/Kolkata')
+        const tomorrowUtc = tomorrowTimeIst.toUTC();
 
 
 
@@ -248,16 +172,12 @@ exports.canPunchIn = async (req, res, next) => {
             return res.status(404).json({ canPunch: false, message: 'Employee not found' });
         }
 
-
-        console.log("todayDate", today);
-        console.log("tomorrowDate", tomorrow);
-
         // Base holiday query: holidays active and starting today (in IST date)
         let holidayQuery = {
             isActive: true,
             startDate: {
-                $gte: today,
-                $lte: tomorrow
+                $gte: todayUtc.toJSDate(),
+                $lte: tomorrowUtc.toJSDate()
             }
         };
 
@@ -293,11 +213,21 @@ exports.canPunchIn = async (req, res, next) => {
         }
 
         // Optional: Check if already punched in
-        // Note: You need to store 'date' as midnight UTC corresponding to IST date
-        const attendance = await Attendance.findOne({
+        // const todayAttIst = DateTime.now().setZone('Asia/Kolkata')
+        // const todayAttUtc = todayAttIst.toUTC();
+
+        // const tomorrowAttIst = DateTime.now().setZone('Asia/Kolkata').plus({days: 1})
+        // const tomorrowAttUtc = tomorrowAttIst.toUTC();
+
+        const query = {
             employeeId,
-            date: { $gte: today, $lt: tomorrow } // assuming 'date' field in attendance is also midnight UTC
-        });
+            date: { $gte: todayUtc.toJSDate(), $lt: tomorrowUtc.toJSDate() } // assuming 'date' field in attendance is also midnight UTC
+        }
+
+        console.log("query", query);
+
+
+        const attendance = await Attendance.findOne(query);
 
         console.log("attendance", attendance);
 
