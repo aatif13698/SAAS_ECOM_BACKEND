@@ -160,8 +160,6 @@ exports.canPunchIn = async (req, res, next) => {
         const tomorrowTimeIst = DateTime.now().setZone('Asia/Kolkata')
         const tomorrowUtc = tomorrowTimeIst.toUTC();
 
-
-
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Attendance = clientConnection.model('attendance', attendanceSchema);
         const User = clientConnection.model('clientUsers', clinetUserSchema); // Note: fix typo 'clinetUserSchema' → 'clientUserSchema'
@@ -212,24 +210,24 @@ exports.canPunchIn = async (req, res, next) => {
             });
         }
 
-        // Optional: Check if already punched in
-        // const todayAttIst = DateTime.now().setZone('Asia/Kolkata')
-        // const todayAttUtc = todayAttIst.toUTC();
+        const startOfTodayIst = DateTime.now()
+            .setZone('Asia/Kolkata')
+            .startOf('day');
 
-        // const tomorrowAttIst = DateTime.now().setZone('Asia/Kolkata').plus({days: 1})
-        // const tomorrowAttUtc = tomorrowAttIst.toUTC();
+        const endOfTodayIst = DateTime.now()
+            .setZone('Asia/Kolkata')
+            .endOf('day');
 
+        const startOfTodayUtc = startOfTodayIst.toUTC().toJSDate();
+        const endOfTodayUtc = endOfTodayIst.toUTC().toJSDate();
         const query = {
             employeeId,
-            date: { $gte: todayUtc.toJSDate(), $lt: tomorrowUtc.toJSDate() } // assuming 'date' field in attendance is also midnight UTC
+            date: {
+                $gte: startOfTodayUtc,
+                $lte: endOfTodayUtc
+            },
         }
-
-        console.log("query", query);
-
-
         const attendance = await Attendance.findOne(query);
-
-        console.log("attendance", attendance);
 
         if (attendance && attendance.punchIn) {
             return res.json({ canPunch: true, canPunchIn: false, message: 'Already punched in today', attendance: attendance });
