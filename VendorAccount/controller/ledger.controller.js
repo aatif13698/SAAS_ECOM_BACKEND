@@ -406,6 +406,10 @@ exports.update = async (req, res, next) => {
 
         // Get client connection and start session
         clientConnection = await getClientDatabaseConnection(clientId);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+
+
         session = await clientConnection.startSession();
         session.startTransaction();
 
@@ -470,6 +474,38 @@ exports.update = async (req, res, next) => {
         formData.otherThanFiles = new Map(Object.entries(otherThanFiles || {}));
         if (files.length > 0) {
             formData.files = files; // Replace files array
+        }
+
+
+        // new part
+
+        const existingGroup = await LedgerGroup.findById(ledgerGroupId).session(session);
+        if (!existingGroup) {
+            await session.abortTransaction();
+            return res.status(statusCode.BadRequest).send({
+                success: false,
+                message: "Group not found"
+            })
+        }
+        if (existingGroup.groupName == "Sundry Debtors" && isSupplier) {
+
+            const existingSupplier = await Supplier.findOne({ ledgerLinkedId: ledgerId }).session(session);
+
+            if (!existingSupplier) {
+                await session.abortTransaction();
+                await session.endSession();
+                return res.status(httpStatusCode.NotFound).json({
+                    success: false,
+                    message: "Supplier data not found",
+                    errorCode: "NOT_FOUND",
+                });
+            }
+
+            existingSupplier.name = ledgerName, 
+            existingSupplier.contactPerson = otherThanFiles["Contact Person"], 
+            existingSupplier.emailContact = otherThanFiles["Email"], 
+            existingSupplier.contactNumber = otherThanFiles["Phone"], 
+            await existingSupplier.save({ session })
         }
 
         await formData.save({ session });
