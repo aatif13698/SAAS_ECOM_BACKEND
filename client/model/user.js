@@ -125,6 +125,10 @@ const clinetUserSchema = new Schema(
             assetId: { type: ObjectId, ref: "clientAsset", default: null }
         }],
 
+
+        ledgerLinkedId: { type: ObjectId, ref: "ledger", default: null },
+
+
         // handlign created by
         createdBy: { type: ObjectId, ref: "clientUsers", index: true }, // Index for admin/user relationships
         deletedAt: { type: Date, default: null, index: true }, // Index for soft-delete functionality

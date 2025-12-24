@@ -1,6 +1,7 @@
 
 
 
+const bcrypt = require("bcrypt");
 
 const { getClientDatabaseConnection } = require("../../db/connection");
 const httpStatusCode = require("../../utils/http-status-code");
@@ -16,6 +17,8 @@ const path = require('path');
 const AWS = require('aws-sdk');
 const clientLedgerGroupSchema = require("../../client/model/ledgerGroup");
 const supplierSchema = require("../../client/model/supplier");
+const clinetUserSchema = require("../../client/model/user");
+const clientRoleSchema = require("../../client/model/role");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -190,7 +193,9 @@ exports.create = async (req, res, next) => {
         // All validations passed; now start the DB transaction on the client-specific connection
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
-        const Supplier = clientConnection.model('supplier', supplierSchema)
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema); // Note: fix typo 'clinetUserSchema' → 'clientUserSchema'
+
 
         const session = await clientConnection.startSession(ledgerGroupId);
         session.startTransaction();
@@ -232,7 +237,7 @@ exports.create = async (req, res, next) => {
                     message: "Group not found"
                 })
             }
-            if (existingGroup.groupName == "Sundry Debtors" && isSupplier) {
+            if (existingGroup.groupName == "Sundry Creditor" && isSupplier) {
                 const newSupplier = await Supplier.create(
                     [{
                         businessUnit: dataObject.businessUnit,
@@ -248,6 +253,50 @@ exports.create = async (req, res, next) => {
                         contactNumber: otherThanFiles["Phone"],
                         ledgerLinkedId: newLedger._id
                     }],
+                    { session }  // Pass the session in options
+                );
+            }
+
+            if (existingGroup.groupName == "Sundry Debtors" && isCustomer) {
+                const Role = clientConnection.model('clientRoles', clientRoleSchema);
+                const role = await Role.findOne({ id: 0 }).session(session);
+                if (!role) {
+                    await session.abortTransaction();
+                    return res.status(statusCode.BadRequest).send({
+                        success: false,
+                        message: "Customer Role not found"
+                    })
+                }
+                const existingCustomer = await User.findOne({
+                    $or: [{ email: otherThanFiles["Email"] },
+                    { phone: otherThanFiles["Phone"] }
+                    ],
+                }).session(session);
+
+                if (existingCustomer) {
+                    await session.abortTransaction();
+                    return res.status(statusCode.BadRequest).send({
+                        success: false,
+                        message: "Customer already exists with this email or phone"
+                    })
+                }
+                // Hash password
+                const hashedPassword = await bcrypt.hash("AES@1234", 10);
+                const newCustomer = await User.create(
+                    [
+                        {
+                            firstName: ledgerName,
+                            email: otherThanFiles["Email"],
+                            phone: otherThanFiles["Phone"],
+                            role: role._id,
+                            roleId: role.id,
+                            password: hashedPassword,
+                            createdBy: mainUser._id,
+                            tc: true,
+                            isUserVerified: true,
+                            ledgerLinkedId: newLedger._id
+                        }
+                    ],
                     { session }  // Pass the session in options
                 );
             }
@@ -408,6 +457,7 @@ exports.update = async (req, res, next) => {
         clientConnection = await getClientDatabaseConnection(clientId);
         const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema); // Note: fix typo 'clinetUserSchema' → 'clientUserSchema'
 
 
         session = await clientConnection.startSession();
@@ -487,10 +537,8 @@ exports.update = async (req, res, next) => {
                 message: "Group not found"
             })
         }
-        if (existingGroup.groupName == "Sundry Debtors" && isSupplier) {
-
+        if (existingGroup.groupName == "Sundry Creditor" && isSupplier) {
             const existingSupplier = await Supplier.findOne({ ledgerLinkedId: ledgerId }).session(session);
-
             if (!existingSupplier) {
                 await session.abortTransaction();
                 await session.endSession();
@@ -500,12 +548,48 @@ exports.update = async (req, res, next) => {
                     errorCode: "NOT_FOUND",
                 });
             }
+            existingSupplier.name = ledgerName,
+                existingSupplier.contactPerson = otherThanFiles["Contact Person"],
+                existingSupplier.emailContact = otherThanFiles["Email"],
+                existingSupplier.contactNumber = otherThanFiles["Phone"],
+                await existingSupplier.save({ session })
+        }
 
-            existingSupplier.name = ledgerName, 
-            existingSupplier.contactPerson = otherThanFiles["Contact Person"], 
-            existingSupplier.emailContact = otherThanFiles["Email"], 
-            existingSupplier.contactNumber = otherThanFiles["Phone"], 
-            await existingSupplier.save({ session })
+        if (existingGroup.groupName == "Sundry Debtors" && isCustomer) {
+            const existingCustomer = await User.findOne({ ledgerLinkedId: ledgerId }).session(session);
+            if (!existingCustomer) {
+                await session.abortTransaction();
+                await session.endSession();
+                return res.status(httpStatusCode.NotFound).json({
+                    success: false,
+                    message: "Customer data not found",
+                    errorCode: "NOT_FOUND",
+                });
+            }
+            const existing = await User.findOne({
+                $and: [
+                    { ledgerLinkedId: { $ne: ledgerId } },
+                    {
+                        $or: [{ email: otherThanFiles["Email"] },
+                        { phone: otherThanFiles["Phone"] }
+                        ],
+                    },
+                ],
+            }).session(session);
+
+            if (existing) {
+                await session.abortTransaction();
+                return res.status(statusCode.BadRequest).send({
+                    success: false,
+                    message: "Customer already exists with this email or phone"
+                })
+            }
+
+            existingCustomer.firstName = ledgerName;
+            existingCustomer.email = otherThanFiles["Email"];
+            existingCustomer.phone = otherThanFiles["Phone"];
+            await existingCustomer.save({ session })
+
         }
 
         await formData.save({ session });

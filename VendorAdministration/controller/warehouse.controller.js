@@ -252,12 +252,18 @@ exports.refreshMasterGroup = async (req, res, next) => {
             })
         }
         const existingMaster = await LedgerGroup.findOne({ businessUnit: warehouse.businessUnit, branch: warehouse.branchId, warehouse: warehouseId, isWarehouseLevel: true, groupName: "Capital Account" });
-        if (existingMaster) {
+        console.log("existingMaster", existingMaster);
+
+        if (existingMaster == null) {
+            console.log("erer");
+            
+
             await generateLedgerGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
         }
 
         const VoucherGroup = clientConnection.model("voucherGroup", clientVoucharGroupSchema);
         const existingVoucherGroupMaster = await VoucherGroup.findOne({ businessUnit: warehouse.businessUnit, branch: warehouse.branchId, warehouse: warehouseId, isWarehouseLevel: true, name: "Payment" });
+        
         if (!existingVoucherGroupMaster) {
             await generateVoucherGroup(warehouse.businessUnit, warehouse.branchId, warehouseId, "warehouse", mainUser, clientId);
         }
