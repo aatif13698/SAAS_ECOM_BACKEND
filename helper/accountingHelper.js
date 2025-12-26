@@ -729,7 +729,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 businessUnit: businessId,
                 branch: branchId,
                 warehouse: warehouseId,
-                groupName: "Bank Account",
+                groupName: "Cash-At-Bank",
                 hasParent: true,
                 isMaster: true,
                 createdBy: mainUser._id,
@@ -804,6 +804,56 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 isMaster: true,
                 createdBy: mainUser._id,
                 parentGroup: "Current Liabilities"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Salary-Payable",
+                hasParent: true,
+                isMaster: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Liabilities"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Wages-Payable",
+                hasParent: true,
+                isMaster: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Liabilities"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Bill-Payable",
+                hasParent: true,
+                isMaster: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Liabilities"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Bank Over Draft",
+                hasParent: true,
+                isMaster: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Liabilities"
+            },
+            {
+                businessUnit: businessId,
+                branch: branchId,
+                warehouse: warehouseId,
+                groupName: "Bill-Receivable",
+                hasParent: true,
+                isMaster: true,
+                createdBy: mainUser._id,
+                parentGroup: "Current Asset"
             },
         ];
 
@@ -920,7 +970,7 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                 ]
             },
             {
-                "Bank Account": [
+                "Cash-At-Bank": [
                     {
                         name: "nickName",
                         label: "Nick Name",
@@ -1521,6 +1571,663 @@ async function generateLedgerGroup(businessId, branchId, warehouseId, level = "b
                         gridConfig: {
                             span: 12,
                             order: 11
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                ]
+            },
+
+
+
+            {
+                "Salary-Payable": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Phone",
+                        label: "Phone",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Phone.",
+                        gridConfig: {
+                            span: 12,
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Email",
+                        label: "Email",
+                        type: "email",
+                        isRequired: true,
+                        placeholder: "Enter Email.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Address",
+                        label: "Address",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Address.",
+                        gridConfig: {
+                            span: 12,
+                            order: 4
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "PIN Code",
+                        label: "PIN Code",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter PIN Code.",
+                        gridConfig: {
+                            span: 12,
+                            order: 5
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "State",
+                        label: "State",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter State.",
+                        gridConfig: {
+                            span: 12,
+                            order: 6
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Country",
+                        label: "Country",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Country.",
+                        gridConfig: {
+                            span: 12,
+                            order: 7
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Registration Type",
+                        label: "Registration Type",
+                        type: "select",
+                        isRequired: true,
+                        options: [
+                            "regular",
+                            "composition",
+                            "unregistered"
+                        ],
+                        gridConfig: {
+                            span: 12,
+                            order: 8
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "PAN",
+                        label: "PAN",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter PAN.",
+                        gridConfig: {
+                            span: 12,
+                            order: 9
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Description",
+                        label: "Description",
+                        type: "text",
+                        isRequired: false,
+                        placeholder: "Enter Description.",
+                        gridConfig: {
+                            span: 12,
+                            order: 10
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                ]
+            },
+            {
+                "Wages-Payable": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Employee/Employee Group",
+                        label: "Employee/Employee Group",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter employee group name ...",
+                        gridConfig: {
+                            span: 12,
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Wages Payable Amount",
+                        label: "Wages Payable Amount",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Wages Payable Amount.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Wages Period",
+                        label: "Wages Period",
+                        type: "select",
+                        isRequired: true,
+                        options: [
+                            "Weekly",
+                            "Monthly",
+                            "Yearly",
+                            "Bi-weekly"
+                        ],
+                        gridConfig: {
+                            span: 12,
+                            order: 4
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Gross Wages",
+                        label: "Gross Wages",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Gross Wages.",
+                        gridConfig: {
+                            span: 12,
+                            order: 5
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Total Deductions",
+                        label: "Total Deductions",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter Deduction...",
+                        gridConfig: {
+                            span: 12,
+                            order: 6
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Net Wages",
+                        label: "Net Wages",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Net Wages.",
+                        gridConfig: {
+                            span: 12,
+                            order: 7
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+
+                    {
+                        name: "Working Hours",
+                        label: "Working Hours",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter Working Hours..",
+                        gridConfig: {
+                            span: 12,
+                            order: 8
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Wage Classification",
+                        label: "Wage Classification",
+                        type: "select",
+                        isRequired: false,
+                        options: [
+                            "regular wages",
+                            "contract wages",
+                            "temporary wages"
+                        ],
+                        gridConfig: {
+                            span: 12,
+                            order: 9
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Remarks",
+                        label: "Remarks",
+                        type: "text",
+                        isRequired: false,
+                        placeholder: "Enter Remarks",
+                        gridConfig: {
+                            span: 12,
+                            order: 10
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                ]
+            },
+            {
+                "Bill-Payable": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Vendor/Supplier Name",
+                        label: "Vendor/Supplier Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Vendor/Supplier Name ...",
+                        gridConfig: {
+                            span: 12,
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bill Amount",
+                        label: "Bill Amount",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Bill Amount.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bill Number / Invoice Number",
+                        label: "Bill Number / Invoice Number",
+                        type: "text",
+                        isRequired: false,
+                        placeholder: "Enter Bill Number / Invoice Number.",
+                        gridConfig: {
+                            span: 12,
+                            order: 4
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Date of Bill",
+                        label: "Date of Bill",
+                        type: "date",
+                        isRequired: true,
+                        gridConfig: {
+                            span: 12,
+                            order: 5
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Due Date",
+                        label: "Due Date",
+                        type: "date",
+                        isRequired: false,
+                        gridConfig: {
+                            span: 12,
+                            order: 6
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Payment Terms",
+                        label: "Payment Terms",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Payment Terms.",
+                        gridConfig: {
+                            span: 12,
+                            order: 7
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Goods/Services Provided",
+                        label: "Goods/Services Provided",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Goods/Services Provided..",
+                        gridConfig: {
+                            span: 12,
+                            order: 8
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Taxes",
+                        label: "Taxes",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter Taxes..",
+                        gridConfig: {
+                            span: 12,
+                            order: 9
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Discounts",
+                        label: "Discounts",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter Discounts..",
+                        gridConfig: {
+                            span: 12,
+                            order: 10
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Total Payable Amount",
+                        label: "Total Payable Amount",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Total Payable Amount..",
+                        gridConfig: {
+                            span: 12,
+                            order: 11
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Remarks",
+                        label: "Remarks",
+                        type: "text",
+                        isRequired: false,
+                        placeholder: "Enter Remarks",
+                        gridConfig: {
+                            span: 12,
+                            order: 12
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                ]
+            },
+            {
+                "Bill-Receivable": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Customer / Party Name",
+                        label: "Customer / Party Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Customer / Party Name ...",
+                        gridConfig: {
+                            span: 12,
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bill Amount",
+                        label: "Bill Amount",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Bill Amount.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Tax Amount",
+                        label: "Tax Amount",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter Tax Amount.",
+                        gridConfig: {
+                            span: 12,
+                            order: 4
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "GST / VAT / Sales Tax",
+                        label: "GST / VAT / Sales Tax",
+                        type: "number",
+                        isRequired: false,
+                        placeholder: "Enter GST / VAT / Sales Tax.",
+                        gridConfig: {
+                            span: 12,
+                            order: 5
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Total Bill Value",
+                        label: "Total Bill Value",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Total Bill Value.",
+                        gridConfig: {
+                            span: 12,
+                            order: 6
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bill / Invoice Number",
+                        label: "Bill / Invoice Number",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Bill / Invoice Number.",
+                        gridConfig: {
+                            span: 12,
+                            order: 7
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bill Date",
+                        label: "Bill Date",
+                        type: "date",
+                        isRequired: true,
+                        gridConfig: {
+                            span: 12,
+                            order: 8
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Due Date",
+                        label: "Due Date",
+                        type: "date",
+                        isRequired: false,
+                        gridConfig: {
+                            span: 12,
+                            order: 9
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Remarks",
+                        label: "Remarks",
+                        type: "text",
+                        isRequired: false,
+                        placeholder: "Enter Remarks",
+                        gridConfig: {
+                            span: 12,
+                            order: 10
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                ]
+            },
+            {
+                "Bank Over Draft": [
+                    {
+                        name: "nickName",
+                        label: "Nick Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Nick Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 1
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Bank Name",
+                        label: " Bank Name",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Bank Name.",
+                        gridConfig: {
+                            span: 12,
+                            order: 2
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Account Number",
+                        label: "Account Number",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Account Number.",
+                        gridConfig: {
+                            span: 12,
+                            order: 3
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "IFSC Code",
+                        label: " IFSC Code",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter IFSC Code.",
+                        gridConfig: {
+                            span: 12,
+                            order: 4
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Branch",
+                        label: "Branch",
+                        type: "text",
+                        isRequired: true,
+                        placeholder: "Enter Branch.",
+                        gridConfig: {
+                            span: 12,
+                            order: 5
+                        },
+                        isDeleteAble: false,
+                        createdBy: mainUser?._id,
+                    },
+                    {
+                        name: "Overdraft Limit",
+                        label: "Overdraft Limit",
+                        type: "number",
+                        isRequired: true,
+                        placeholder: "Enter Overdraft Limit.",
+                        gridConfig: {
+                            span: 12,
+                            order: 6
                         },
                         isDeleteAble: false,
                         createdBy: mainUser?._id,
