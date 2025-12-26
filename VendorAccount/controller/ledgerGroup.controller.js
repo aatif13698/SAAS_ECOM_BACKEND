@@ -270,7 +270,9 @@ exports.allLedgerGroup = async (req, res, next) => {
                 message: message.lblClinetIdIsRequired,
             });
         }
-        let filters = {};
+        let filters = {
+            isPrimary: false
+        };
 
         if (level == "vendor") {
 
