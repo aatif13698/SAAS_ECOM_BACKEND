@@ -11,6 +11,7 @@ const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const { path } = require("../../client/model/user");
 const { model } = require("mongoose");
+const ledgerSchema = require("../../client/model/ledger");
 
 
 
@@ -129,6 +130,43 @@ const allLedgerGroup = async (clientId, filters = {}) => {
     }
 };
 
+
+
+
+const allCashAndBankGroup = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LedgerGroup = clientConnection.model("ledgerGroup", clientLedgerGroupSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+
+        const [bank, cash] = await Promise.all([
+            LedgerGroup.findOne({ ...filters, groupName: "Cash-At-Bank" }),
+            LedgerGroup.findOne({ ...filters, groupName: "Cash-in-hand" }),
+        ]);
+
+        const [bankLedgers, cashLedgers] = await Promise.all([
+            Ledger.find({...filters, ledgerGroupId: bank._id }),
+            Ledger.find({...filters, ledgerGroupId: cash._id}),
+        ]);
+
+
+
+
+        return { bankLedgers, cashLedgers };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing ledger group: ${error.message}`);
+    }
+};
+
+
+
+
+
+
+
 const activeInactive = async (clientId, groupId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -189,12 +227,17 @@ const getById = async (clientId, shiftId) => {
 
 
 
+
+
 module.exports = {
     create,
     list,
     all,
     allField,
     allLedgerGroup,
+    allCashAndBankGroup,
+
+
 
     update,
     getById,

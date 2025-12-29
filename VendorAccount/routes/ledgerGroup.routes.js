@@ -32,6 +32,10 @@ router.delete('/delete/field/:groupId/:clientId/:fieldId', entityAuth.authorizeE
 
 router.post("/update/order/field/:groupId/:clientId", entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.updateFieldOrder);
 
+router.get('/get/all/cash/bank/ledger', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.getAllCashAndBankLedger);
+
+
+
 
 
 
