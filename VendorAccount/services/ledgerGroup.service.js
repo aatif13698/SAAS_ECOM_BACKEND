@@ -147,10 +147,21 @@ const allCashAndBankGroup = async (clientId, filters = {}) => {
             LedgerGroup.findOne({ ...filters, groupName: "Cash-in-hand" }),
         ]);
 
-        const [bankLedgers, cashLedgers] = await Promise.all([
-            Ledger.find({...filters, ledgerGroupId: bank._id }),
-            Ledger.find({...filters, ledgerGroupId: cash._id}),
-        ]);
+        const promiseArray = []
+
+        if (bank) {
+            promiseArray.push(Ledger.find({ ...filters, ledgerGroupId: bank._id }))
+        }
+
+        if (cash) {
+            promiseArray.push(Ledger.find({ ...filters, ledgerGroupId: cash._id }))
+        }
+
+        const [bankLedgers, cashLedgers] = await Promise.all(promiseArray);
+        // const [bankLedgers, cashLedgers] = await Promise.all([
+        //     Ledger.find({ ...filters, ledgerGroupId: bank._id }),
+        //     Ledger.find({ ...filters, ledgerGroupId: cash._id }),
+        // ]);
 
 
 
