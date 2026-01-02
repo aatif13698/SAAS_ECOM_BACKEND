@@ -2,6 +2,8 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const purhcasePaymentConfigSchema = require("../../client/model/purchasePaymentConfig");
+const ledgerSchema = require("../../client/model/ledger");
+const { path } = require("pdfkit");
 
 
 // create
@@ -161,6 +163,59 @@ exports.getPaymentConfigs = async (req, res) => {
         const PurchasePaymentConfig = clientConnection.model("purchasePaymentConfig", purhcasePaymentConfigSchema);
 
         const configs = await PurchasePaymentConfig.find(filters)
+            .lean();
+
+        const cash = configs.find(c => c.type === 'cash') || { ledgers: [] };
+        const bank = configs.find(c => c.type === 'bank') || { ledgers: [] };
+
+        res.json({
+            success: true,
+            data: {
+                cashLedgers: cash.ledgers,
+                bankLedgers: bank.ledgers
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.getPaymentFromConfigs = async (req, res) => {
+    try {
+        const { clientId, level, levelId } = req.query;
+        let filters = {};
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PurchasePaymentConfig = clientConnection.model("purchasePaymentConfig", purhcasePaymentConfigSchema);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+
+        const configs = await PurchasePaymentConfig.find(filters)
+            .populate({
+                path: 'ledgers.id',
+                model: Ledger,
+            })
             .lean();
 
         const cash = configs.find(c => c.type === 'cash') || { ledgers: [] };

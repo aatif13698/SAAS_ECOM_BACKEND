@@ -16,6 +16,9 @@ router.post('/upsert/purhcase/payement/ledger/config', entityAuth.authorizeEntit
 
 router.get('/get/purhcase/payement/ledger/config', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), purchasePaymentConfig.getPaymentConfigs);
 
+router.get('/get/purhcase/payement/from/ledger/config', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), purchasePaymentConfig.getPaymentFromConfigs);
+
+
 // router.put('/update/ledgerGroup', entityAuth.authorizeEntity("Accounting Master", "Group", "update"), purchasePaymentConfig.update);
 
 // router.delete('/delete/field/:groupId/:clientId/:fieldId', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), purchasePaymentConfig.deleteField);
