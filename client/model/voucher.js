@@ -25,6 +25,8 @@ const voucherSchema = new mongoose.Schema({
   amountForeign: { type: Number, default: 0 },
   exchangeRate: { type: Number, default: 1 },
   financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'financialYear', required: true },
+
+  purchaseInvoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'purchaseInvoice', default: null },
   //   relatedInvoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Document', default: null }, // Optional: Link to invoice
   isSingleEntry: { type: Boolean, default: false },// Not used for standard accounting
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "clientUsers", index: true },
