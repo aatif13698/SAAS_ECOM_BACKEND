@@ -320,9 +320,11 @@ exports.all = async (req, res, next) => {
             filters = {
                 ...filters,
                 isWarehouseLevel: true,
-                isWarehouseLevel: levelId
+                warehouse: levelId
             }
         }
+
+        
         const result = await voucherGroupService.all(clientId, filters);
         return res.status(statusCode.OK).send({
             message: message.lblVoucherGroupFoundSucessfully,

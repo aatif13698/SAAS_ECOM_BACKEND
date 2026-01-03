@@ -24,13 +24,13 @@ const voucherSchema = new mongoose.Schema({
   currency: { type: mongoose.Schema.Types.ObjectId, ref: 'currency', default: null },
   amountForeign: { type: Number, default: 0 },
   exchangeRate: { type: Number, default: 1 },
-  financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'financialYear', required: true },
+  financialYear: { type: mongoose.Schema.Types.ObjectId, ref: 'financialYear', default: null },
 
   purchaseInvoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'purchaseInvoice', default: null },
   //   relatedInvoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Document', default: null }, // Optional: Link to invoice
   isSingleEntry: { type: Boolean, default: false },// Not used for standard accounting
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "clientUsers", index: true },
-});
+},{ timestamps: true });
 
 // Pre-save: Validate double-entry and assign FY
 // voucherSchema.pre('save', async function (next) {

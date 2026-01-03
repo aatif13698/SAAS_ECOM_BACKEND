@@ -55,14 +55,14 @@ const bankDetailsSchema = new Schema({
 
 const purchaseInvoiceSchema = new Schema(
     {
-        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },  
-        branch: { type: ObjectId, ref: "branch", default: null, index: true },  
-        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },  
+        businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
+        branch: { type: ObjectId, ref: "branch", default: null, index: true },
+        warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
-        isVendorLevel: { type: Boolean, default: false },  
-        isBuLevel: { type: Boolean, default: false },  
-        isBranchLevel: { type: Boolean, default: false },  
-        isWarehouseLevel: { type: Boolean, default: false },  
+        isVendorLevel: { type: Boolean, default: false },
+        isBuLevel: { type: Boolean, default: false },
+        isBranchLevel: { type: Boolean, default: false },
+        isWarehouseLevel: { type: Boolean, default: false },
 
 
         // Core PO fields
@@ -80,12 +80,12 @@ const purchaseInvoiceSchema = new Schema(
         bankDetails: { type: bankDetailsSchema, default: () => ({}) },
         isInterState: { type: Boolean, default: false }, // Determines IGST vs CGST/SGST
         roundOff: { type: Boolean, default: false },
-        paymentMethod: { type: String, enum: ['cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
+        paymentMethod: { type: String, enum: ["", 'cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
         paidAmount: { type: Number, default: 0, min: 0 },
-        payedFrom: { type: ObjectId, ref: 'ledger', required: true },
+        payedFrom: { type: ObjectId, ref: 'ledger', default: null },
         balance: { type: Number, default: 0, min: 0 },
 
-        status: { type: String, enum: ['draft', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
+        status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes

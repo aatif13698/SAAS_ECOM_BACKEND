@@ -14,6 +14,7 @@ const bcrypt = require("bcrypt")
 
 // create 
 exports.create = async (req, res, next) => {
+    const mainUser = req.user;
     try {
         const {
             clientId,
@@ -25,6 +26,7 @@ exports.create = async (req, res, next) => {
 
 
             supplier,
+            supplierLedger,
             shippingAddress,
             piNumber,
             piDate,
@@ -34,6 +36,7 @@ exports.create = async (req, res, next) => {
             isInterState,
             roundOff,
             paymentMethod,
+            payedFrom,
             paidAmount,
             balance
 
@@ -51,6 +54,7 @@ exports.create = async (req, res, next) => {
 
         const requiredFields = [
             supplier,
+            supplierLedger,
             shippingAddress,
             piNumber,
             piDate,
@@ -79,6 +83,7 @@ exports.create = async (req, res, next) => {
         // Base data object 
         const dataObject = {
             supplier,
+            supplierLedger,
             shippingAddress,
             piNumber,
             piDate,
@@ -88,6 +93,7 @@ exports.create = async (req, res, next) => {
             isInterState,
             roundOff,
             paymentMethod,
+            payedFrom,
             paidAmount,
             balance,
             createdBy: mainUser._id,
@@ -133,7 +139,7 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseOrder = await purchaseInvoice.create(clientId, dataObject);
+        const newPurchaseOrder = await purchaseInvoice.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblPurchaseOrderCreatedSuccess,
             data: { holidayId: newPurchaseOrder._id },

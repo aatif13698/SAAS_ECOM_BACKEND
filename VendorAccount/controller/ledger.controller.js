@@ -744,20 +744,20 @@ exports.all = async (req, res, next) => {
         } else if (level == "business" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
+                isBuLevel: true,
                 businessUnit: levelId
             }
         } else if (level == "branch" && levelId) {
             filters = {
                 ...filters,
-                // isBranchLevel: true,
+                isBranchLevel: true,
                 branch: levelId
             }
         } else if (level == "warehouse" && levelId) {
             filters = {
                 ...filters,
-                // isBuLevel: true,
-                isWarehouseLevel: levelId
+                isWarehouseLevel: true,
+                warehouse: levelId
             }
         }
 
