@@ -82,7 +82,7 @@ const purchaseInvoiceSchema = new Schema(
         roundOff: { type: Boolean, default: false },
         paymentMethod: { type: String, enum: ["", 'cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
         paidAmount: { type: Number, default: 0, min: 0 },
-        payedFrom: { type: ObjectId, ref: 'ledger', default: null },
+        payedFrom: [{ id: { type: ObjectId, ref: 'ledger', default: null } }],
         balance: { type: Number, default: 0, min: 0 },
 
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
