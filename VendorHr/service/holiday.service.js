@@ -6,6 +6,9 @@ const CustomError = require("../../utils/customeError");
 const clientAssetSchema = require("../../client/model/asset");
 const holidaySchema = require("../../client/model/holiday");
 const { DateTime } = require("luxon");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 const create = async (clientId, data) => {
@@ -54,10 +57,28 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Holiday = clientConnection.model('holiday', holidaySchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [holidays, total] = await Promise.all([
-            Holiday.find(filters).skip(skip),
+            Holiday.find(filters).skip(skip)
+              .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                }),
             Holiday.countDocuments(filters),
         ]);
         const formatedHoliday = holidays?.map((item) => {
