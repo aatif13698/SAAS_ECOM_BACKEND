@@ -341,10 +341,55 @@ exports.list = async (req, res, next) => {
     }
 };
 
+exports.unpaidInvoices = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, level = "vendor", levelId = "", supplier, supplierLedger } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            supplier,
+            supplierLedger,
+        };
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+        const result = await purchaseInvoice.unpaid(clientId, filters,);
+        return res.status(statusCode.OK).send({
+            message: "List found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // active inactive 
 exports.changeStatus = async (req, res, next) => {
     try {
-        const {  id, status, clientId, } = req.body;
+        const { id, status, clientId, } = req.body;
         if (!clientId || !id) {
             return res.status(400).send({
                 message: message.lblHolidayIdIdAndClientIdRequired,

@@ -188,11 +188,11 @@ const create = async (clientId, data, mainUser) => {
 
                 console.log("Number(payedFromLedger.balance)", Number(payedFromLedger.balance));
                 console.log("");
-                
-                
+
+
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom}], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
+                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
@@ -296,6 +296,34 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 };
 
 
+const unpaid = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+
+        const query = {
+            ...filters,
+            balance: { $gt: 0 }
+        };
+
+        const [purchaseInvoices, total] = await Promise.all([
+            PurchaseInvoice.find(query)
+                .sort({ createdAt: -1 })  // Sort by creation date descending (latest first)
+                .populate({
+                    path: "supplier",
+                    model: Supplier,
+                    select: "-items"
+                }),
+            PurchaseInvoice.countDocuments(query),
+        ]);
+        return { count: total, purchaseInvoices };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
 const changeStatus = async (clientId, purchaseInvoiceId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -318,4 +346,5 @@ module.exports = {
     getById,
     list,
     changeStatus,
+    unpaid
 }; 

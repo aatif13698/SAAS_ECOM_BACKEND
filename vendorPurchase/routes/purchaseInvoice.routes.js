@@ -19,6 +19,8 @@ router.get('/get/:clientId/:purchaseInvoice', entityAuth.authorizeEntity("Admini
 
 router.get('/list/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.list);
 
+router.get('/unpaid/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.unpaidInvoices);
+
 router.post("/change/status/purchaseInvoice", entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.changeStatus);
 
 
