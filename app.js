@@ -64,6 +64,7 @@ const vendorRequestShiftRouter = require("./VendorAdministration/routes/requestS
 const documentRouter = require("./VendorAdministration/routes/documentRequirements.routes.js");
 const assetRouter = require("./VendorAdministration/routes/assets.routes.js");
 const leaveCategoryRoute = require("./VendorHr/routes/leaveCategories.route.js");
+const leaveAllotmentRoute = require("./VendorHr/routes/leaveAllotment.routes.js");
 const holidayRoute = require("./VendorHr/routes/holiday.route.js");
 const attendanceRoute = require("./VendorHr/routes/attendance.route.js");
 
@@ -165,6 +166,7 @@ app.use("/api/vendor/customer", vendorCustomerRouter.router);
 app.use("/api/vendor/hr/doc", documentRouter.router);
 app.use("/api/vendor/hr/asset", assetRouter.router);
 app.use("/api/vendor/hr/leavecategory", leaveCategoryRoute.router);
+app.use("/api/vendor/hr/leave/allotment", leaveAllotmentRoute.router);
 app.use("/api/vendor/hr/holiday", holidayRoute.router);
 app.use("/api/vendor/hr/attendance", attendanceRoute.router);
 

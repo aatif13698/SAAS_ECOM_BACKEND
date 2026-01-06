@@ -316,3 +316,47 @@ exports.activeinactive = async (req, res, next) => {
     } 
 }; 
 
+
+exports.all = async (req, res, next) => { 
+    try { 
+        const mainUser = req.user; 
+        const { clientId, level = "vendor", levelId = "" } = req.query; 
+        if (!clientId) { 
+            return res.status(statusCode.BadRequest).send({ 
+                message: message.lblClinetIdIsRequired, 
+            }); 
+        } 
+        let filters = { 
+            deletedAt: null, 
+        }; 
+        if (level == "vendor") { 
+
+        } else if (level == "business" && levelId) { 
+            filters = { 
+                ...filters, 
+                isBuLevel: true, 
+                businessUnit: levelId 
+            } 
+        } else if (level == "branch" && levelId) { 
+            filters = { 
+                ...filters, 
+                isBranchLevel: true, 
+                branch: levelId 
+            } 
+        } else if (level == "warehouse" && levelId) { 
+            filters = { 
+                ...filters, 
+                isWarehouseLevel: true, 
+                warehouse: levelId 
+            } 
+        } 
+        const result = await leaveCategoryService.all(clientId, filters); 
+        return res.status(statusCode.OK).send({ 
+            message: message.lblLeaveCategoryFoundSucessfully, 
+            data: result, 
+        }); 
+    } catch (error) { 
+        next(error); 
+    } 
+}; 
+

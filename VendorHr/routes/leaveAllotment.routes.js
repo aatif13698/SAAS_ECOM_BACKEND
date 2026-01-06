@@ -13,6 +13,8 @@ router.post('/create/leave/allotment', entityAuth.authorizeEntity("Administratio
 
 router.put('/update/leave/allotment', entityAuth.authorizeEntity("Administration", "Employee", "update"), leaveAllotmentController.update); 
 
+router.get('/get/leave/allotment/by/department', entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveAllotmentController.allotmentByDepartment); 
+
 router.get('/get/:clientId/:leave/allotment', entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveAllotmentController.getParticular); 
 
 exports.router = router; 

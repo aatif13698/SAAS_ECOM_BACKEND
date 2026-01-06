@@ -17,6 +17,8 @@ router.get('/get/:clientId/:leave/category', entityAuth.authorizeEntity("Adminis
 
 router.get('/list/leave/category', entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveCategoryController.list); 
 
+router.get('/all/leave/category', entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveCategoryController.all); 
+
 router.post("/activeInactive/leave/category", entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveCategoryController.activeinactive); 
 
 

@@ -103,10 +103,45 @@ const activeInactive = async (clientId, leaveCategoryId, data) => {
 };
 
 
+
+const all = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LeaveCategory = clientConnection.model('leaveCategory', leaveCategorySchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const [leaveCategories] = await Promise.all([
+            LeaveCategory.find(filters)
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                }),
+            LeaveCategory.countDocuments(filters),
+        ]);
+        return { leaveCategories };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing leave category: ${error.message}`);
+    }
+};
+
+
 module.exports = {
     create,
     update,
     getById,
     list,
+    all,
     activeInactive,
 }; 
