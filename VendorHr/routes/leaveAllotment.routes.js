@@ -2,7 +2,7 @@ const express = require("express");
 let router = express.Router(); 
 
 
-const leaveAllotmentController = require("../controller/leaveCategories.controller"); 
+const leaveAllotmentController = require("../controller/leaveAllotment.controller"); 
 const entityAuth = require("../../middleware/authorization/commonEntityAuthorization/commonEntityAuthorization"); 
 const { uploadBranchIcon } = require("../../utils/multer"); 
 
