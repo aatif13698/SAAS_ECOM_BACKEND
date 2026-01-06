@@ -9,18 +9,22 @@ const leaveAllotmentSchema = new Schema(
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
-        workingDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
+        isVendorLevel: { type: Boolean, default: false },
+        isBuLevel: { type: Boolean, default: false },
+        isBranchLevel: { type: Boolean, default: false },
+        isWarehouseLevel: { type: Boolean, default: false },
 
-        leaveCategories: [ 
-            { 
-                id: { 
-                    type: ObjectId, 
-                    ref: "leaveCategory", 
-                    required: true, 
-                }, 
-                allocated: { type: Number, default: 0 }, 
-            } 
-        ], 
+        workingDepartment: { type: ObjectId, ref: "clientWorkingDepartment", default: null, index: true },
+        leaveCategories: [
+            {
+                id: {
+                    type: ObjectId,
+                    ref: "leaveCategory",
+                    required: true,
+                },
+                allocated: { type: Number, default: 0 },
+            }
+        ],
 
         isActive: { type: Boolean, default: false },
         createdBy: { type: ObjectId, ref: "clientUsers", index: true },
