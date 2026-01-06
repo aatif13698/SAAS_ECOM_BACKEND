@@ -92,10 +92,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newLeaveCategory = await leaveAllotmentService.create(clientId, dataObject);
+        const newLeaveAllotment = await leaveAllotmentService.create(clientId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblLeaveCategoryCreatedSuccess,
-            data: { leaveCategoryId: newLeaveCategory._id },
+            data: { leaveAllotmentId: newLeaveAllotment._id },
         });
     } catch (error) {
         next(error);
@@ -108,21 +108,14 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            leaveCategoryId,
+            leaveAllotmentId,
             level,
             businessUnit,
             branch,
             warehouse,
 
-            name,
-            code,
-            description,
-            maxLimit,
-            carryOverLimit,
-            defaultEntitlement,
-            requiresApproval,
-            isLossOfPay,
-            isEarnedLeave,
+            workingDepartment,
+            leaveCategories,
         } = req.body;
 
         const mainUser = req.user;
@@ -132,29 +125,21 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            leaveCategoryId,
-            name,
-            code,
-            description,
-            maxLimit,
-            carryOverLimit,
-            defaultEntitlement,
+            leaveAllotmentId,
+            level,
         ];
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
+        if (leaveCategories.length == 0) {
+            return res.status(statusCode.BadRequest).send({ message: "category is required." });
+        }
+
         // Base data object 
         const dataObject = {
-            name,
-            code,
-            description,
-            maxLimit,
-            carryOverLimit,
-            defaultEntitlement,
-            requiresApproval,
-            isLossOfPay,
-            isEarnedLeave,
+            workingDepartment,
+            leaveCategories,
             createdBy: mainUser._id,
         };
 
@@ -197,7 +182,7 @@ exports.update = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
         // update  
-        const updated = await leaveAllotmentService.update(clientId, leaveCategoryId, dataObject);
+        const updated = await leaveAllotmentService.update(clientId, leaveAllotmentId, dataObject);
         return res.status(statusCode.OK).send({
             message: message.lblLeaveCategoryUpdatedSuccess,
         });
@@ -210,13 +195,13 @@ exports.update = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, leaveCategoryId } = req.params;
-        if (!clientId || !leaveCategoryId) {
+        const { clientId, leaveAllotmentId } = req.params;
+        if (!clientId || !leaveAllotmentId) {
             return res.status(400).send({
-                message: message.lblLeaveCategoryIdAndClientIdRequired,
+                message: message.lblRequiredFieldMissing,
             });
         }
-        const asset = await leaveAllotmentService.getById(clientId, leaveCategoryId);
+        const asset = await leaveAllotmentService.getById(clientId, leaveAllotmentId);
         return res.status(200).send({
             message: message.lblLeaveCategoryFoundSucessfully,
             data: asset,
@@ -226,73 +211,4 @@ exports.getParticular = async (req, res, next) => {
     }
 };
 
-// list 
-exports.list = async (req, res, next) => {
-    try {
-        const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
-        if (!clientId) {
-            return res.status(statusCode.BadRequest).send({
-                message: message.lblClinetIdIsRequired,
-            });
-        }
-        let filters = {
-            deletedAt: null,
-            ...(keyword && {
-                $or: [
-                    { name: { $regex: keyword.trim(), $options: "i" } },
-                ],
-            }),
-        };
-        if (level == "vendor") {
 
-        } else if (level == "business" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true, 
-                businessUnit: levelId
-            }
-        } else if (level == "branch" && levelId) {
-            filters = {
-                ...filters,
-                // isBranchLevel: true, 
-                branch: levelId
-            }
-        } else if (level == "warehouse" && levelId) {
-            filters = {
-                ...filters,
-                // isBuLevel: true, 
-                warehouse: levelId
-            }
-        }
-        const result = await leaveAllotmentService.list(clientId, filters, { page, limit: perPage });
-        return res.status(statusCode.OK).send({
-            message: message.lblLeaveCategoryFoundSucessfully,
-            data: result,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// active inactive 
-exports.activeinactive = async (req, res, next) => {
-    try {
-        const { keyword, page, perPage, id, status, clientId } = req.body;
-        req.query.clientId = clientId;
-        req.query.keyword = keyword;
-        req.query.page = page;
-        req.query.perPage = perPage;
-        if (!clientId || !id) {
-            return res.status(400).send({
-                message: message.lblEmployeeIdIdAndClientIdRequired,
-            });
-        }
-        const updated = await leaveAllotmentService.activeInactive(clientId, id, {
-            isActive: status == "1",
-        });
-        this.list(req, res, next)
-    } catch (error) {
-        next(error);
-    }
-}; 
