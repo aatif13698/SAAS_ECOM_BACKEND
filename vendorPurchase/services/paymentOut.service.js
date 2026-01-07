@@ -98,16 +98,16 @@ const create = async (clientId, data, mainUser) => {
                 if (existingPaymentOut) {
                     throw new CustomError(400, 'Payment out number already exists.');
                 }
-                
+
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom}] }], {
+                [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom }] }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
 
                 return po;
 
-            } 
+            }
         });
 
         return result;
@@ -121,7 +121,33 @@ const create = async (clientId, data, mainUser) => {
     }
 };
 
+const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
+        const { page, limit } = options;
+        const skip = (Number(page) - 1) * Number(limit);
+        const [paymentOut, total] = await Promise.all([
+            PaymentOut.find(filters)
+                .skip(skip)
+                .sort({ createdAt: -1 }) 
+                .limit(Number(limit))
+                .populate({
+                    path: "supplier",
+                    model: Supplier,
+                    select: "-items"
+                }),
+            PaymentOut.countDocuments(filters),
+        ]);
+        return { count: total, paymentOut };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 
 module.exports = {
     create,
+    list
 }; 

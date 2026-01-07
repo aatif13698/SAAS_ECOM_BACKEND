@@ -90,6 +90,7 @@ const purhcasePaymentConfigure = require("./VendorAccount/routes/purchasePayment
 
 const PurchaseOrder = require("./vendorPurchase/routes/purchaseOrder.routes.js");
 const PurchaseInvoice = require("./vendorPurchase/routes/purchaseInvoice.routes.js");
+const PaymentOut = require("./vendorPurchase/routes/paymentOut.routes.js");
 
 
 
@@ -199,6 +200,7 @@ app.use("/api/vendor/accounts/settings/pur", purhcasePaymentConfigure.router);
 
 app.use("/api/vendor/purhcase/po", PurchaseOrder.router);
 app.use("/api/vendor/purhcase/pi", PurchaseInvoice.router);
+app.use("/api/vendor/purhcase/payment/out", PaymentOut.router);
 
 
 

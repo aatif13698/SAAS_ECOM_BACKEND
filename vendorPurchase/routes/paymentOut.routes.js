@@ -7,7 +7,9 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 const { uploadBranchIcon } = require("../../utils/multer");
 
 
-router.post('/create/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), paymentOutController.create);
+router.post('/create/payment/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), paymentOutController.create);
+
+router.get('/list/payment/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), paymentOutController.list);
 
 
 exports.router = router; 
