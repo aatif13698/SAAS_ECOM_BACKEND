@@ -13,7 +13,25 @@ const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LeaveAllotment = clientConnection.model('leaveAllotment', leaveAllotmentSchema);
-        return await LeaveAllotment.create(data);
+
+        const existing = await LeaveAllotment.findOne({
+            isVendorLevel: data?.isVendorLevel,
+            isBuLevel: data?.isBuLevel,
+            isBranchLevel: data?.isBranchLevel,
+            isWarehouseLevel: data?.isWarehouseLevel,
+
+            businessUnit: data?.businessUnit ? data?.businessUnit : null,
+            branch: data?.branch ? data?.branch : null,
+            warehouse: data?.warehouse ? data?.warehouse : null,
+            workingDepartment: data?.workingDepartment
+        });
+
+        if (existing) {
+            existing.leaveCategories = data.leaveCategories;
+            return await existing.save()
+        } else {
+            return await LeaveAllotment.create(data);
+        }
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
