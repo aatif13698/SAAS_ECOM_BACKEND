@@ -192,7 +192,7 @@ const create = async (clientId, data, mainUser) => {
 
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
+                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom, paymentType: "Payment" }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });

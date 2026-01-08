@@ -22,6 +22,8 @@ exports.create = async (req, res, next) => {
             payedFrom,
             notes,
 
+            payments,
+
         } = req.body;
 
 
@@ -51,9 +53,8 @@ exports.create = async (req, res, next) => {
 
         console.log("coming here");
 
-
-        if (items?.length == 0) {
-            return res.status(statusCode.BadRequest).send({ message: "Items is required" })
+        if (payments?.length == 0) {
+            return res.status(statusCode.BadRequest).send({ message: "Invoice is required" })
         }
 
         // Base data object 
@@ -68,6 +69,8 @@ exports.create = async (req, res, next) => {
             paidAmount,
             payedFrom,
             notes,
+
+            payments,
             createdBy: mainUser._id,
         };
 

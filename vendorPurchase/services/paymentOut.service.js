@@ -17,6 +17,7 @@ const paymentOutSchema = require("../../client/model/paymentOut");
 
 const create = async (clientId, data, mainUser) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
+    const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
     const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
@@ -38,49 +39,34 @@ const create = async (clientId, data, mainUser) => {
                     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
                 }
 
-                const voucherGroup = await VoucherGroup.findOne({
-                    warehouse: data?.warehouse,
-                    isWarehouseLevel: true,
-                    name: "Payment"
-                }).session(session);
 
-                if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
+                // settlement of invoice 
+                const linkedId = uuidv4();
+                const invoices = data?.payments;
+                const noInvoice = [];
+                const settledInvoices = [];
 
-                const voucherLinkId = uuidv4();
-
-                const voucherDocs = [
-                    {
-                        businessUnit: data?.businessUnit,
-                        branch: data?.branch,
-                        warehouse: data?.warehouse,
-                        isWarehouseLevel: true,
-                        voucherGroup: voucherGroup._id,
-                        narration: "Purchase invoice payment.",
-                        voucherLinkId,
-                        ledger: data.supplierLedger,
-                        debit: 0,
-                        credit: data.paidAmount,
-                        isSingleEntry: false,
-                        createdBy: mainUser._id,
-                    },
-                    {
-                        businessUnit: data?.businessUnit,
-                        branch: data?.branch,
-                        warehouse: data?.warehouse,
-                        isWarehouseLevel: true,
-                        voucherGroup: voucherGroup._id,
-                        narration: "Purchase invoice payment.",
-                        voucherLinkId,
-                        ledger: data.payedFrom,
-                        debit: data.paidAmount,
-                        credit: 0,
-                        isSingleEntry: false,
-                        createdBy: mainUser._id,
+                for (let index = 0; index < invoices.length; index++) {
+                    const invoiceId = invoices[index].purchaseInvoice;
+                    const amount = invoices[index].amount;
+                    const invoice = await PurchaseInvoice.findById(invoiceId);
+                    if (!invoice) {
+                        noInvoice.push(invoiceId);
+                    } else {
+                        invoice.paidAmount += Number(amount);
+                        const newBalance = Number(invoice.balance) - Number(amount);
+                        invoice.payedFrom = [...invoice.payedFrom, { id: data.payedFrom, paymentType: "Settlement", linkedId: linkedId }];
+                        if (newBalance == 0) {
+                            invoice.status = "paid"
+                        } else {
+                            invoice.status = "partially_paid"
+                        }
+                        invoice.balance = newBalance;
+                        await invoice.save();
+                        settledInvoices.push(invoice)
                     }
-                ];
+                }
 
-                // Important: ordered: true when using session + multiple docs
-                await Voucher.create(voucherDocs, { session, ordered: true });
 
                 // Update ledgers
                 payedFromLedger.balance -= Number(data.paidAmount);
@@ -100,10 +86,55 @@ const create = async (clientId, data, mainUser) => {
                 }
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom }] }], {
+                [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom }], linkedId: linkedId }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                // voucher creation
+                const voucherGroup = await VoucherGroup.findOne({
+                    warehouse: data?.warehouse,
+                    isWarehouseLevel: true,
+                    name: "Payment"
+                }).session(session);
+
+                if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
+                const voucherLinkId = uuidv4();
+                const voucherDocs = [
+                    {
+                        businessUnit: data?.businessUnit,
+                        branch: data?.branch,
+                        warehouse: data?.warehouse,
+                        isWarehouseLevel: true,
+                        voucherGroup: voucherGroup._id,
+                        narration: "Purchase invoice payment.",
+                        voucherLinkId,
+                        ledger: data.supplierLedger,
+                        debit: 0,
+                        credit: data.paidAmount,
+                        isSingleEntry: false,
+                        createdBy: mainUser._id,
+                        paymentOutId: po._id
+                    },
+                    {
+                        businessUnit: data?.businessUnit,
+                        branch: data?.branch,
+                        warehouse: data?.warehouse,
+                        isWarehouseLevel: true,
+                        voucherGroup: voucherGroup._id,
+                        narration: "Purchase invoice payment.",
+                        voucherLinkId,
+                        ledger: data.payedFrom,
+                        debit: data.paidAmount,
+                        credit: 0,
+                        isSingleEntry: false,
+                        createdBy: mainUser._id,
+                        paymentOutId: po._id
+                    }
+                ];
+
+                // Important: ordered: true when using session + multiple docs
+                await Voucher.create(voucherDocs, { session, ordered: true });
 
                 return po;
 
@@ -131,7 +162,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const [paymentOut, total] = await Promise.all([
             PaymentOut.find(filters)
                 .skip(skip)
-                .sort({ createdAt: -1 }) 
+                .sort({ createdAt: -1 })
                 .limit(Number(limit))
                 .populate({
                     path: "supplier",
