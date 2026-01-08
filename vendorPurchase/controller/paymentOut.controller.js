@@ -51,8 +51,6 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        console.log("coming here");
-
         if (payments?.length == 0) {
             return res.status(statusCode.BadRequest).send({ message: "Invoice is required" })
         }

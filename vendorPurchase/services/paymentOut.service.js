@@ -49,21 +49,32 @@ const create = async (clientId, data, mainUser) => {
                 for (let index = 0; index < invoices.length; index++) {
                     const invoiceId = invoices[index].purchaseInvoice;
                     const amount = invoices[index].amount;
-                    const invoice = await PurchaseInvoice.findById(invoiceId);
-                    if (!invoice) {
-                        noInvoice.push(invoiceId);
-                    } else {
-                        invoice.paidAmount += Number(amount);
-                        const newBalance = Number(invoice.balance) - Number(amount);
-                        invoice.payedFrom = [...invoice.payedFrom, { id: data.payedFrom, paymentType: "Settlement", linkedId: linkedId }];
-                        if (newBalance == 0) {
-                            invoice.status = "paid"
+                    if (amount > 0) {
+                        const invoice = await PurchaseInvoice.findById(invoiceId);
+                        if (!invoice) {
+                            noInvoice.push(invoiceId);
                         } else {
-                            invoice.status = "partially_paid"
+                            invoice.paidAmount += Number(amount);
+
+                            invoice.payedFrom = [...invoice.payedFrom, { id: data.payedFrom, paymentType: "Settlement", linkedId: linkedId }];
+                            let newBalance;
+                            if (invoice.balance == 0) {
+
+                            } else {
+                                newBalance = Number(invoice.balance) - Number(amount);
+                            }
+
+                            if (newBalance == 0) {
+                                invoice.status = "paid"
+                            } else {
+                                invoice.status = "partially_paid"
+                            }
+                            invoice.balance = newBalance;
+                            await invoice.save({ session });
+                            settledInvoices.push(invoice)
                         }
-                        invoice.balance = newBalance;
-                        await invoice.save();
-                        settledInvoices.push(invoice)
+                    } else {
+                        noInvoice.push(invoiceId);
                     }
                 }
 
@@ -135,7 +146,6 @@ const create = async (clientId, data, mainUser) => {
 
                 // Important: ordered: true when using session + multiple docs
                 await Voucher.create(voucherDocs, { session, ordered: true });
-
                 return po;
 
             }
