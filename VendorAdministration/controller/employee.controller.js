@@ -287,7 +287,7 @@ exports.create = async (req, res, next) => {
         }
 
         // Create 
-        const newEmployee = await employeeService.create(clientId, dataObject);
+        const newEmployee = await employeeService.create(clientId, dataObject, mainUser);
 
         const masterRole = await roleModel.findOne({ id: 4 });
         const existingStaff = await userModel.findOne({

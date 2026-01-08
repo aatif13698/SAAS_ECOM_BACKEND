@@ -10,13 +10,17 @@ const clientRoleSchema = require("../../client/model/role");
 const clientShiftSchema = require("../../client/model/shift");
 const clientWorkingDepartmentSchema = require("../../client/model/workingDepartment");
 const { path } = require("pdfkit");
+const leaveBalanceSchema = require("../../client/model/leaveBalance");
+const leaveAllotmentSchema = require("../../client/model/leaveAllotment");
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
+        const LeaveBalance = clientConnection.model('leaveBalance', leaveBalanceSchema)
+        const LeaveAllotment = clientConnection.model('leaveAllotment', leaveAllotmentSchema);
 
         const existing = await clientUser.findOne({
             $or: [{ email: data.email },
@@ -26,7 +30,37 @@ const create = async (clientId, data) => {
         if (existing) {
             throw new CustomError(statusCode.Conflict, message.lblEmployeeAlreadyExists);
         }
-        return await clientUser.create(data);
+        const newStaff = await clientUser.create(data);
+
+        const existingAllotment = await LeaveAllotment.findOne({
+            workingDepartment: data?.workingDepartment,
+            isVendorLevel: data?.isVendorLevel,
+            isBuLevel: data?.isBuLevel,
+            isBranchLevel: data?.isBranchLevel,
+            isWarehouseLevel: data?.isWarehouseLevel,
+
+            businessUnit: data?.businessUnit ? data?.businessUnit : null,
+            branch: data?.branch ? data?.branch : null,
+            warehouse: data?.warehouse ? data?.warehouse : null,
+        });
+
+        if (existingAllotment && existingAllotment.leaveCategories.length > 0) {
+            const currentYear = new Date(Date.now()).getFullYear();
+            const leaveBalance = await LeaveBalance.create({
+                employeeId: newStaff._id,
+                leaveCategories: existingAllotment.leaveCategories,
+                year: currentYear,
+                createdBy: mainUser._id
+            });
+
+            console.log("leaveBalance", leaveBalance);
+
+        }
+
+        console.log("existingAllotment", existingAllotment);
+
+
+        return newStaff
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating employee : ${error.message}`);
     }
@@ -144,7 +178,7 @@ const listAllByCurrentLevel = async (clientId, filters = {}) => {
                 model: Shift,
                 select: "shiftName"
             })
-            .sort({ _id: -1 }),
+                .sort({ _id: -1 }),
         ]);
         return { employees };
     } catch (error) {
