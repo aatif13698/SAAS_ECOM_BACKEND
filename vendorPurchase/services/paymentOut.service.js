@@ -13,6 +13,10 @@ const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
 const paymentOutSchema = require("../../client/model/paymentOut");
 const purchaseInvoiceAndPaymentConnectionSchema = require("../../client/model/purchaseInvoiceAndPaymentConnection");
+const { path } = require("pdfkit");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 
 
 
@@ -197,8 +201,49 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const getById = async (clientId, id) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
+        const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+
+
+        const paymentOut = await PaymentOut.findById(id)
+            .populate({ path: "supplier", select: "-items" })
+            .populate({ path: "businessUnit", model: BusinessUnit, select: "name" })
+            .populate({ path: "branch", model: Branch, select: "name" })
+            .populate({ path: "warehouse", model: Warehouse, select: "name" })
+            .lean();
+        if (!paymentOut) {
+            throw new CustomError(statusCode.NotFound, "Payment out not found.");
+        }
+
+        const connection = await PurchaseInvoiceAndPaymentConnection.findOne({
+            paymentOut: paymentOut._id
+        }).populate({
+            path: "invoices.id",
+            select: "-shippingAddress -bankDetails"
+        });
+
+        if (!connection) {
+            throw new CustomError(statusCode.NotFound, "Connection out not found.");
+        }
+
+        console.log("connnection", connection);
+
+        return { ...paymentOut, invoices: connection.invoices };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting business unit: ${error.message}`);
+    }
+};
+
 
 module.exports = {
     create,
-    list
+    list,
+    getById
 }; 

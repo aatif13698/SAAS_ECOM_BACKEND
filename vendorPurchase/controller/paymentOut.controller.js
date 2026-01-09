@@ -169,3 +169,22 @@ exports.list = async (req, res, next) => {
         next(error);
     }
 };
+
+
+exports.getParticularPaymentOut = async (req, res, next) => {
+    try {
+        const { clientId, id } = req.params;
+        if (!clientId || !id) {
+            return res.status(400).send({
+                message: "Required fields are missing"
+            });
+        }
+        const paymentOut = await paymentOutService.getById(clientId, id);
+        return res.status(200).send({
+            message: "Payment out found successfully.",
+            data: paymentOut,
+        });
+    } catch (error) {
+        next(error)
+    }
+};

@@ -11,5 +11,7 @@ router.post('/create/payment/out', entityAuth.authorizeEntity("Administration", 
 
 router.get('/list/payment/out', entityAuth.authorizeEntity("Administration", "Employee", "create"), paymentOutController.list);
 
+router.get('/get/payment/out/:id/:clientId', entityAuth.authorizeEntity("Administration", "Employee", "create"), paymentOutController.getParticularPaymentOut);
+
 
 exports.router = router; 
