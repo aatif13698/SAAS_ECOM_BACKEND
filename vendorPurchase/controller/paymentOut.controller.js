@@ -112,10 +112,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseOrder = await paymentOutService.create(clientId, dataObject, mainUser);
+        const newPaymentOut = await paymentOutService.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
-            message: message.lblPurchaseOrderCreatedSuccess,
-            data: { holidayId: newPurchaseOrder._id },
+            message: "Payment out created successfully.",
+            data: { holidayId: newPaymentOut._id },
         });
     } catch (error) {
         next(error);

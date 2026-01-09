@@ -12,6 +12,7 @@ const voucherGroupSchema = require("../../client/model/voucherGroup");
 const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
 const paymentOutSchema = require("../../client/model/paymentOut");
+const purchaseInvoiceAndPaymentConnectionSchema = require("../../client/model/purchaseInvoiceAndPaymentConnection");
 
 
 
@@ -22,11 +23,11 @@ const create = async (clientId, data, mainUser) => {
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
+    const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
     const session = await clientConnection.startSession();
     try {
         const result = await session.withTransaction(async (session) => {
             let po;
-
             // ── Payment part ───────────────────────────────────────
             if (data?.paidAmount > 0) {
                 const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
@@ -56,7 +57,7 @@ const create = async (clientId, data, mainUser) => {
                         } else {
                             invoice.paidAmount += Number(amount);
 
-                            invoice.payedFrom = [...invoice.payedFrom, { id: data.payedFrom, paymentType: "Settlement", linkedId: linkedId }];
+                            invoice.payedFrom = [...invoice.payedFrom, { id: data.payedFrom, paymentType: "Settlement", linkedId: linkedId, amount: Number(amount) }];
                             let newBalance;
                             if (invoice.balance == 0) {
 
@@ -71,7 +72,7 @@ const create = async (clientId, data, mainUser) => {
                             }
                             invoice.balance = newBalance;
                             await invoice.save({ session });
-                            settledInvoices.push(invoice)
+                            settledInvoices.push({ id: invoice._id, settlementAmount: Number(amount) })
                         }
                     } else {
                         noInvoice.push(invoiceId);
@@ -101,6 +102,15 @@ const create = async (clientId, data, mainUser) => {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                // payment out and invoices connection
+                await PurchaseInvoiceAndPaymentConnection.create(
+                    [{
+                        paymentOut: po._id,
+                        invoices: settledInvoices
+                    }],
+                    { session }
+                );
 
                 // voucher creation
                 const voucherGroup = await VoucherGroup.findOne({

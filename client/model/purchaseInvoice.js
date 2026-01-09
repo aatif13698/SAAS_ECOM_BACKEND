@@ -86,7 +86,8 @@ const purchaseInvoiceSchema = new Schema(
             {
                 id: { type: ObjectId, ref: 'ledger', default: null },
                 paymentType: { type: String, default: null },                   // "Payment", "Settlement", "Credit"
-                linkedId: { type: String, default: null }
+                linkedId: { type: String, default: null },
+                amount: {type: Number, required: true}
             }
         ],
         balance: { type: Number, default: 0, min: 0 },
