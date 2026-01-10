@@ -15,7 +15,7 @@ router.post('/issue/purchaseInvoice/mail', entityAuth.authorizeEntity("Administr
 
 router.put('/update/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseInvoiceController.update);
 
-router.get('/get/:clientId/:purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.getParticular);
+router.get('/get/:clientId/:purchaseOrderId', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.getParticular);
 
 router.get('/list/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.list);
 

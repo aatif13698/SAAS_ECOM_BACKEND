@@ -260,7 +260,7 @@ const getById = async (clientId, purchaseInvoiceId) => {
         if (!purchaseInvoice) {
             throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
         }
-        return purchaseOrder;
+        return purchaseInvoice;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
     }
