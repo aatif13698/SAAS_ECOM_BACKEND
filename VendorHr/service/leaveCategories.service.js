@@ -8,6 +8,7 @@ const leaveCategorySchema = require("../../client/model/leaveCategories");
 const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
+const leaveBalanceSchema = require("../../client/model/leaveBalance");
 
 
 const create = async (clientId, data) => {
@@ -136,6 +137,25 @@ const all = async (clientId, filters = {}) => {
     }
 };
 
+const allLeaveBalance = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LeaveCategory = clientConnection.model('leaveCategory', leaveCategorySchema);
+        const LeaveBalance = clientConnection.model('leaveBalance', leaveBalanceSchema)
+
+        const [leaveBalance] = await Promise.all([
+            LeaveBalance.findOne(filters)
+                .populate({
+                    path: "leaveCategories.id",
+                    model: LeaveCategory,
+                })
+        ]);
+        return { leaveBalance };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 
 module.exports = {
     create,
@@ -143,5 +163,6 @@ module.exports = {
     getById,
     list,
     all,
+    allLeaveBalance,
     activeInactive,
 }; 

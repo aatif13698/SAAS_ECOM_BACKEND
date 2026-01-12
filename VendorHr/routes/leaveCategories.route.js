@@ -21,5 +21,8 @@ router.get('/all/leave/category', entityAuth.authorizeEntity("Administration", "
 
 router.post("/activeInactive/leave/category", entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveCategoryController.activeinactive); 
 
+router.get('/all/leave/balance', leaveCategoryController.allLeaveBalance); 
+
+
 
 exports.router = router; 
