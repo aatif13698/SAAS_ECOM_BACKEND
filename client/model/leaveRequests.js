@@ -47,7 +47,7 @@ const leaveRequestsSchema = new Schema(
         rejectionReason: { type: String }, 
 
         // Optional: backup person or handover notes 
-        handoverTo: { type: Schema.Types.ObjectId, ref: 'clientUsers' }, 
+        handoverTo: { type: Schema.Types.ObjectId, ref: 'clientUsers', default: null}, 
         handoverNotes: String, 
 
         createdBy: { type: ObjectId, ref: "clientUsers", index: true }, 

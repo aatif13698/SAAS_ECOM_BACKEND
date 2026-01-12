@@ -390,3 +390,89 @@ exports.allLeaveBalance = async (req, res, next) => {
     }
 };
 
+exports.allLeaveHistory = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, employeeId } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!employeeId) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Employee id is required.",
+            });
+        }
+        let filters = {
+            employeeId
+        };
+        const result = await leaveCategoryService.allLeaveHistory(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: "Leave history found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+exports.applyLeave = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            employeeId,
+            leaveTypeId,
+            startDate,
+            endDate,
+            isHalfDay,
+            halfDaySession,
+            reason,
+            totalDays
+        } = req.body;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const requiredFields = [
+            leaveTypeId,
+            startDate,
+            endDate,
+            halfDaySession,
+            reason,
+            totalDays
+        ];
+        console.log("requiredFields", requiredFields);
+        
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+        if (!employeeId) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Employee id is required.",
+            });
+        }
+        const dataObject = {
+            employeeId,
+            leaveTypeId,
+            startDate,
+            endDate,
+            isHalfDay,
+            halfDaySession,
+            reason,
+            totalDays,
+            appliedBy: employeeId
+        };
+        const result = await leaveCategoryService.applyLeave(clientId, dataObject);
+        return res.status(statusCode.OK).send({
+            message: "Leave applied successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

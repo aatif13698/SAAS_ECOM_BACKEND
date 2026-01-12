@@ -9,6 +9,7 @@ const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const leaveBalanceSchema = require("../../client/model/leaveBalance");
+const leaveRequestsSchema = require("../../client/model/leaveRequests");
 
 
 const create = async (clientId, data) => {
@@ -156,6 +157,66 @@ const allLeaveBalance = async (clientId, filters = {}) => {
     }
 };
 
+const allLeaveHistory = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LeaveCategory = clientConnection.model('leaveCategory', leaveCategorySchema);
+        const LeaveBalance = clientConnection.model('leaveBalance', leaveBalanceSchema);
+        const LeaveRequest = clientConnection.model('leaveRequests', leaveRequestsSchema);
+        const [leaveHistory] = await Promise.all([
+            LeaveRequest.find(filters)
+                .populate({
+                    path: "leaveTypeId",
+                    model: LeaveCategory,
+                })
+        ]);
+        return { leaveHistory };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
+
+const applyLeave = async (clientId, data) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LeaveRequest = clientConnection.model('leaveRequests', leaveRequestsSchema);
+        const LeaveBalance = clientConnection.model('leaveBalance', leaveBalanceSchema);
+        const leaveBalance = await LeaveBalance.findOne({ employeeId: data.employeeId });
+        if (!leaveBalance) {
+            throw new CustomError(statusCode.NotFound, "Leave balance not found.");
+        }
+        const filteredCategory = leaveBalance.leaveCategories.find((item) => {
+            if (item.id == data.leaveTypeId) {
+                return item
+            }
+        });
+        if (!filteredCategory) {
+            throw new CustomError(statusCode.NotFound, "Leave category not found.");
+        }
+        if (Number(filteredCategory.allocated) - Number(filteredCategory.taken) == 0) {
+            throw new CustomError(statusCode.NotFound, "Leave balance is zero in this category.");
+        };
+        const newLeaveCategories = leaveBalance.leaveCategories.map((cat) => {
+            if (cat.id == data.leaveTypeId) {
+                return {
+                    ...cat,
+                    taken: Number(cat.taken) + Number(data.totalDays)
+                }
+            } else {
+                return cat
+            }
+        });
+        const request = await LeaveRequest.create(data);
+        leaveBalance.leaveCategories = newLeaveCategories;
+        await leaveBalance.save()
+        return request;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
+    }
+};
+
 
 module.exports = {
     create,
@@ -164,5 +225,7 @@ module.exports = {
     list,
     all,
     allLeaveBalance,
+    allLeaveHistory,
     activeInactive,
+    applyLeave,
 }; 

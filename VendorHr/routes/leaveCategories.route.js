@@ -21,7 +21,11 @@ router.get('/all/leave/category', entityAuth.authorizeEntity("Administration", "
 
 router.post("/activeInactive/leave/category", entityAuth.authorizeEntity("Administration", "Employee", "create"), leaveCategoryController.activeinactive); 
 
-router.get('/all/leave/balance', leaveCategoryController.allLeaveBalance); 
+router.get('/all/leave/balance', leaveCategoryController.allLeaveBalance);
+
+router.get('/all/leave/history', leaveCategoryController.allLeaveHistory); 
+
+router.post('/apply/leave', leaveCategoryController.applyLeave); 
 
 
 
