@@ -476,3 +476,51 @@ exports.applyLeave = async (req, res, next) => {
     }
 };
 
+exports.listLeaveRequests = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                // isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                // isBuLevel: true,
+                isWarehouseLevel: levelId
+            }
+        }
+
+        console.log("filters", filters);
+
+        const result = await leaveCategoryService.listLeaveRequests(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: "Leave requests found successfully.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

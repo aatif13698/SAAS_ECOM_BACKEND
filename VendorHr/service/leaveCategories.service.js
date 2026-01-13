@@ -10,6 +10,7 @@ const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const leaveBalanceSchema = require("../../client/model/leaveBalance");
 const leaveRequestsSchema = require("../../client/model/leaveRequests");
+const clinetUserSchema = require("../../client/model/user");
 
 
 const create = async (clientId, data) => {
@@ -183,7 +184,15 @@ const applyLeave = async (clientId, data) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const LeaveRequest = clientConnection.model('leaveRequests', leaveRequestsSchema);
         const LeaveBalance = clientConnection.model('leaveBalance', leaveBalanceSchema);
+        const Employee = clientConnection.model('clientUsers', clinetUserSchema);
+
+        const employee = await Employee.findById(data.employeeId);
+        if (!employee) {
+            throw new CustomError(statusCode.NotFound, "Employee not found.");
+        }
+
         const leaveBalance = await LeaveBalance.findOne({ employeeId: data.employeeId });
+
         if (!leaveBalance) {
             throw new CustomError(statusCode.NotFound, "Leave balance not found.");
         }
@@ -208,14 +217,77 @@ const applyLeave = async (clientId, data) => {
                 return cat
             }
         });
-        const request = await LeaveRequest.create(data);
+        const newDataObject = {
+            ...data,
+            businessUnit: employee.businessUnit,
+            branch: employee.branch,
+            warehouse: employee.warehouse,
+
+            isVendorLevel: employee.isVendorLevel,
+            isBuLevel: employee.isBuLevel,
+            isBranchLevel: employee.isBranchLevel,
+            isWarehouseLevel: employee.isWarehouseLevel,
+        }
+        const request = await LeaveRequest.create(newDataObject);
         leaveBalance.leaveCategories = newLeaveCategories;
-        await leaveBalance.save()
+        await leaveBalance.save();
         return request;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
 };
+
+
+
+const listLeaveRequests = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        console.log("filters", filters);
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const LeaveRequest = clientConnection.model('leaveRequests', leaveRequestsSchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+        const LeaveCategory = clientConnection.model('leaveCategory', leaveCategorySchema);
+
+        const { page, limit } = options;
+        const skip = (page - 1) * limit;
+        const [leaverequests, total] = await Promise.all([
+            LeaveRequest.find(filters).skip(skip)
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                })
+                .populate({
+                    path: "employeeId",
+                    model: User,
+                    select: "firstName lastName email"
+                })
+                .populate({
+                    path: "leaveTypeId",
+                    model: LeaveCategory,
+                })
+                .limit(limit).sort({ _id: -1 }),
+            LeaveRequest.countDocuments(filters),
+        ]);
+        return { count: total, leaverequests };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 
 
 module.exports = {
@@ -228,4 +300,5 @@ module.exports = {
     allLeaveHistory,
     activeInactive,
     applyLeave,
+    listLeaveRequests
 }; 
