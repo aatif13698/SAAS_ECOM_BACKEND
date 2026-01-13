@@ -28,5 +28,8 @@ router.get('/all/leave/history', leaveCategoryController.allLeaveHistory);
 router.post('/apply/leave', leaveCategoryController.applyLeave); 
 
 
+router.get('/leave/requests', leaveCategoryController.applyLeave)
+
+
 
 exports.router = router; 
