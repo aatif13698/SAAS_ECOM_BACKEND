@@ -11,6 +11,7 @@ const ledgerSchema = require("../../client/model/ledger");
 const voucherGroupSchema = require("../../client/model/voucherGroup");
 const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
+const productMainStockSchema = require("../../client/model/productMainStock");
 
 
 // const create = async (clientId, data, mainUser) => {
@@ -229,6 +230,109 @@ const create = async (clientId, data, mainUser) => {
     }
 };
 
+// const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+//         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+//         const purchaseInvoice = await PurchaseInvoice.findOne({ _id: purchaseInvoiceId, auditStatus: "pending" }).lean();
+//         if (!purchaseInvoice) {
+//             throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
+//         }
+
+//         if (purchaseInvoice.items.length == 0) {
+//             throw new CustomError(statusCode.BadRequest, "No item found in invoice");
+//         }
+
+//         const mainStockArray = [];
+//         purchaseInvoice.items.map((item) => {
+//             mainStockArray.push(item.itemName.productMainStock)
+//         });
+//         const itemStock = await MainStock.find({ _id: { $in: mainStockArray } }).lean();
+
+//         const mapedItems = purchaseInvoice.items.map((item) => {
+//             let oldItemStock = 0;
+//             for (let index = 0; index < itemStock.length; index++) {
+//                 const element = itemStock[index];
+//                 console.log("element._id", element);
+//                 console.log("item.itemName.productMainStock", item.itemName.productMainStock);
+//                 if(element._id == item.itemName.productMainStock ){
+//                     oldItemStock = element.totalStock
+//                 }
+//             }
+
+//             console.log("oldItemStock", oldItemStock);
+            
+//             return {
+//                 ...item,
+//                 oldItemStock: oldItemStock
+//             }
+//         });
+
+//         console.log("mapedItems", mapedItems);
+
+
+//         return purchaseInvoice;
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+//     }
+// };
+
+const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        const purchaseInvoice = await PurchaseInvoice.findOne({
+            _id: purchaseInvoiceId,
+            auditStatus: "pending"
+        }).lean();
+
+        if (!purchaseInvoice) {
+            throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
+        }
+
+        if (purchaseInvoice.items.length === 0) {
+            throw new CustomError(statusCode.BadRequest, "No item found in invoice");
+        }
+
+        // Get all main stock documents in one query
+        const mainStockIds = purchaseInvoice.items.map(item => item.itemName.productMainStock);
+        const itemStocks = await MainStock.find({ _id: { $in: mainStockIds } })
+            .select('totalStock')
+            .lean();
+
+        // Create lookup map for fast access (key: string id)
+        const stockMap = new Map(
+            itemStocks.map(stock => [stock._id.toString(), stock.totalStock])
+        );
+        console.log("stockMap", stockMap);
+        // Add oldItemStock to each item
+        const enrichedItems = purchaseInvoice.items.map(item => {
+            const mainStockIdStr = item.itemName.productMainStock.toString();
+            const oldItemStock = stockMap.get(mainStockIdStr) || 0;
+            return {
+                ...item,
+                oldItemStock
+            };
+        });
+        // Create the final enriched invoice object
+        const result = {
+            ...purchaseInvoice,
+            items: enrichedItems
+        };
+        return result;
+    } catch (error) {
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error getting audit purchase invoice: ${error.message}`
+        );
+    }
+};
+
+
 const update = async (clientId, purchaseInvoiceId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -342,6 +446,8 @@ const changeStatus = async (clientId, purchaseInvoiceId, data) => {
 
 module.exports = {
     create,
+    getAuditPurchaseInvoice,
+
     update,
     getById,
     list,

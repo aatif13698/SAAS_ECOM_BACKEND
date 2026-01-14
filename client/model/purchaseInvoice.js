@@ -42,7 +42,8 @@ const purchaseOrderItemSchema = new Schema({
     sgst: { type: Number, default: 0, min: 0 },
     igst: { type: Number, default: 0, min: 0 },
     tax: { type: Number, default: 0, min: 0 }, // Total tax
-    totalAmount: { type: Number, default: 0, min: 0 }
+    totalAmount: { type: Number, default: 0, min: 0 },
+    audited: { type: Boolean, default: false },
 }, { _id: true }); // Allow _id for individual items if needed for updates
 
 // Sub-schema for Bank Details
@@ -87,12 +88,15 @@ const purchaseInvoiceSchema = new Schema(
                 id: { type: ObjectId, ref: 'ledger', default: null },
                 paymentType: { type: String, default: null },                   // "Payment", "Settlement", "Credit"
                 linkedId: { type: String, default: null },
-                amount: {type: Number, required: true}
+                amount: { type: Number, required: true }
             }
         ],
         balance: { type: Number, default: 0, min: 0 },
 
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
+
+        auditStatus: { type: String, enum: ['completed','pending'], default: "pending" },
+
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes

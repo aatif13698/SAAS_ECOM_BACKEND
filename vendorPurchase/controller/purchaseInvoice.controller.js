@@ -149,6 +149,27 @@ exports.create = async (req, res, next) => {
     }
 };
 
+exports.getAuditPurchaseInvoice = async (req, res, next) => {
+    try {
+        const { clientId, purchaseOrderId } = req.params;
+        if (!clientId || !purchaseOrderId) {
+            return res.status(400).send({
+                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
+            });
+        }
+        const auditPurchaseInvoice = await purchaseInvoice.getAuditPurchaseInvoice(clientId, purchaseOrderId);
+        return res.status(200).send({
+            message: "Invoice found successfully.",
+            data: auditPurchaseInvoice,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
+
+
 // update   
 exports.update = async (req, res, next) => {
 
