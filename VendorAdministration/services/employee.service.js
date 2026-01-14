@@ -112,8 +112,24 @@ const getById = async (clientId, branchId) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const User = clientConnection.model('clientUsers', clinetUserSchema);
+        const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
+        const Shift = clientConnection.model('clientShift', clientShiftSchema);
+        const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
 
-        const user = await User.findById(branchId);
+
+        const user = await User.findById(branchId).populate({
+            path: "role",
+            model: clientRole,
+            select: "id _id name"
+        }).populate({
+            path: "workingDepartment",
+            model: WorkingDepartment,
+            select: "departmentName"
+        }).populate({
+            path: "shift",
+            model: Shift,
+            select: "shiftName"
+        });
         if (!user) {
             throw new CustomError(statusCode.NotFound, message.lblEmployeeNotFound);
         }
