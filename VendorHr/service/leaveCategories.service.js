@@ -289,6 +289,26 @@ const listLeaveRequests = async (clientId, filters = {}, options = { page: 1, li
 };
 
 
+const actionLeaveRequest = async (clientId, leaveRequestId, data) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const LeaveRequest = clientConnection.model('leaveRequests', leaveRequestsSchema);
+
+        const request = await LeaveRequest.findById(leaveRequestId);
+        if (!request) {
+            throw new CustomError(statusCode.NotFound, "Request not found.");
+        }
+        request.status = data.status;
+        request.approvedBy = data.approvedBy;
+        request.remark = data.remark;
+        await request.save();
+        return request;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
+    }
+};
+
+
 
 module.exports = {
     create,
@@ -300,5 +320,6 @@ module.exports = {
     allLeaveHistory,
     activeInactive,
     applyLeave,
-    listLeaveRequests
+    listLeaveRequests,
+    actionLeaveRequest
 }; 

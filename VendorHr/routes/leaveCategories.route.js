@@ -29,6 +29,8 @@ router.post('/apply/leave', leaveCategoryController.applyLeave);
 
 router.get('/leave/requests',entityAuth.authorizeEntity("Human resources", "Leave Requests", "create"), leaveCategoryController.listLeaveRequests);
 
+router.post('/action/on/leave/request', entityAuth.authorizeEntity("Human resources", "Leave Requests", "create"), leaveCategoryController.actionLeaveRequest)
+
 
 
 exports.router = router; 

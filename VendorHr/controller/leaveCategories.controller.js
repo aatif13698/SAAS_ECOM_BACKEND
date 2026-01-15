@@ -446,7 +446,7 @@ exports.applyLeave = async (req, res, next) => {
             totalDays
         ];
         console.log("requiredFields", requiredFields);
-        
+
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
@@ -524,3 +524,43 @@ exports.listLeaveRequests = async (req, res, next) => {
     }
 };
 
+
+exports.actionLeaveRequest = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            leaveRequestId, 
+            status,
+            remark,
+            approvedBy,
+        } = req.body;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const requiredFields = [
+            leaveRequestId,
+            status,
+            approvedBy
+        ];
+        console.log("requiredFields", requiredFields);
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+        const dataObject = {
+            status,
+            approvedBy,
+            remark
+        };
+        const result = await leaveCategoryService.actionLeaveRequest(clientId, leaveRequestId, dataObject);
+        return res.status(statusCode.OK).send({
+            success: true,
+            message: "Leave action taken successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
