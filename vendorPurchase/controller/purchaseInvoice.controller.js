@@ -168,6 +168,25 @@ exports.getAuditPurchaseInvoice = async (req, res, next) => {
 };
 
 
+exports.auditItem = async (req, res, next) => {
+    try {
+        const { clientId, purchaseInvoiceId, productMainStock } = req.body;
+        if (!clientId || !purchaseInvoiceId || !productMainStock) {
+            return res.status(400).send({
+                message: "Requird fields are missing.",
+            });
+        }
+        const purchaseOrder = await purchaseInvoice.auditItem(clientId, purchaseInvoiceId, productMainStock);
+
+        return res.status(200).send({
+            message: "Audit success.",
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
 
 
 // update   

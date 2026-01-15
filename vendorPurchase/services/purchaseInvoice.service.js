@@ -263,7 +263,7 @@ const create = async (clientId, data, mainUser) => {
 //             }
 
 //             console.log("oldItemStock", oldItemStock);
-            
+
 //             return {
 //                 ...item,
 //                 oldItemStock: oldItemStock
@@ -287,7 +287,7 @@ const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
 
         const purchaseInvoice = await PurchaseInvoice.findOne({
             _id: purchaseInvoiceId,
-            auditStatus: "pending"
+            // auditStatus: "pending"
         }).lean();
 
         if (!purchaseInvoice) {
@@ -328,6 +328,125 @@ const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
         throw new CustomError(
             error.statusCode || 500,
             `Error getting audit purchase invoice: ${error.message}`
+        );
+    }
+};
+
+
+// const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+//         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+//         const purchaseInvoice = await PurchaseInvoice.findById(purchaseInvoiceId).lean();
+//         if (!purchaseInvoice) {
+//             throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
+//         }
+//         const item = MainStock.findById(productMainStock).lean();
+//         if (!item) {
+//             throw new CustomError(statusCode.NotFound, "Stock not found.");
+//         }
+//         const filteredItem = purchaseInvoice.items.find((item) => item.itemName.productMainStock == productMainStock)
+//         item.totalStock += Number(filteredItem.quantity);
+//         await item.save();
+//         const enrichedItems = purchaseInvoice.items.map(item => {
+//             const mainStockIdStr = item.itemName.productMainStock.toString();
+//             if (mainStockIdStr == productMainStock) {
+//                 return {
+//                     ...item,
+//                     audited: true
+//                 }
+//             } else {
+//                 return {
+//                     ...item,
+//                 };
+//             }
+//         });
+//         purchaseInvoice.items = enrichedItems;
+//         await purchaseInvoice.save();
+//         return purchaseInvoice;
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+//     }
+// };
+
+const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        // 1. Fetch purchase invoice
+        const purchaseInvoice = await PurchaseInvoice.findById(purchaseInvoiceId);
+        if (!purchaseInvoice) {
+            throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
+        }
+
+        // 2. Find the matching stock document (use await!)
+        const stockItem = await MainStock.findById(productMainStock);
+        if (!stockItem) {
+            throw new CustomError(statusCode.NotFound, "Stock item not found");
+        }
+
+        // 3. Find the corresponding item in invoice
+        const invoiceItem = purchaseInvoice.items.find(
+            (item) => item.itemName.productMainStock.toString() === productMainStock.toString()
+        );
+
+        if (!invoiceItem) {
+            throw new CustomError(statusCode.BadRequest, "Item not found in this purchase invoice");
+        }
+
+        // 4. Update main stock (assuming quantity is positive - incoming stock)
+        stockItem.totalStock += Number(invoiceItem.quantity);
+        await stockItem.save();
+
+        console.log("stockItem", stockItem);
+        
+
+        // 5. Mark item as audited & prepare to check if all are done
+        let allAudited = true;
+
+        const enrichedItems = purchaseInvoice.items.map((item) => {
+            const mainStockIdStr = item.itemName.productMainStock.toString();
+
+            if (mainStockIdStr === productMainStock.toString()) {
+                return {
+                    ...item.toObject(),           // safer with subdocuments
+                    audited: true
+                };
+            }
+
+            // While we're here — check if every item is audited
+            if (!item.audited) {
+                allAudited = false;
+            }
+
+            return item;
+        });
+
+        // 6. Update items array
+        purchaseInvoice.items = enrichedItems;
+
+        // 7. Auto-update auditStatus when all items are audited
+        if (allAudited) {
+            purchaseInvoice.auditStatus = 'completed';
+        }
+
+        // 8. Save invoice with updated items + possible status change
+        await purchaseInvoice.save();
+
+        console.log("purchaseInvoice", purchaseInvoice);
+        
+
+        return purchaseInvoice;
+
+    } catch (error) {
+        console.error(error);
+        throw new CustomError(
+            error.statusCode || statusCode.InternalServerError,
+            `Audit failed: ${error.message}`
         );
     }
 };
@@ -447,6 +566,7 @@ const changeStatus = async (clientId, purchaseInvoiceId, data) => {
 module.exports = {
     create,
     getAuditPurchaseInvoice,
+    auditItem,
 
     update,
     getById,

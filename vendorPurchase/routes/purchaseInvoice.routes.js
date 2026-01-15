@@ -13,6 +13,10 @@ router.post('/create/purchaseInvoice', entityAuth.authorizeEntity("Administratio
 
 router.get('/get/audit/purchaseInvoice/:clientId/:purchaseOrderId', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.getAuditPurchaseInvoice);
 
+router.post('/audit/item/purchaseInvoice', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.auditItem);
+
+
+
 
 router.post('/issue/purchaseInvoice/mail', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseInvoiceController.issueMail);
 

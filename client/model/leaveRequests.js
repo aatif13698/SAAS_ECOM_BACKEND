@@ -54,7 +54,7 @@ const leaveRequestsSchema = new Schema(
         // Approval workflow 
         approvedBy: { type: Schema.Types.ObjectId, ref: 'clientUsers', default: null },
         approvedAt: { type: Date },
-        rejectionReason: { type: String },
+        remark: { type: String },
 
         // Optional: backup person or handover notes 
         handoverTo: { type: Schema.Types.ObjectId, ref: 'clientUsers', default: null },
