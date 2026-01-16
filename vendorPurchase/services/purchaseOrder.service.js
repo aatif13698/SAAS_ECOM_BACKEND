@@ -7,6 +7,8 @@ const clientAssetSchema = require("../../client/model/asset");
 const purchaseOrderSchema = require("../../client/model/purchaseOrder");
 const { model } = require("mongoose");
 const supplierSchema = require("../../client/model/supplier");
+const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
+const crypto = require('crypto');
 
 
 const create = async (clientId, data) => {
@@ -99,10 +101,50 @@ const changeStatus = async (clientId, purchaseOrderId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+
         const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
         if (!purchaseOrder) {
             throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
         }
+        if (data.status == "invoiced") {
+            const Supplier = clientConnection.model("supplier", supplierSchema);
+            const supplier = await Supplier.findById(purchaseOrder.supplier);
+            let supplierLedger = null;
+            if (supplier) {
+                throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
+            }
+            if (!supplier.ledgerLinkedId) {
+                throw new CustomError(statusCode.NotFound, "Supplier ledger id not found.");
+            }
+            supplierLedger = supplier.ledgerLinkedId;
+            const invoiceData = {
+                businessUnit: purchaseOrder.businessUnit,
+                branch: purchaseOrder.branch,
+                warehouse: purchaseOrder.warehouse,
+
+                isVendorLevel: purchaseOrder.isVendorLevel,
+                isBuLevel: purchaseOrder.isBuLevel,
+                isBranchLevel: purchaseOrder.isBranchLevel,
+                isWarehouseLevel: purchaseOrder.isWarehouseLevel,
+
+                supplier: purchaseOrder.supplier, // Assumed ref to Supplier model
+                supplierLedger: supplierLedger,
+                shippingAddress: purchaseOrder.shippingAddress,
+                piNumber: crypto.randomInt(100000, 1000000).toString(), // Unique for business integrity
+                items: purchaseOrder.items,
+                notes: purchaseOrder.notes,
+                isInterState: purchaseOrder.isInterState, // Determines IGST vs CGST/SGST
+                roundOff: purchaseOrder.roundOff,
+                status: "full_due",
+                createdBy: purchaseOrder.createdBy, 
+            }
+
+
+
+        }
+
+
         Object.assign(purchaseOrder, data);
         return await purchaseOrder.save();
     } catch (error) {

@@ -42,7 +42,8 @@ const purchaseOrderItemSchema = new Schema({
     sgst: { type: Number, default: 0, min: 0 },
     igst: { type: Number, default: 0, min: 0 },
     tax: { type: Number, default: 0, min: 0 }, // Total tax
-    totalAmount: { type: Number, default: 0, min: 0 }
+    totalAmount: { type: Number, default: 0, min: 0 },
+    audited: { type: Boolean, default: false },
 }, { _id: true }); // Allow _id for individual items if needed for updates
 
 // Sub-schema for Bank Details
