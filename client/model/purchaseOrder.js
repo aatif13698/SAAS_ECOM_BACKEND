@@ -83,6 +83,7 @@ const purchaseOrderSchema = new Schema(
         // paymentMethod: { type: String, enum: ['cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
         paidAmount: { type: Number, default: 0, min: 0 },
         balance: { type: Number, default: 0, min: 0 },
+        grandTotal: { type: Number, default: 0, min: 0 },
 
         status: { type: String, enum: ['draft', 'issued', 'invoiced', 'partially_invoiced', 'pending_approval', 'approved', 'closed', 'canceled'], default: "draft" },
         // Audit fields

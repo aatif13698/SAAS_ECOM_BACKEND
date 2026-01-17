@@ -109,9 +109,11 @@ const changeStatus = async (clientId, purchaseOrderId, data) => {
         }
         if (data.status == "invoiced") {
             const Supplier = clientConnection.model("supplier", supplierSchema);
-            const supplier = await Supplier.findById(purchaseOrder.supplier);
+            console.log("purchaseOrder.supplier", purchaseOrder.supplier);
+            
+            const supplier = await Supplier.findById(purchaseOrder.supplier.toString());
             let supplierLedger = null;
-            if (supplier) {
+            if (!supplier) {
                 throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
             }
             if (!supplier.ledgerLinkedId) {
@@ -137,11 +139,11 @@ const changeStatus = async (clientId, purchaseOrderId, data) => {
                 isInterState: purchaseOrder.isInterState, // Determines IGST vs CGST/SGST
                 roundOff: purchaseOrder.roundOff,
                 status: "full_due",
-                createdBy: purchaseOrder.createdBy, 
+                balance: purchaseOrder.grandTotal,
+                createdBy: purchaseOrder.createdBy,
             }
 
-
-
+            await PurchaseInvoice.create(invoiceData)
         }
 
 

@@ -35,9 +35,8 @@ exports.create = async (req, res, next) => {
             roundOff,
             paymentMethod,
             paidAmount,
-            balance
-
-
+            balance,
+            grandTotal
 
         } = req.body;
 
@@ -55,6 +54,7 @@ exports.create = async (req, res, next) => {
             poNumber,
             poDate,
             items,
+            grandTotal,
             // notes,
             // bankDetails,
             // paymentMethod,
@@ -90,6 +90,7 @@ exports.create = async (req, res, next) => {
             paymentMethod,
             paidAmount,
             balance,
+            grandTotal,
             createdBy: mainUser._id,
         };
 
