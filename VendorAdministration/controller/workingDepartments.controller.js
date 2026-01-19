@@ -339,8 +339,8 @@ exports.allDepartment = async (req, res, next) => {
         } else if (level == "warehouse" && levelId) { 
             filters = { 
                 ...filters, 
-                isBuLevel: true, 
-                isWarehouseLevel: levelId 
+                isWarehouseLevel: true, 
+                warehouse: levelId 
             } 
         } 
         const result = await workingDepartmentService.all(clientId, filters); 

@@ -12,6 +12,9 @@ const voucherGroupSchema = require("../../client/model/voucherGroup");
 const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
 const productMainStockSchema = require("../../client/model/productMainStock");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
 
 
 // const create = async (clientId, data, mainUser) => {
@@ -403,7 +406,7 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
         await stockItem.save();
 
         console.log("stockItem", stockItem);
-        
+
 
         // 5. Mark item as audited & prepare to check if all are done
         let allAudited = true;
@@ -438,7 +441,7 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
         await purchaseInvoice.save();
 
         console.log("purchaseInvoice", purchaseInvoice);
-        
+
 
         return purchaseInvoice;
 
@@ -495,6 +498,9 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
@@ -509,6 +515,21 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     path: "supplier",
                     model: Supplier,
                     select: "-items"
+                })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
                 }),
             PurchaseInvoice.countDocuments(filters),
         ]);
