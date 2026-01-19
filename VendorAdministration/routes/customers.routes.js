@@ -62,7 +62,7 @@ router.get('/listCustomer', entityAuth.authorizeEntity("Administration", "Custom
 
 router.get('/get/all/Customer', entityAuth.authorizeEntity("Administration", "Customer", "view"), customerContrller.getAllCustomers);
 
-router.get('/get/all/active/Customer', entityAuth.authorizeEntity("Administration", "Customer", "view"), customerContrller.getAllCustomers);
+router.get('/get/all/active/Customer', entityAuth.authorizeEntity("Administration", "Customer", "view"), customerContrller.getAllActiveCustomers);
 
 router.post("/activeInactiveCustomer", entityAuth.authorizeEntity("Administration", "Customer", "create"), customerContrller.activeinactive);
 
