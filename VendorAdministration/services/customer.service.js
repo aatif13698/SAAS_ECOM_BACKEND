@@ -108,6 +108,20 @@ const getAllCustomer = async (clientId, filters = {}) => {
     }
 };
 
+const getAllActiveCustomer = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
+        const [customers, total] = await Promise.all([
+            User.find(filters).sort({ _id: -1 }),
+            User.countDocuments(filters),
+        ]);
+        return { count: total, customers };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting customer: ${error.message}`);
+    }
+};
+
 const activeInactive = async (clientId, customerId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -179,6 +193,7 @@ const getBranchByBusiness = async (clientId, businessUnitId) => {
 module.exports = {
     create,
     getAllCustomer,
+    getAllActiveCustomer,
     update,
     getById,
     list,

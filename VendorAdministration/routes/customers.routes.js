@@ -62,6 +62,8 @@ router.get('/listCustomer', entityAuth.authorizeEntity("Administration", "Custom
 
 router.get('/get/all/Customer', entityAuth.authorizeEntity("Administration", "Customer", "view"), customerContrller.getAllCustomers);
 
+router.get('/get/all/active/Customer', entityAuth.authorizeEntity("Administration", "Customer", "view"), customerContrller.getAllCustomers);
+
 router.post("/activeInactiveCustomer", entityAuth.authorizeEntity("Administration", "Customer", "create"), customerContrller.activeinactive);
 
 router.post("/softDeleteEmployee", entityAuth.authorizeEntity("Administration", "Branch", "create"), customerContrller.softDelete);
