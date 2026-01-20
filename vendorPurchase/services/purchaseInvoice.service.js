@@ -15,6 +15,7 @@ const productMainStockSchema = require("../../client/model/productMainStock");
 const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
+const stockLedgerSchema = require("../../client/model/stockLedger");
 
 
 // const create = async (clientId, data, mainUser) => {
@@ -373,12 +374,13 @@ const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
 //     }
 // };
 
-const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
+const auditItem = async (clientId, purchaseInvoiceId, productMainStock, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
 
         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const StockLedger = clientConnection.model('stockLedger', stockLedgerSchema)
 
         // 1. Fetch purchase invoice
         const purchaseInvoice = await PurchaseInvoice.findById(purchaseInvoiceId);
@@ -401,11 +403,68 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock) => {
             throw new CustomError(statusCode.BadRequest, "Item not found in this purchase invoice");
         }
 
-        // 4. Update main stock (assuming quantity is positive - incoming stock)
-        stockItem.totalStock += Number(invoiceItem.quantity);
-        await stockItem.save();
+        // // 4. Update main stock (assuming quantity is positive - incoming stock)
+        // stockItem.totalStock += Number(invoiceItem.quantity);
+        // await stockItem.save();
 
         console.log("stockItem", stockItem);
+
+        // 1. Find the MOST RECENT previous ledger entry for this exact stock context
+
+        const mainItem = purchaseInvoice.items.find((item) => {
+            const mainStockIdStr = item.itemName.productMainStock.toString();
+            if (mainStockIdStr === productMainStock.toString()) {
+                return item
+            }
+        });
+
+
+
+        const lastLedger = await StockLedger.findOne({
+            businessUnit: purchaseInvoice.businessUnit,
+            branch: purchaseInvoice.branch,
+            warehouse: purchaseInvoice.warehouse,
+            isVendorLevel: purchaseInvoice.isVendorLevel,
+            isBuLevel: purchaseInvoice.isBuLevel,
+            isBranchLevel: purchaseInvoice.isBranchLevel,
+            isWarehouseLevel: purchaseInvoice.isWarehouseLevel,
+        })
+            .sort({ date: -1, createdAt: -1 })   // most recent first
+            .select('totalStock')
+            .lean();
+
+        const previousBalance = lastLedger ? lastLedger.totalStock : 0;
+
+        // 2. Calculate new balance
+        let quantityChange = mainItem.quantity - 0;
+        const newTotalStock = previousBalance + quantityChange;
+
+        if (newTotalStock < 0) {
+            throw new Error("Stock cannot go negative");
+        }
+
+        // 3. Create the new ledger entry with computed totalStock
+        const newEntry = new StockLedger({
+            businessUnit: purchaseInvoice.businessUnit,
+            branch: purchaseInvoice.branch,
+            warehouse: purchaseInvoice.warehouse,
+            isVendorLevel: purchaseInvoice.isVendorLevel,
+            isBuLevel: purchaseInvoice.isBuLevel,
+            isBranchLevel: purchaseInvoice.isBranchLevel,
+            isWarehouseLevel: purchaseInvoice.isWarehouseLevel,
+
+            productMainStock: productMainStock,
+            pricePerUnit: Number(mainItem.totalAmount/mainItem.quantity).toFixed(2) ,
+            in: mainItem.quantity,
+            purchaseInvoiceId: purchaseInvoice._id,
+            totalStock: newTotalStock,
+            date: purchaseInvoice.piDate || new Date(),
+
+            createdBy: mainUser._id
+
+        });
+
+        await newEntry.save();
 
 
         // 5. Mark item as audited & prepare to check if all are done
