@@ -27,6 +27,8 @@ const stockLedgerSchema = new mongoose.Schema({
 
     date: { type: Date },
 
+    type: { type: String, enum: ['opening', 'purchase', 'purchase_return', 'sale', 'sale_return'], required: true }, // Enum for validation
+
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "clientUsers", index: true },
 }, { timestamps: true });
 

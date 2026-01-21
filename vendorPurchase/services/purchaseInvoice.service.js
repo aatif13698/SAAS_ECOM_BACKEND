@@ -404,8 +404,8 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock, mainUser
         }
 
         // // 4. Update main stock (assuming quantity is positive - incoming stock)
-        // stockItem.totalStock += Number(invoiceItem.quantity);
-        // await stockItem.save();
+        stockItem.totalStock += Number(invoiceItem.quantity);
+        await stockItem.save();
 
         console.log("stockItem", stockItem);
 
@@ -417,8 +417,6 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock, mainUser
                 return item
             }
         });
-
-
 
         const lastLedger = await StockLedger.findOne({
             businessUnit: purchaseInvoice.businessUnit,
@@ -454,11 +452,12 @@ const auditItem = async (clientId, purchaseInvoiceId, productMainStock, mainUser
             isWarehouseLevel: purchaseInvoice.isWarehouseLevel,
 
             productMainStock: productMainStock,
-            pricePerUnit: Number(mainItem.totalAmount/mainItem.quantity).toFixed(2) ,
+            pricePerUnit: Number(mainItem.totalAmount / mainItem.quantity).toFixed(2),
             in: mainItem.quantity,
             purchaseInvoiceId: purchaseInvoice._id,
             totalStock: newTotalStock,
             date: purchaseInvoice.piDate || new Date(),
+            type: "purchase",
 
             createdBy: mainUser._id
 

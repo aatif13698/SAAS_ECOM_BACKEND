@@ -66,7 +66,7 @@ exports.create = async (req, res, next) => {
             warehouse,
             variant,
             varianValue,
-            totalStock,
+            openingStock,
             onlineStock,
             offlineStock,
             lowStockThreshold,
@@ -90,7 +90,6 @@ exports.create = async (req, res, next) => {
             warehouse,
             variant,
             varianValue,
-            totalStock,
             onlineStock,
             offlineStock,
             lowStockThreshold,
@@ -112,7 +111,7 @@ exports.create = async (req, res, next) => {
             warehouse,
             variant,
             varianValue,
-            totalStock,
+            openingStock,
             onlineStock,
             offlineStock,
             lowStockThreshold,
@@ -142,7 +141,7 @@ exports.create = async (req, res, next) => {
         }
 
         // Create 
-        const created = await stockService.create(clientId, dataObject);
+        const created = await stockService.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblStockCreatedSuccess,
             data: created,
@@ -163,7 +162,7 @@ exports.update = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            totalStock,
+            openingStock,
             // priceOptions,
             onlineStock,
             offlineStock,
@@ -175,6 +174,10 @@ exports.update = async (req, res, next) => {
             paymentOPtions
 
         } = req.body;
+
+
+        console.log("req.body", req.body);
+        
 
 
 
@@ -190,7 +193,6 @@ exports.update = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            totalStock,
             // priceOptions,
             onlineStock,
             offlineStock,
@@ -211,8 +213,9 @@ exports.update = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-            totalStock,
             // priceOptions,
+            openingStock,
+
             onlineStock,
             offlineStock,
             lowStockThreshold,

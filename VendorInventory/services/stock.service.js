@@ -12,13 +12,15 @@ const productVariantSchema = require("../../client/model/productVariant");
 const productRateSchema = require("../../client/model/productRate");
 const { default: mongoose } = require("mongoose");
 const supplierSchema = require("../../client/model/supplier");
+const stockLedgerSchema = require("../../client/model/stockLedger");
 
 
-const create = async (clientId, data) => {
+const create = async (clientId, data, mainUser) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Stock = clientConnection.model('productStock', productStockSchema);
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const StockLedger = clientConnection.model('stockLedger', stockLedgerSchema)
 
         console.log("dataobject ", data);
 
@@ -54,10 +56,11 @@ const create = async (clientId, data) => {
             varianValue: JSON.parse(data.varianValue),
             specification: JSON.parse(data.specification),
             paymentOPtions: JSON.parse(data.paymentOPtions),
-            totalStock: data?.totalStock,
+            openingStock: data?.openingStock,
             images: data?.images,
             defaultImage: data?.images[0],
             onlineStock: data?.onlineStock,
+            totalStock: data?.onlineStock,
             offlineStock: data?.offlineStock,
             lowStockThreshold: data?.lowStockThreshold,
             restockQuantity: data?.restockQuantity,
@@ -65,12 +68,54 @@ const create = async (clientId, data) => {
             isBulkType: false,
             name: data?.name,
             description: data?.description
-        })
+        });
         const oldStock = newStock.normalSaleStock;
         const newStockArray = [...oldStock, mainStock._id]
         newStock.normalSaleStock = newStockArray;
 
         await newStock.save();
+
+        if (data?.openingStock && data?.openingStock > 0) {
+
+            const lastLedger = await StockLedger.findOne({
+                businessUnit: data.businessUnit,
+                branch: data.branch,
+                warehouse: data.warehouse,
+                isVendorLevel: false,
+                isBuLevel: false,
+                isBranchLevel: false,
+                isWarehouseLevel: true,
+            })
+                .sort({ date: -1, createdAt: -1 })   // most recent first
+                .select('totalStock')
+                .lean();
+
+            const previousBalance = lastLedger ? lastLedger.totalStock : 0;
+            let quantityChange = data?.openingStock - 0;
+            const newTotalStock = previousBalance + quantityChange;
+
+            if (newTotalStock < 0) {
+                throw new Error("Stock cannot go negative");
+            }
+            const newEntry = new StockLedger({
+                businessUnit: data.businessUnit,
+                branch: data.branch,
+                warehouse: data.warehouse,
+                isVendorLevel: false,
+                isBuLevel: false,
+                isBranchLevel: false,
+                isWarehouseLevel: true,
+
+                productMainStock: mainStock._id,
+                in: data?.openingStock,
+                totalStock: newTotalStock,
+                date:  new Date(),
+                type: "opening",
+                createdBy: mainUser._id
+            });
+
+            await newEntry.save();
+        }
 
         const stock = await Stock.findOne({ product: data.product }).populate({
             path: 'normalSaleStock',
@@ -101,7 +146,7 @@ const update = async (clientId, stockId, updateData) => {
         mainStock.businessUnit = updateData.businessUnit;
         mainStock.branch = updateData.branch;
         mainStock.warehouse = updateData.warehouse;
-        mainStock.totalStock = updateData.totalStock;
+        mainStock.openingStock = updateData.openingStock;
         // mainStock.priceOptions = JSON.parse(updateData.priceOptions);
         mainStock.specification = JSON.parse(updateData.specification);
         mainStock.paymentOPtions = JSON.parse(updateData.paymentOPtions);
@@ -617,14 +662,14 @@ const getListStockOfSupplier = async (
 
         const stocks = await Stock.aggregate(pipeline);
 
-       
+
         const filteredStock = stocks.map((item) => {
             const mainStockArrayBefore = item?.normalSaleStock;
             const normalSaleStockAfterFilter = mainStockArrayBefore.filter((stock) => {
                 const stockId = stock._id.toString();
                 for (let index = 0; index < productMainStockIds.length; index++) {
                     const id = productMainStockIds[index].toString();
-                    if (id == stockId ) {
+                    if (id == stockId) {
                         return stock
                     }
                 }

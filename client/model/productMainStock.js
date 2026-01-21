@@ -16,7 +16,6 @@ const productMainStockSchema = new Schema(
 
         name: { type: String, default: null },
         description: { type: String, default: null },
-        totalStock: { type: Number, required: true },
         priceOptions: {},
         specification: [{
             title: { type: String },
@@ -38,6 +37,8 @@ const productMainStockSchema = new Schema(
 
         images: [{ type: String }],
         defaultImage: { type: String, default: null },
+        openingStock: { type: Number, default: 0 },
+        totalStock: { type: Number, default: 0 },
         onlineStock: { type: Number, required: true },
         offlineStock: { type: Number, required: true },
         lowStockThreshold: { type: Number, default: 10 },
