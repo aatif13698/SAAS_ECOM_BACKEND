@@ -81,13 +81,16 @@ const update = async (clientId, shiftId, updateData, newShift) => {
         if (!changeShift) {
             throw new CustomError(statusCode.NotFound, "Shift request not found");
         }
-        const emp = await User.findOne({ _id: changeShift.createdBy});
+        const emp = await User.findOne({ _id: changeShift.createdBy });
 
-        if(!emp){
+        if (!emp) {
             return new CustomError(statusCode.NotFound, "Employee not found");
         }
-        emp.shift = newShift;
-        await emp.save();
+        if (updateData.status == "approved") {
+            emp.shift = newShift;
+            await emp.save();
+        }
+        
         Object.assign(changeShift, updateData);
         await changeShift.save();
         return changeShift

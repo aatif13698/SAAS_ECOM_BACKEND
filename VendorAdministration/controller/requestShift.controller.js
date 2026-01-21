@@ -91,10 +91,13 @@ exports.action = async (req, res, next) => {
         const dataObject = {
             status,
             actionRemark,
-            newJoinDate,
+            newJoinDate: status == "approved" ? newJoinDate : null,
             actionBy: mainUser._id,
-            newShift: status == "approved" ? newShift : ""
+            newShift: status == "approved" ? newShift : null
         };
+
+        console.log("dataObject", dataObject);
+        
 
         // update  
         const updated = await requestShiftService.update(clientId, shiftChangeId, dataObject, newShift);
