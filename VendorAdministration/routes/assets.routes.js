@@ -12,21 +12,21 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 // # create, update, view, list, activate/inactive woring department
 
-router.post('/create/asset', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.create);
+router.post('/create/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.create);
 
-router.put('/update/asset', entityAuth.authorizeEntity("Administration", "Employee", "update"), assetController.update);
+router.put('/update/asset', entityAuth.authorizeEntity("Human resources", "Employee", "update"), assetController.update);
 
-router.get('/get/:clientId/:asset', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.getParticular);
+router.get('/get/:clientId/:asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.getParticular);
 
-router.get('/list/asset', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.list);
+router.get('/list/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.list);
 
-router.post("/activeInactive/asset", entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.activeinactive);
+router.post("/activeInactive/asset", entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.activeinactive);
 
-router.post('/assign/asset', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.assign );
+router.post('/assign/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.assign );
 
-// router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.unAssign );
+// router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.unAssign );
 
-router.post('/create/asset/request', entityAuth.authorizeEntity("Administration", "Employee", "create"), assetController.createRequest );
+router.post('/create/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.createRequest );
 
 
 // # create, update, view, list, activate/inactive  woring department
