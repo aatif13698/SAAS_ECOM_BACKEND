@@ -690,6 +690,248 @@ const getListStockOfSupplier = async (
         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
     }
 };
+
+const getListStockForCustomer = async (
+    clientId,
+    keyword = '',
+    categoryId = null,
+    subCategoryId = null,
+    level = 'vendor',
+    levelId = '',
+    supplierId = null,
+    options = { page: 1, limit: 10 }
+) => {
+    try {
+        const { page, limit } = options;
+
+        // Ensure they are numbers
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            throw new CustomError(400, "Invalid pagination values");
+        }
+
+        if (!supplierId) {
+            throw new CustomError(400, "Supplier ID is required");
+        }
+
+        const skip = (pageNum - 1) * limitNum;
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const ProductBlueprint = clientConnection.model('productBlueprint', productBlueprintSchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+        const ProductRate = clientConnection.model('productRate', productRateSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+
+        // const supplier = await Supplier.findById(supplierId);
+
+        // if (!supplier) {
+        //     throw new CustomError(404, "Supplier not found.");
+        // }
+
+        // if (supplier.items.length === 0) {
+        //     return {
+        //         stocks: [],
+        //         total: 0,
+        //         currentPage: pageNum,
+        //         totalPages: 0,
+        //         perPage: limitNum
+        //     };
+        // }
+
+        // const productStockIds = supplier.items.map(item => item.productStock);
+        // const productMainStockIds = supplier.items.map(item => item.productMainStock);
+
+
+
+        // Build level filter
+        let match = {
+            deletedAt: null,
+            // _id: { $in: productStockIds }
+        };
+
+        if (level === 'business' && levelId) {
+            match.businessUnit = new mongoose.Types.ObjectId(levelId);
+        } else if (level === 'branch' && levelId) {
+            match.branch = new mongoose.Types.ObjectId(levelId);
+        } else if (level === 'warehouse' && levelId) {
+            match.warehouse = new mongoose.Types.ObjectId(levelId);
+        }
+
+        // Base pipeline
+        let pipeline = [
+            { $match: match },
+            {
+                $lookup: {
+                    from: 'productblueprints',
+                    localField: 'product',
+                    foreignField: '_id',
+                    as: 'product'
+                }
+            },
+            { $unwind: '$product' }
+        ];
+
+        // Add category filter if provided
+        if (categoryId && categoryId !== "null") {
+            // Optional: Validate category existence
+            const categoryExists = await Category.findById(categoryId);
+            if (!categoryExists) {
+                throw new CustomError(404, "Category not found.");
+            }
+            pipeline.push({
+                $match: { 'product.categoryId': new mongoose.Types.ObjectId(categoryId) }
+            });
+        }
+
+        // Add sub-category filter if provided
+        if (subCategoryId && subCategoryId !== "null") {
+            // Optional: Validate sub-category existence
+            const subCategoryExists = await SubCategory.findById(subCategoryId);
+            if (!subCategoryExists) {
+                throw new CustomError(404, "Sub-category not found.");
+            }
+            pipeline.push({
+                $match: { 'product.subCategoryId': new mongoose.Types.ObjectId(subCategoryId) }
+            });
+        }
+
+        // Add keyword search if provided (assuming search on product name)
+        if (keyword) {
+            pipeline.push({
+                $match: { 'product.name': { $regex: new RegExp(keyword, 'i') } }
+            });
+        }
+
+        // Sort by _id descending (matching the previous code)
+        pipeline.push({ $sort: { _id: -1 } });
+
+        // Get total count (clone pipeline without skip/limit)
+        const countPipeline = [...pipeline, { $count: 'total' }];
+        const totalResult = await Stock.aggregate(countPipeline);
+        const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+        // Add pagination
+        pipeline.push(
+            { $skip: skip },
+            { $limit: limitNum }
+        );
+
+        // Add lookups for category and sub-category after pagination
+        pipeline.push(
+            {
+                $lookup: {
+                    from: Category.collection.name,
+                    localField: 'product.categoryId',
+                    foreignField: '_id',
+                    as: 'product.categoryId'
+                }
+            },
+            { $unwind: { path: '$product.categoryId', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: SubCategory.collection.name,
+                    localField: 'product.subCategoryId',
+                    foreignField: '_id',
+                    as: 'product.subCategoryId'
+                }
+            },
+            { $unwind: { path: '$product.subCategoryId', preserveNullAndEmptyArrays: true } }
+        );
+
+        // Define the pipeline for main stock lookups
+        const mainStockPipeline = [
+            {
+                $project: {
+                    paymentOptions: 0, product: 0, businessUnit: 0, branch: 0,
+                    warehouse: 0, totalStock: 0, specification: 0, onlineStock: 0,
+                    offlineStock: 0, lowStockThreshold: 0, restockQuantity: 0,
+                    lastRestockedAt: 0, isBulkType: 0, isActive: 0,
+                    averageRating: 0, reviewCount: 0, deletedAt: 0,
+                    updatedAt: 0, createdAt: 0
+                }
+            },
+            {
+                $lookup: {
+                    from: ProductVariant.collection.name,
+                    localField: 'variant',
+                    foreignField: '_id',
+                    as: 'variant'
+                }
+            },
+            { $unwind: '$variant' },
+            {
+                $lookup: {
+                    from: ProductRate.collection.name,
+                    localField: 'variant.priceId',
+                    foreignField: '_id',
+                    as: 'variant.priceId',
+                    pipeline: [{ $project: { price: 1 } }]
+                }
+            },
+            { $unwind: { path: '$variant.priceId', preserveNullAndEmptyArrays: true } }
+        ];
+
+        // Lookup normalSaleStock and bulkSaleStock with pipeline
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'productmainstocks',
+                    localField: 'normalSaleStock',
+                    foreignField: '_id',
+                    as: 'normalSaleStock',
+                    pipeline: mainStockPipeline
+                }
+            },
+            {
+                $lookup: {
+                    from: 'productmainstocks',
+                    localField: 'bulkSaleStock',
+                    foreignField: '_id',
+                    as: 'bulkSaleStock',
+                    pipeline: mainStockPipeline
+                }
+            }
+        );
+
+        const stocks = await Stock.aggregate(pipeline);
+
+
+        const filteredStock = stocks.map((item) => {
+            const mainStockArrayBefore = item?.normalSaleStock;
+            // const normalSaleStockAfterFilter = mainStockArrayBefore.filter((stock) => {
+            //     const stockId = stock._id.toString();
+            //     for (let index = 0; index < productMainStockIds.length; index++) {
+            //         const id = productMainStockIds[index].toString();
+            //         if (id == stockId) {
+            //             return stock
+            //         }
+            //     }
+            // });
+            return {
+                ...item,
+                normalSaleStock: mainStockArrayBefore
+            }
+        });
+        return {
+            stocks: filteredStock,
+            total,
+            currentPage: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+            perPage: limitNum
+        };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
+
 const getAllStock = async (clientId, filters = {}) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -759,5 +1001,6 @@ module.exports = {
 
     getAllStock,
     getListStock,
-    getListStockOfSupplier
+    getListStockOfSupplier,
+    getListStockForCustomer
 };
