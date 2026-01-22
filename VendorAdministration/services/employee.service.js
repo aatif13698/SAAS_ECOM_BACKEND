@@ -12,6 +12,7 @@ const clientWorkingDepartmentSchema = require("../../client/model/workingDepartm
 const { path } = require("pdfkit");
 const leaveBalanceSchema = require("../../client/model/leaveBalance");
 const leaveAllotmentSchema = require("../../client/model/leaveAllotment");
+const clientAssetSchema = require("../../client/model/asset");
 
 
 const create = async (clientId, data, mainUser) => {
@@ -115,6 +116,7 @@ const getById = async (clientId, branchId) => {
         const clientRole = clientConnection.model('clientRoles', clientRoleSchema);
         const Shift = clientConnection.model('clientShift', clientShiftSchema);
         const WorkingDepartment = clientConnection.model('clientWorkingDepartment', clientWorkingDepartmentSchema);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
 
 
         const user = await User.findById(branchId).populate({
@@ -129,7 +131,12 @@ const getById = async (clientId, branchId) => {
             path: "shift",
             model: Shift,
             select: "shiftName"
-        });
+        }).populate({
+            path: "assignedAssets.assetId",
+            model: Asset,
+            // select: "shiftName"
+        })
+        ;
         if (!user) {
             throw new CustomError(statusCode.NotFound, message.lblEmployeeNotFound);
         }
