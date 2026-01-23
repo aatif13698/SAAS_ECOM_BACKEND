@@ -6,7 +6,7 @@ const statementSchema = new mongoose.Schema({
     title: { type: String, default: null },
     description: { type: String, default: null },
     isActive: { type: Boolean, default: true },
-    type: { type: String, enum: ["Primacy", 'Refund', 'Terms'], required: true }, // Enum for validation
+    type: { type: String, enum: ["Privacy", 'Refund', 'Terms'], required: true }, // Enum for validation
     deletedAt: {
         type: Date,
         default: null,
