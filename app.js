@@ -103,7 +103,11 @@ const staffAuthRouter = require("./staffAuthentication/routes/staffAuth.routes.j
 const customerAuthRouter = require("./commonUserAuthentication/routes/user.routes.js");
 const customer = require("./commonCustomerWebiste/routes/customer.routes.js");
 const productListing = require("./productListing/routes/productListing.routes.js");
-const productOrder = require("./commonCustomerOrder/routes/order.routes.js")
+const productOrder = require("./commonCustomerOrder/routes/order.routes.js");
+
+
+// cms
+const statement = require("./VendorCMS/routes/statement.routes.js")
 
 
 
@@ -214,6 +218,10 @@ app.use("/api/customer/auth", customerAuthRouter.router);
 app.use("/api/customer", customer.router);
 app.use("/api/listing", productListing.router);
 app.use("/api/customer/order", productOrder.router);
+
+
+// cms
+app.use("/api/vendor/cms/statement", statement.router)
 
 
 

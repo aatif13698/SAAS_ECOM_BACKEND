@@ -10,6 +10,12 @@ const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Statement = clientConnection.model("statement", statementSchema);
+        const existing = await Statement.findOne({
+            type: data.type
+        });
+        if (existing) {
+            throw new CustomError(statusCode.Conflict, "Statement already exists");
+        }
         const statement = await Statement.create(data);
         return statement
     } catch (error) {

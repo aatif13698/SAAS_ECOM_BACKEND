@@ -70,7 +70,7 @@ exports.list = async (req, res, next) => {
         };
         const result = await statementService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
-            message: message.lblFinancialYearFoundSucessfully,
+            message: "Statement found successfully",
             data: result,
         });
     } catch (error) {
@@ -125,13 +125,10 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            financialYearId,
-            name,
-            alias,
-            startDate,
-            endDate,
-            notes,
-            isClosed
+            statementId,
+            title,
+            description,
+            type,
         } = req.body;
 
 
@@ -144,11 +141,9 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            name,
-            alias,
-            startDate,
-            endDate,
-            notes,
+            title,
+            description,
+            type,
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -157,19 +152,15 @@ exports.update = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
-            name,
-            alias,
-            startDate,
-            endDate,
-            notes,
-            isClosed,
-            createdBy: mainUser._id,
+            title,
+            description,
+            type,
         };
 
         // update 
-        const updated = await statementService.update(clientId, financialYearId, dataObject);
+        const updated = await statementService.update(clientId, statementId, dataObject);
         return res.status(statusCode.OK).send({
-            message: message.lblFinancialYearUpdatedSuccess,
+            message: "Statement updated successfully",
         });
     } catch (error) {
         next(error);
