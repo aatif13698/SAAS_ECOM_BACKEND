@@ -92,7 +92,7 @@ const saleQuotationSchema = new Schema(
         ],
         balance: { type: Number, default: 0, min: 0 },
 
-        status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
+        status: { type: String, enum: ['draft', 'issued', 'invoiced', 'partially_invoiced', 'pending_approval', 'approved', 'closed', 'canceled'], default: "draft" },
 
         auditStatus: { type: String, enum: ['completed','pending'], default: "pending" },
 

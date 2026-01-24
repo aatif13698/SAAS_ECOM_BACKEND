@@ -93,6 +93,9 @@ const PurchaseInvoice = require("./vendorPurchase/routes/purchaseInvoice.routes.
 const PaymentOut = require("./vendorPurchase/routes/paymentOut.routes.js");
 
 
+const PurchaseQuotation = require("./vendorSale/routes/quotation.routes.js")
+
+
 
 // routes import for staff
 const staffAuthRouter = require("./staffAuthentication/routes/staffAuth.routes.js");
@@ -206,6 +209,10 @@ app.use("/api/vendor/purhcase/po", PurchaseOrder.router);
 app.use("/api/vendor/purhcase/pi", PurchaseInvoice.router);
 app.use("/api/vendor/purhcase/payment/out", PaymentOut.router);
 
+
+// routes setup for sales
+
+app.use("/api/vendor/sale/pq", PurchaseQuotation.router);
 
 
 

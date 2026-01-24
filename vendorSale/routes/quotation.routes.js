@@ -15,7 +15,7 @@ router.post('/issue/quotation/mail', entityAuth.authorizeEntity("Administration"
 
 router.put('/update/quotation', entityAuth.authorizeEntity("Administration", "Employee", "update"), quotationController.update);
 
-router.get('/get/:clientId/:quotation', entityAuth.authorizeEntity("Administration", "Employee", "create"), quotationController.getParticular);
+router.get('/get/:clientId/:quotationId', entityAuth.authorizeEntity("Administration", "Employee", "create"), quotationController.getParticular);
 
 router.get('/list/quotation', entityAuth.authorizeEntity("Administration", "Employee", "create"), quotationController.list);
 

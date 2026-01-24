@@ -66,8 +66,9 @@ const getById = async (clientId, quotationId) => {
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('saleQuotation', quotationSchema);
+        const Quotation = clientConnection.model('saleQuotation', quotationSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
+        const User = clientConnection.model("clientUsers", clinetUserSchema)
 
         console.log("options", options);
 
@@ -76,19 +77,18 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const skip = (Number(page) - 1) * Number(limit);
         console.log("skip", skip);
 
-        const [purchaseOrders, total] = await Promise.all([
-            PurchaseOrder.find(filters)
+        const [quotations, total] = await Promise.all([
+            Quotation.find(filters)
                 .skip(skip)
                 .sort({ createdAt: -1 })  // Sort by creation date descending (latest first)
                 .limit(Number(limit))
                 .populate({
-                    path: "supplier",
-                    model: Supplier,
-                    select: "-items"
+                    path: "customer",
+                    model: User,
                 }),
-            PurchaseOrder.countDocuments(filters),
+            Quotation.countDocuments(filters),
         ]);
-        return { count: total, purchaseOrders };
+        return { count: total, quotations };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
     }

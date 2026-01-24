@@ -25,9 +25,10 @@ exports.create = async (req, res, next) => {
 
 
             customer,
+            customerLedger,
             shippingAddress,
             sqNumber,
-            poDate,
+            sqDate,
             items,
             notes,
             bankDetails,
@@ -50,9 +51,10 @@ exports.create = async (req, res, next) => {
 
         const requiredFields = [
             customer,
+            customerLedger,
             shippingAddress,
             sqNumber,
-            poDate,
+            sqDate,
             items,
             grandTotal,
             // notes,
@@ -79,9 +81,10 @@ exports.create = async (req, res, next) => {
         // Base data object 
         const dataObject = {
             customer,
+            customerLedger,
             shippingAddress,
             sqNumber,
-            poDate,
+            sqDate,
             items,
             notes,
             bankDetails,
@@ -243,13 +246,13 @@ exports.update = async (req, res, next) => {
 
 exports.issueMail = async (req, res, next) => {
     try {
-        const { clientId, purchaseOrderId } = req.body;
-        if (!clientId || !purchaseOrderId) {
+        const { clientId, quotationId } = req.body;
+        if (!clientId || !quotationId) {
             return res.status(400).send({
-                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
+                message: message.lblquotationIdIdAndClientIdRequired,
             });
         }
-        const purchaseOrder = await quotationService.getById(clientId, purchaseOrderId);
+        const purchaseOrder = await quotationService.getById(clientId, quotationId);
 
         if (!purchaseOrder?.customer?.emailContact) {
             return res.status(statusCode.BadRequest).send({
@@ -271,15 +274,15 @@ exports.issueMail = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, purchaseOrderId } = req.params;
-        if (!clientId || !purchaseOrderId) {
+        const { clientId, quotationId } = req.params;
+        if (!clientId || !quotationId) {
             return res.status(400).send({
-                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
+                message: "Client id and quotation id is required.",
             });
         }
-        const asset = await quotationService.getById(clientId, purchaseOrderId);
+        const asset = await quotationService.getById(clientId, quotationId);
         return res.status(200).send({
-            message: message.lblHolidayFoundSucessfully,
+            message: "Quotation found successfully",
             data: asset,
         });
     } catch (error) {
