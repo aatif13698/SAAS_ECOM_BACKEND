@@ -19,7 +19,7 @@ router.post("/activeInactive/statement", entityAuth.authorizeEntity("Accounting 
 
 router.put('/update/statement', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), statementController.update);
 
-router.get('/all/statement', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), statementController.all);
+router.get('/get/statement/:clientId/:type', statementController.statementType);
 
 
 // # create, update, view, list, activate/inactive

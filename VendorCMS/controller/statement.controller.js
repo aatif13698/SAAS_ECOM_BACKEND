@@ -79,18 +79,24 @@ exports.list = async (req, res, next) => {
 };
 
 // all
-exports.all = async (req, res, next) => {
+exports.statementType = async (req, res, next) => {
     try {
         const mainUser = req.user;
-        const { clientId } = req.query;
+        const { clientId, type } = req.params;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        const result = await statementService.all(clientId);
+        if (!type) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Type is required",
+            });
+        }
+
+        const result = await statementService.statementType(clientId, type);
         return res.status(statusCode.OK).send({
-            message: message.lblFinancialYearFoundSucessfully,
+            message: "Statement found success.",
             data: result,
         });
     } catch (error) {

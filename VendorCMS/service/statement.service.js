@@ -39,16 +39,17 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
-const all = async (clientId) => {
+const statementType = async (clientId, type) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Statement = clientConnection.model("statement", statementSchema);
-        const [statements] = await Promise.all([
-            Statement.find({})
-        ]);
-        return { statements };
+        const statement = await Statement.findOne({ type });
+        if (!statement) {
+            throw new CustomError(statusCode.NotFound, "Statement not found");
+        }
+        return statement
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error listing financial year: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
     }
 };
 
@@ -119,5 +120,5 @@ module.exports = {
     list,
     update,
     activeInactive,
-    all
+    statementType
 };
