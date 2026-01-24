@@ -120,6 +120,9 @@ router.post("/post/question", customerAuth.customer, customerCoontroller.postQue
 router.get('/get/all/question/customer', customerAuth.customer, customerCoontroller.getAllQuestionsByCustomer);
 router.delete('/delete/question/:clientId/:id', customerAuth.customer, customerCoontroller.deleteQuestion);
 
+router.post("/post/query", customerAuth.customer, customerCoontroller.postQuery);
+router.get('/get/all/query/customer', customerAuth.customer, customerCoontroller.getAllQueryByCustomer);
+router.delete('/delete/query/:clientId/:id', customerAuth.customer, customerCoontroller.deleteQuery);
 
 
 

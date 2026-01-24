@@ -24,6 +24,7 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
 const questionAndAnswerProductSchema = require("../../client/model/questionAndAnswerProduct");
+const querySchema = require("../../client/model/query");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -1906,6 +1907,93 @@ exports.deleteQuestion = async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting queston:', error);
+    res.status(500).json({ message: 'Server error while deleting question' });
+  }
+};
+
+
+exports.postQuery = async (req, res, next) => {
+  try {
+    const { clientId, question } = req.body;
+    const customerId = req.user ? req.user._id : null; // From auth middleware, if present
+    // Validate required fields
+    if (!question ) {
+      return res.status(httpStatusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Query = clientConnection.model("query", querySchema);
+    const existingQuestion = await Query.findOne({ userId: customerId, question });
+    if (existingQuestion) {
+      return res.status(httpStatusCode.BadRequest).json({ message: 'You have already raised this query.' });
+    }
+    const dataObject = {
+      userId: customerId,
+      question,
+      createdBy: customerId, // Assuming createdBy is the same as customerId
+    }
+    const newQuery = new Query(dataObject);
+    await newQuery.save();
+    return res.status(201).json({ message: 'Query posted successfully', review: newQuery });
+  } catch (error) {
+    next(error)
+  }
+};
+
+
+exports.getAllQueryByCustomer = async (req, res) => {
+  try {
+    const { clientId } = req.query; // Using query param for clientId
+    const userId = req.user ? req.user._id : null; // From auth middleware   
+    const { page = 1, limit = 10, sort = '-createdAt' } = req.query; // Pagination and sorting
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Query = clientConnection.model("query", querySchema);
+
+    const queries = await Query.find({ userId: userId })
+      .sort(sort)
+    // .skip((page - 1) * limit)
+    // .limit(parseInt(limit))
+    const total = await Query.countDocuments({ customerId: userId });
+    return res.status(200).json({
+      queries,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+exports.deleteQuery = async (req, res) => {
+  try {
+    const { id, clientId } = req.params; // reviewId
+    const customerId = req.user.id; // Assuming auth middleware sets req.user.id from JWT (customerId)
+
+    // Validate ID format (MongoDB ObjectId)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid review ID format' });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Query = clientConnection.model("query", querySchema);
+
+    const query = await Query.findOneAndDelete({
+      _id: id,
+      userId: customerId, // Enforce ownership
+    });
+
+    if (!query) {
+      return res.status(404).json({ message: 'Query not found or you do not have permission to delete it' });
+    }
+    return res.status(200).json({
+      message: 'query deleted successfully',
+      deletedReview: { id: query._id }
+    });
+  } catch (error) {
+    console.error('Error deleting:', error);
     res.status(500).json({ message: 'Server error while deleting question' });
   }
 };
