@@ -78,6 +78,7 @@ const vendorSupplier = require("./VendorInventory/routes/supplier.routes.js");
 const transporter = require("./VendorInventory/routes/supplierTransport.routes.js");
 const vendorStock = require("./VendorInventory/routes/stock.routes.js");
 const vendorOrder = require("./VendorInventory/routes/orders.routes.js");
+const quert = require("./VendorAdministration/routes/query.routes.js")
 
 const vendorLedgerGroup = require("./VendorAccount/routes/ledgerGroup.routes.js");
 const ledger = require("./VendorAccount/routes/ledger.routes.js");
@@ -185,6 +186,7 @@ app.use("/api/vendor/blueprint", vendorProductBlueprint.router);
 app.use("/api/vendor/product/qa", productQa.router);
 app.use("/api/vendor/variant", vendorProductVariant.router);
 app.use("/api/vendor/price", vendorProductPrice.router);
+app.use("/api/vendor/query", quert.router);
 
 // route setup for inventory
 app.use("/api/vendor/supplier", vendorSupplier.router);

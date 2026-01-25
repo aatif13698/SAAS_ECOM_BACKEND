@@ -4,7 +4,7 @@ const queryService = require("../services/query.service");
  
 
 
-exports.listQaOut = async (req, res, next) => { 
+exports.listQuery = async (req, res, next) => { 
     try { 
  
         const mainUser = req.user; 

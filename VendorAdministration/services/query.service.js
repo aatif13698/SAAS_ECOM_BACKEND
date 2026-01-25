@@ -1,4 +1,5 @@
 const querySchema = require("../../client/model/query");
+const clinetUserSchema = require("../../client/model/user");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const httpStatusCode = require("../../utils/http-status-code");
 
@@ -11,11 +12,16 @@ const listQuery = async (clientId, filters = {}, options = { page: 1, limit: 10 
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Query = clientConnection.model("query", querySchema);
+        const User = clientConnection.model('clientUsers', clinetUserSchema);
 
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [queries, total] = await Promise.all([
-            Query.find(filters).skip(skip),
+            Query.find(filters).skip(skip).populate({
+                path: "userId",
+                model: User,
+                select: " firstName lastName profileImage email phone "
+            }),
             Query.countDocuments(filters),
         ]);
         return { count: total, queries };

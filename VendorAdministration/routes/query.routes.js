@@ -6,11 +6,11 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 
 
-router.get('/list/query', entityAuth.authorizeEntity("Administration", "Employee", "create"), queryController.listQaOut);  
+router.get('/list/query', entityAuth.authorizeEntity("Administration", "Employee", "create"), queryController.listQuery);  
 
 router.get('/get/query/:clientId/:id', entityAuth.authorizeEntity("Administration", "Employee", "create"), queryController.getQueryById);  
 
-router.put('/update/query', entityAuth.authorizeEntity("Administration", "Employee", "update"), queryController.updateQuery);  
+router.post('/update/query', entityAuth.authorizeEntity("Administration", "Employee", "update"), queryController.updateQuery);  
 
 
 exports.router = router;  
