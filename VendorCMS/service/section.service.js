@@ -3,7 +3,8 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
-const sectionSchema = require("../../client/model/section")
+const sectionSchema = require("../../client/model/section");
+const productBlueprintSchema = require("../../client/model/productBlueprint");
 
 
 const create = async (clientId, data) => {
@@ -77,7 +78,12 @@ const sectionType = async (clientId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Section = clientConnection.model("section", sectionSchema);
-        const section = await Section.find({});
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+        const section = await Section.find({}).populate({
+            path: "products.id",
+            model: ProductBluePrint
+        });
         if (!section) {
             throw new CustomError(statusCode.NotFound, "Section not found");
         }

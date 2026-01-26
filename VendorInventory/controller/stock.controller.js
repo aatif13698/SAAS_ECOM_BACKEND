@@ -646,4 +646,23 @@ exports.listBlueprintForCms = async (req, res, next) => {
 
 
 
+exports.getStockByProductId = async (req, res, next) => {
+    try {
+        const { clientId, productId } = req.params;
+        if (!clientId || !productId) {
+            return res.status(400).send({
+                message: message.lblRequiredFieldMissing,
+            });
+        }
+        const data = await stockService.getStockByProductId(clientId, productId);
+        return res.status(200).send({
+            message: message.lblStockFoundSuccessfully,
+            data: data,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
 

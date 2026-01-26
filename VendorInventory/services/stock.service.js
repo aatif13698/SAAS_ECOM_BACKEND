@@ -1080,6 +1080,26 @@ const getListBlueprintsForCms = async (
 };
 
 
+const getStockByProductId = async (clientId, productId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Stock = clientConnection.model('productStock', productStockSchema);
+        const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+        const stock = await Stock.findOne({ product: productId }).populate({
+            path: 'normalSaleStock',
+            model: MainStock,
+        });
+        if (!stock) {
+            throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
+        }
+        return stock;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+    }
+};
+
+
 
 module.exports = {
     create,
@@ -1094,5 +1114,7 @@ module.exports = {
     getListStock,
     getListStockOfSupplier,
     getListStockForCustomer,
-    getListBlueprintsForCms
+    getListBlueprintsForCms,
+
+    getStockByProductId
 };
