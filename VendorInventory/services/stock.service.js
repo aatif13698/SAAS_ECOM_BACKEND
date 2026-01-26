@@ -109,7 +109,7 @@ const create = async (clientId, data, mainUser) => {
                 productMainStock: mainStock._id,
                 in: data?.openingStock,
                 totalStock: newTotalStock,
-                date:  new Date(),
+                date: new Date(),
                 type: "opening",
                 createdBy: mainUser._id
             });
@@ -989,6 +989,97 @@ const deleted = async (clientId, stockId, softDelete = true) => {
 };
 
 
+const getListBlueprintsForCms = async (
+    clientId,
+    keyword = '',
+    categoryId = null,
+    subCategoryId = null,
+    level = 'vendor',
+    levelId = '',
+    options = { page: 1, limit: 10 }
+) => {
+    try {
+        const { page, limit } = options;
+
+        // Ensure they are numbers
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            throw new CustomError(400, "Invalid pagination values");
+        }
+
+        const skip = (pageNum - 1) * limitNum;
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+
+        const ProductBlueprint = clientConnection.model('productBlueprint', productBlueprintSchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+
+        // Build match filter
+        let match = {
+            deletedAt: null
+        };
+
+        // Add level-based filter if applicable (customize based on your business logic)
+        // For example, if level === 'vendor' and levelId is provided, filter by manufacturerId or brandId
+        if (level === 'vendor' && levelId) {
+            match.manufacturerId = new mongoose.Types.ObjectId(levelId); // Assuming levelId filters on manufacturerId; adjust as needed
+        }
+        // Add more level conditions if there are other levels (e.g., 'brand' filtering on brandId)
+
+        // Add category filter if provided
+        if (categoryId && categoryId !== "null") {
+            const categoryObjectId = new mongoose.Types.ObjectId(categoryId);
+            // Optional: Validate category existence
+            const categoryExists = await Category.findById(categoryObjectId);
+            if (!categoryExists) {
+                throw new CustomError(404, "Category not found.");
+            }
+            match.categoryId = categoryObjectId;
+        }
+
+        // Add sub-category filter if provided
+        if (subCategoryId && subCategoryId !== "null") {
+            const subCategoryObjectId = new mongoose.Types.ObjectId(subCategoryId);
+            // Optional: Validate sub-category existence
+            const subCategoryExists = await SubCategory.findById(subCategoryObjectId);
+            if (!subCategoryExists) {
+                throw new CustomError(404, "Sub-category not found.");
+            }
+            match.subCategoryId = subCategoryObjectId;
+        }
+
+        // Add keyword search if provided (case-insensitive regex on name)
+        if (keyword) {
+            match.name = { $regex: new RegExp(keyword, 'i') };
+        }
+
+        // Get total count for pagination
+        const total = await ProductBlueprint.countDocuments(match);
+
+        // Fetch paginated results (optionally populate references if needed for the response)
+        const products = await ProductBlueprint.find(match)
+            .skip(skip)
+            .limit(limitNum)
+            .populate('categoryId', 'name') // Optional: populate category name; adjust fields as needed
+            .populate('subCategoryId', 'name') // Optional: populate sub-category name
+            .exec();
+
+        return {
+            products,
+            total,
+            currentPage: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+            perPage: limitNum
+        };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing products: ${error.message}`);
+    }
+};
+
+
 
 module.exports = {
     create,
@@ -1002,5 +1093,6 @@ module.exports = {
     getAllStock,
     getListStock,
     getListStockOfSupplier,
-    getListStockForCustomer
+    getListStockForCustomer,
+    getListBlueprintsForCms
 };
