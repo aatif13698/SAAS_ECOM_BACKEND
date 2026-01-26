@@ -14,6 +14,8 @@ const sectionService = require("../service/section.service");
 const bcrypt = require("bcrypt");
 const clientCustomFieldSchema = require("../../client/model/customField");
 const { default: mongoose } = require("mongoose");
+const sectionSchema = require("../../client/model/section");
+const productBlueprintSchema = require("../../client/model/productBlueprint");
 
 
 
@@ -62,7 +64,7 @@ exports.create = async (req, res, next) => {
 exports.list = async (req, res, next) => {
     try {
         const mainUser = req.user;
-        const { clientId, keyword = '', page = 1, perPage = 10 } = req.query;
+        const { clientId } = req.query;
         console.log("req.query", req.query);
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
@@ -71,7 +73,7 @@ exports.list = async (req, res, next) => {
         }
         let filters = {
         };
-        const result = await sectionService.list(clientId, filters, { page, limit: perPage });
+        const result = await sectionService.list(clientId, filters);
         return res.status(statusCode.OK).send({
             message: "Statement found successfully",
             data: result,
@@ -174,6 +176,92 @@ exports.sectionTypes = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+
+exports.updateSectionOrders = async (req, res) => {
+    try {
+        const { updates, clientId } = req.body;
+
+        console.log("updates", updates);
+        
+        console.log("clientId", clientId);
+        
+
+        const parsedUpdate = JSON.parse(updates)
+
+        // Basic validation
+        if (!Array.isArray(parsedUpdate) || parsedUpdate.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid request body. Expected an array of { _id, order } objects.',
+            });
+        }
+
+        // Optional: Validate that all orders are unique numbers
+        const orderValues = parsedUpdate.map(u => u.order);
+        const uniqueOrders = new Set(orderValues);
+        if (uniqueOrders.size !== parsedUpdate.length) {
+            return res.status(400).json({
+                success: false,
+                message: 'Duplicate order values detected. All orders must be unique.',
+            });
+        }
+
+        // Optional: Validate that orders are sequential starting from 1 (recommended)
+        const sortedOrders = [...orderValues].sort((a, b) => a - b);
+        for (let i = 0; i < sortedOrders.length; i++) {
+            if (sortedOrders[i] !== i + 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Orders must be sequential integers starting from 1 (1, 2, 3, ...).',
+                });
+            }
+        }
+
+        // Prepare bulk operations
+        const bulkOps = parsedUpdate.map(update => ({
+            updateOne: {
+                filter: {
+                    _id: new mongoose.Types.ObjectId(update._id),
+                    // Optional: Add createdBy filter for security if you have authentication
+                    // createdBy: req.user._id  // Uncomment if you have req.user from auth middleware
+                },
+                update: {
+                    $set: { order: update.order },
+                },
+                upsert: false,
+            },
+        }));
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Section = clientConnection.model("section", sectionSchema);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+        // Execute bulk write (atomic operation)
+        const result = await Section.bulkWrite(bulkOps, { ordered: true });
+
+        // Check if all operations succeeded
+        if (result.modifiedCount !== parsedUpdate.length) {
+            return res.status(400).json({
+                success: false,
+                message: `Only ${result.modifiedCount} out of ${parsedUpdate.length} sections were updated. Some IDs may not exist.`,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Section orders updated successfully',
+            modifiedCount: result.modifiedCount,
+        });
+    } catch (error) {
+        console.error('Error updating section orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while updating orders',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        });
     }
 };
 

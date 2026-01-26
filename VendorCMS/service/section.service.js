@@ -26,14 +26,18 @@ const create = async (clientId, data) => {
     }
 };
 
-const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+const list = async (clientId, filters = {}) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Section = clientConnection.model("section", sectionSchema);
-        const { page, limit } = options;
-        const skip = (Number(page) - 1) * Number(limit);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
         const [sections, total] = await Promise.all([
-            Section.find(filters).skip(skip).limit(limit),
+            Section.find(filters).populate({
+                path: "products.id",
+                model: ProductBluePrint,
+                select: "name description images"
+            }),
             Section.countDocuments(filters),
         ]);
         return { count: total, sections };
@@ -80,7 +84,8 @@ const sectionType = async (clientId) => {
         const Section = clientConnection.model("section", sectionSchema);
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
 
-        const section = await Section.find({}).populate({
+        const section = await Section.find({})
+        .populate({
             path: "products.id",
             model: ProductBluePrint
         });
@@ -93,7 +98,34 @@ const sectionType = async (clientId) => {
     }
 };
 
+const reorder = async (clientId, sectionIds) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Section = clientConnection.model("section", sectionSchema);
 
+        // Validate that all sectionIds exist and belong to this client (optional but recommended)
+        const existingSections = await Section.find({ _id: { $in: sectionIds } });
+        if (existingSections.length !== sectionIds.length) {
+            throw new CustomError(400, "One or more section IDs are invalid or do not exist");
+        }
+
+        // Update orders based on the new array order (starting from 1)
+        const updates = sectionIds.map((id, index) => ({
+            updateOne: {
+                filter: { _id: id },
+                update: { order: index + 1 },
+            },
+        }));
+
+        await Section.bulkWrite(updates);
+
+        // Return the updated sections in the new order
+        const updatedSections = await Section.find({ _id: { $in: sectionIds } }).sort({ order: 1 });
+        return updatedSections;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error reordering: ${error.message}`);
+    }
+};
 
 
 module.exports = {
@@ -101,5 +133,6 @@ module.exports = {
     list,
     update,
     activeInactive,
-    sectionType
+    sectionType,
+    reorder
 };

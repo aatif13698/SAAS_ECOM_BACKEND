@@ -21,6 +21,8 @@ router.put('/update/section', entityAuth.authorizeEntity("Accounting Master", "F
 
 router.get('/get/all/section/cardtypes/:clientId', sectionController.sectionTypes);
 
+router.post('/arraneg/order', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), sectionController.updateSectionOrders); // or POST if you prefer
+
 
 // # create, update, view, list, activate/inactive
 
