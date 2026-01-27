@@ -71,6 +71,8 @@ router.post('/arraneg/order', entityAuth.authorizeEntity("Accounting Master", "F
 
 router.get('/get/banner/by/id/:clientId/:id', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), bannerController.bannerById);
 
+router.get('/get/all/banners/:clientId', bannerController.banners);
+
 
 // # create, update, view, list, activate/inactive
 

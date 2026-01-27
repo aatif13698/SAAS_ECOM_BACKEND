@@ -322,6 +322,28 @@ exports.bannerById = async (req, res, next) => {
 
 
 
+exports.banners = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        const result = await bannerService.banners(clientId);
+        return res.status(statusCode.OK).send({
+            message: "Banners found success.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
 
 
 

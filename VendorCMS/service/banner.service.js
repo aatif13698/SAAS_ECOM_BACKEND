@@ -128,11 +128,34 @@ const bannerById = async (clientId, id) => {
 };
 
 
+
+const banners = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Banner = clientConnection.model("banner", bannerSchema)
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+        const banner = await Banner.find({})
+        .populate({
+            path: "product",
+            model: ProductBluePrint
+        });
+        if (!banner) {
+            throw new CustomError(statusCode.NotFound, "Banner not found");
+        }
+        return banner
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
+    }
+};
+
+
 module.exports = {
     create,
     list,
     update,
     sectionType,
     reorder,
-    bannerById
+    bannerById,
+    banners
 };
