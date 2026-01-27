@@ -354,7 +354,7 @@ const uploadProductBlueprintToS3 = multer({
         files: 5 // Max 5 files
     },
     fileFilter: (req, file, cb) => {
-        const filetypes = /jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp/;
+        const filetypes = /jpg|JPG|jpeg|JPEG|png|PNG|avif|gif|GIF|webp/;
         const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = filetypes.test(file.mimetype);
 

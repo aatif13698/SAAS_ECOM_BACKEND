@@ -63,7 +63,7 @@ router.post(
         try {
             // Validate file uploads
             if (req.files && req.files.length > 0) {
-                const allowedMimetypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                const allowedMimetypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
                 for (const file of req.files) {
                     if (!allowedMimetypes.includes(file.mimetype)) {
                         return res.status(400).send({
