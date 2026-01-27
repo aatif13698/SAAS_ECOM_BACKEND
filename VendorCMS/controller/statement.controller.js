@@ -265,8 +265,97 @@ exports.createAbout = async (req, res, next) => {
     }
 };
 
+exports.updateAbout = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            id,
+            title,
+            description,
+        } = req.body;
+
+        const mainUser = req.user;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+        const requiredFields = [
+            id,
+            title,
+            description,
+        ];
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+        const dataObject = {
+            title,
+            description,
+            createdBy: mainUser._id,
+        };
+
+        let attachments = [];
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const uploadResult = await uploadProductImageToS3(file, clientId);
+                attachments.push(uploadResult.url);
+            }
+            dataObject.images = attachments;
+        }
+        const updatedStatement = await statementService.update(clientId, id, dataObject);
+        return res.status(statusCode.OK).send({
+            message: "Statement updated successfully",
+            data: { updatedStatement },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
+
+exports.listAbout = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.query;
+        console.log("req.query", req.query);
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const result = await statementService.listAbout(clientId);
+        return res.status(statusCode.OK).send({
+            message: "Statement found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.aboutById = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, id } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!id) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Id is required",
+            });
+        }
+
+        const result = await statementService.aboutById(clientId, id);
+        return res.status(statusCode.OK).send({
+            message: "Statement found success.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
 

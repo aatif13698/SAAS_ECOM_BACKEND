@@ -89,6 +89,35 @@ const update = async (clientId, statementId, updateData) => {
 
 
 
+const listAbout = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Statement = clientConnection.model("statement", statementSchema);
+        const statement = await Statement.findOne({ type: "About" });
+        if (!statement) {
+            throw new CustomError(statusCode.NotFound, "Statement not found");
+        }
+        return statement 
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
+
+const aboutById = async (clientId, id) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Statement = clientConnection.model("statement", statementSchema);
+        const statement = await Statement.findById(id);
+        if (!statement) {
+            throw new CustomError(statusCode.NotFound, "Statement not found");
+        }
+        return statement
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
+    }
+};
 
 
 
@@ -120,5 +149,7 @@ module.exports = {
     list,
     update,
     activeInactive,
-    statementType
+    statementType,
+    listAbout,
+    aboutById
 };
