@@ -5,7 +5,7 @@ const ObjectId = Schema.ObjectId;
 
 const bannerSchema = new Schema(
     {
-        product: { id: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true } },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductBlueprint', required: true },
         image: { type: String, default: null },
         iconKey: { type: String, default: null },
         order: { type: Number },

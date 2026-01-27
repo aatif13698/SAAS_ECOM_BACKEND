@@ -113,6 +113,7 @@ const productOrder = require("./commonCustomerOrder/routes/order.routes.js");
 // cms
 const statement = require("./VendorCMS/routes/statement.routes.js");
 const section = require("./VendorCMS/routes/section.routes.js");
+const banner = require("./VendorCMS/routes/banner.routes.js");
 
 
 
@@ -233,6 +234,7 @@ app.use("/api/customer/order", productOrder.router);
 // cms
 app.use("/api/vendor/cms/statement", statement.router);
 app.use("/api/vendor/cms/section", section.router);
+app.use("/api/vendor/cms/banner", banner.router);
 
 
 

@@ -21,6 +21,7 @@ const productBlueprintSchema = require("../../client/model/productBlueprint");
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const AWS = require('aws-sdk');
+const bannerSchema = require("../../client/model/banner");
 // DigitalOcean Spaces setup
 const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
 const s3 = new AWS.S3({
@@ -115,7 +116,7 @@ exports.list = async (req, res, next) => {
         };
         const result = await bannerService.list(clientId, filters);
         return res.status(statusCode.OK).send({
-            message: "Statement found successfully",
+            message: "Banners found successfully",
             data: result,
         });
     } catch (error) {
@@ -148,54 +149,44 @@ exports.activeinactive = async (req, res, next) => {
 };
 
 // update  
+
 exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
+            product,
             id,
-            template,
-            type,
-            title,
-            products,
         } = req.body;
 
-
-
-
         const mainUser = req.user;
-        // Validate required fields
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
         }
-
         const requiredFields = [
-           template,
-            type,
-            title,
-            products,
+            product, id
         ];
-
         if (requiredFields.some((field) => !field)) {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
-
-        // Base data object
         const dataObject = {
-            template,
-            type,
-            title,
-            products,
+            product,
+            createdBy: mainUser._id,
         };
 
-        // update 
-        const updated = await bannerService.update(clientId, id, dataObject);
+         if (req.file) {
+            const uploadResult = await uploadIconToS3(req.file, clientId);
+            dataObject.image = uploadResult.url;
+            dataObject.iconKey = uploadResult.key; // Store S3 key for potential future deletion
+        }
+
+        const updatedBanner = await bannerService.update(clientId, id, dataObject);
         return res.status(statusCode.OK).send({
-            message: "Section updated successfully",
+            message: "Banner created successfully",
+            data: { updatedBanner },
         });
     } catch (error) {
         next(error);
     }
-
 };
 
 
@@ -223,7 +214,7 @@ exports.sectionTypes = async (req, res, next) => {
 };
 
 
-exports.updateSectionOrders = async (req, res) => {
+exports.updateBannerOrders = async (req, res) => {
     try {
         const { updates, clientId } = req.body;
 
@@ -279,30 +270,30 @@ exports.updateSectionOrders = async (req, res) => {
         }));
 
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Section = clientConnection.model("section", sectionSchema);
+        const Banner = clientConnection.model("banner", bannerSchema)
         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
 
         // Execute bulk write (atomic operation)
-        const result = await Section.bulkWrite(bulkOps, { ordered: true });
+        const result = await Banner.bulkWrite(bulkOps, { ordered: true });
 
         // Check if all operations succeeded
         if (result.modifiedCount !== parsedUpdate.length) {
             return res.status(400).json({
                 success: false,
-                message: `Only ${result.modifiedCount} out of ${parsedUpdate.length} sections were updated. Some IDs may not exist.`,
+                message: `Only ${result.modifiedCount} out of ${parsedUpdate.length} banners were updated. Some IDs may not exist.`,
             });
         }
 
         return res.status(200).json({
             success: true,
-            message: 'Section orders updated successfully',
+            message: 'Banner orders updated successfully',
             modifiedCount: result.modifiedCount,
         });
     } catch (error) {
-        console.error('Error updating section orders:', error);
+        console.error('Error updating orders:', error);
         res.status(500).json({
             success: false,
-            message: 'Server error while updating orders',
+            message: 'Server error while updating',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined,
         });
     }
@@ -310,7 +301,7 @@ exports.updateSectionOrders = async (req, res) => {
 
 
 
-exports.sectionById = async (req, res, next) => {
+exports.bannerById = async (req, res, next) => {
     try {
         const mainUser = req.user;
         const { clientId , id} = req.params;
@@ -319,8 +310,7 @@ exports.sectionById = async (req, res, next) => {
                 message: message.lblClinetIdIsRequired,
             });
         }
-
-        const result = await bannerService.sectionById(clientId, id);
+        const result = await bannerService.bannerById(clientId, id);
         return res.status(statusCode.OK).send({
             message: "Section found success.",
             data: result,

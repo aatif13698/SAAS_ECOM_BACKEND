@@ -31,7 +31,7 @@ const list = async (clientId, filters = {}) => {
 
         const [banners, total] = await Promise.all([
             Banner.find(filters).populate({
-                path: "products.id",
+                path: "product",
                 model: ProductBluePrint,
                 select: "name description images"
             }),
@@ -107,7 +107,7 @@ const reorder = async (clientId, bannerIds) => {
 
 
 
-const sectionById = async (clientId, id) => {
+const bannerById = async (clientId, id) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Banner = clientConnection.model("banner", bannerSchema)
@@ -115,7 +115,7 @@ const sectionById = async (clientId, id) => {
 
         const banner = await Banner.findById(id)
             .populate({
-                path: "products.id",
+                path: "product",
                 model: ProductBluePrint
             });
         if (!banner) {
@@ -134,5 +134,5 @@ module.exports = {
     update,
     sectionType,
     reorder,
-    sectionById
+    bannerById
 };
