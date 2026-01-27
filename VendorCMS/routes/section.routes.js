@@ -17,11 +17,13 @@ router.get('/list/section', entityAuth.authorizeEntity("Accounting Master", "Fin
 
 router.post("/activeInactive/section", entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), sectionController.activeinactive);
 
-router.put('/update/section', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), sectionController.update);
+router.post('/update/section', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), sectionController.update);
 
 router.get('/get/all/section/cardtypes/:clientId', sectionController.sectionTypes);
 
 router.post('/arraneg/order', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "update"), sectionController.updateSectionOrders); // or POST if you prefer
+
+router.get('/get/section/by/id/:clientId/:id', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), sectionController.sectionById);
 
 
 // # create, update, view, list, activate/inactive

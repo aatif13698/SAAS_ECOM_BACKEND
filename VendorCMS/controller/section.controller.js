@@ -112,10 +112,11 @@ exports.update = async (req, res, next) => {
     try {
         const {
             clientId,
-            statementId,
-            title,
-            description,
+            id,
+            template,
             type,
+            title,
+            products,
         } = req.body;
 
 
@@ -128,9 +129,10 @@ exports.update = async (req, res, next) => {
         }
 
         const requiredFields = [
-            title,
-            description,
+           template,
             type,
+            title,
+            products,
         ];
 
         if (requiredFields.some((field) => !field)) {
@@ -139,15 +141,16 @@ exports.update = async (req, res, next) => {
 
         // Base data object
         const dataObject = {
-            title,
-            description,
+            template,
             type,
+            title,
+            products,
         };
 
         // update 
-        const updated = await sectionService.update(clientId, statementId, dataObject);
+        const updated = await sectionService.update(clientId, id, dataObject);
         return res.status(statusCode.OK).send({
-            message: "Statement updated successfully",
+            message: "Section updated successfully",
         });
     } catch (error) {
         next(error);
@@ -267,6 +270,25 @@ exports.updateSectionOrders = async (req, res) => {
 
 
 
+exports.sectionById = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId , id} = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        const result = await sectionService.sectionById(clientId, id);
+        return res.status(statusCode.OK).send({
+            message: "Section found success.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 
 

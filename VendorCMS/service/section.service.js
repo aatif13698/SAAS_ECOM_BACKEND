@@ -128,11 +128,34 @@ const reorder = async (clientId, sectionIds) => {
 };
 
 
+
+const sectionById = async (clientId, id) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Section = clientConnection.model("section", sectionSchema);
+        const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
+
+        const section = await Section.findById(id)
+        .populate({
+            path: "products.id",
+            model: ProductBluePrint
+        });
+        if (!section) {
+            throw new CustomError(statusCode.NotFound, "Section not found");
+        }
+        return section
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
+    }
+};
+
+
 module.exports = {
     create,
     list,
     update,
     activeInactive,
     sectionType,
-    reorder
+    reorder,
+    sectionById
 };
