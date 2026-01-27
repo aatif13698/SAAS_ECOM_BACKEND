@@ -1410,7 +1410,7 @@ exports.removeFromWishList = async (req, res, next) => {
 // post rating
 exports.postRating = async (req, res, next) => {
   try {
-    const { clientId,product, productMainStockId, productStock, rating, name, description } = req.body;
+    const { clientId, product, productMainStockId, productStock, rating, name, description } = req.body;
     // const customerId = req.user.id; // From auth middleware, assuming JWT with user.id as clientUsers _id
     const customerId = req.user ? req.user._id : null; // From auth middleware, if present
 
@@ -1917,7 +1917,7 @@ exports.postQuery = async (req, res, next) => {
     const { clientId, question } = req.body;
     const customerId = req.user ? req.user._id : null; // From auth middleware, if present
     // Validate required fields
-    if (!question ) {
+    if (!question) {
       return res.status(httpStatusCode.BadRequest).json({ message: message.lblRequiredFieldMissing });
     }
 
@@ -1995,5 +1995,137 @@ exports.deleteQuery = async (req, res) => {
   } catch (error) {
     console.error('Error deleting:', error);
     res.status(500).json({ message: 'Server error while deleting question' });
+  }
+};
+
+
+
+exports.addRecentView = async (req, res, next) => {
+  try {
+    const { clientId, productStockId, productMainStockId, sessionId } = req.body;
+    // Basic validation
+    if (
+      !mongoose.Types.ObjectId.isValid(productStockId) ||
+      !mongoose.Types.ObjectId.isValid(productMainStockId)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const userId = req.user ? req.user._id : null; // From auth middleware
+    // Validate input
+    if (!productStockId || !productMainStockId) {
+      return res.status(httpStatusCode.BadRequest).send({
+        success: false,
+        message: message.lblRequiredFieldMissing,
+      });
+    }
+
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ClientUser = clientConnection.model("clientUsers", clinetUserSchema);
+
+    const user = await ClientUser.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the product pair already exists in recentViewed and remove it if so
+    user.recentViewed = user.recentViewed.filter(item =>
+      !(item.productStock.toString() === productStockId &&
+        item.productMainStock.toString() === productMainStockId)
+    );
+
+    // Add the new viewed product to the end (most recent)
+    user.recentViewed.push({
+      productStock: productStockId,
+      productMainStock: productMainStockId
+    });
+
+    // If exceeds 12, remove the oldest (first element)
+    if (user.recentViewed.length > 12) {
+      user.recentViewed.shift();
+    }
+
+    // Save the updated user
+    await user.save();
+
+    return res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "Item added to recent view",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+
+
+exports.getRecentView = async (req, res, next) => {
+  try {
+    const { clientId } = req.params;
+    if (!clientId) {
+      return res
+        .status(httpStatusCode.BadRequest)
+        .send({ message: message.lblClinetIdIsRequired });
+    }
+    const userId = req.user ? req.user._id : null; // From auth middleware
+   
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ClientUser = clientConnection.model("clientUsers", clinetUserSchema);
+    const Stock = clientConnection.model("productStock", productStockSchema);
+    const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const ProductRate = clientConnection.model('productRate', productRateSchema);
+    const ProductVariant = clientConnection.model('productVariant', productVariantSchema);
+    const ProductBluePrint = clientConnection.model(
+      "productBlueprint",
+      productBlueprintSchema
+    );
+
+
+    const user = await ClientUser.findById(userId)
+     .populate({
+          path: "recentViewed.productStock",
+          model: Stock,
+          select: " _id product ",
+          populate: {
+            path: "product",
+            model: ProductBluePrint,
+            select: "name description images sku categoryId subCategoryId brandId",
+
+          },
+        })
+        .populate({
+          path: "recentViewed.productMainStock",
+          model: MainStock,
+          populate: [
+            {
+              path: 'variant',
+              model: ProductVariant,
+              select: "priceId ",
+              populate: {
+                path: 'priceId',
+                model: ProductRate,
+                select: "price product variant"
+              }
+            }
+          ],
+          select: "name priceId description totalStock images onlineStock"
+        });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(httpStatusCode.Created).json({
+      success: true,
+      message: "RecentView found successfully",
+      data: user.recentViewed
+    });
+  } catch (error) {
+    next(error);
   }
 };

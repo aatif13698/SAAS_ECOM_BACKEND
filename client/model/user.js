@@ -128,6 +128,22 @@ const clinetUserSchema = new Schema(
 
         ledgerLinkedId: { type: ObjectId, ref: "ledger", default: null },
 
+        recentViewed: [
+            {
+                productStock: {
+                    type: ObjectId,
+                    ref: "productStock",
+                    required: true,
+                },
+                productMainStock: {
+                    type: ObjectId,
+                    ref: "productMainStock",
+                    required: true,
+                },
+
+            },
+        ],
+
 
         // handlign created by
         createdBy: { type: ObjectId, ref: "clientUsers", index: true }, // Index for admin/user relationships
