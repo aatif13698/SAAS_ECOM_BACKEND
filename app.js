@@ -94,7 +94,8 @@ const PurchaseInvoice = require("./vendorPurchase/routes/purchaseInvoice.routes.
 const PaymentOut = require("./vendorPurchase/routes/paymentOut.routes.js");
 
 
-const PurchaseQuotation = require("./vendorSale/routes/quotation.routes.js")
+const PurchaseQuotation = require("./vendorSale/routes/quotation.routes.js");
+const SalePerforma = require("./vendorSale/routes/performa.routes.js");
 
 
 
@@ -217,6 +218,7 @@ app.use("/api/vendor/purhcase/payment/out", PaymentOut.router);
 // routes setup for sales
 
 app.use("/api/vendor/sale/pq", PurchaseQuotation.router);
+app.use("/api/vendor/sale/sp", SalePerforma.router);
 
 
 

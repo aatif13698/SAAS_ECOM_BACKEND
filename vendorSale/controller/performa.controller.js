@@ -244,13 +244,13 @@ exports.update = async (req, res, next) => {
 
 exports.issueMail = async (req, res, next) => {
     try {
-        const { clientId, quotationId } = req.body;
-        if (!clientId || !quotationId) {
+        const { clientId, performaId } = req.body;
+        if (!clientId || !performaId) {
             return res.status(400).send({
-                message: message.lblquotationIdIdAndClientIdRequired,
+                message: message.lblperformaIdIdAndClientIdRequired,
             });
         }
-        const purchaseOrder = await performaService.getById(clientId, quotationId);
+        const purchaseOrder = await performaService.getById(clientId, performaId);
 
         if (!purchaseOrder?.customer?.emailContact) {
             return res.status(statusCode.BadRequest).send({
@@ -272,15 +272,15 @@ exports.issueMail = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, quotationId } = req.params;
-        if (!clientId || !quotationId) {
+        const { clientId, performaId } = req.params;
+        if (!clientId || !performaId) {
             return res.status(400).send({
-                message: "Client id and quotation id is required.",
+                message: "Client id and performa id is required.",
             });
         }
-        const asset = await performaService.getById(clientId, quotationId);
+        const asset = await performaService.getById(clientId, performaId);
         return res.status(200).send({
-            message: "Quotation found successfully",
+            message: "Performa found successfully",
             data: asset,
         });
     } catch (error) {

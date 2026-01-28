@@ -17,11 +17,11 @@ const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Performa = clientConnection.model('salePerforma', salePerformaSchema);
-        const existingSp = await Performa.findOne({ spNumber: data?.poNumber }).lean();
+        const existingSp = await Performa.findOne({ spNumber: data?.spNumber }).lean();
         if (existingSp) {
             throw new CustomError(statusCode.BadRequest, 'Performa number already exists.')
         }
-        return await Quotation.create(data);
+        return await Performa.create(data);
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
