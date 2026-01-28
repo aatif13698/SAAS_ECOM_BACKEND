@@ -1101,6 +1101,95 @@ const getStockByProductId = async (clientId, productId) => {
 
 
 
+const getListSimilarBlueprints = async (
+    clientId,
+    keyword = '',
+    categoryId = null,
+    subCategoryId = null,
+    exclude = null,
+    options = { page: 1, limit: 10 }
+) => {
+    try {
+        const { page, limit } = options;
+
+        // Ensure they are numbers
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            throw new CustomError(400, "Invalid pagination values");
+        }
+
+        const skip = (pageNum - 1) * limitNum;
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+
+        const ProductBlueprint = clientConnection.model('productBlueprint', productBlueprintSchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+
+        // Build match filter
+        let match = {
+            deletedAt: null
+        };
+
+        if (exclude && exclude !== "null") {
+            if (!mongoose.Types.ObjectId.isValid(exclude)) {
+                throw new CustomError(400, "Invalid exclude blueprint ID");
+            }
+            match._id = { $ne: new mongoose.Types.ObjectId(exclude) };
+        }
+
+
+
+        // Add category filter if provided
+        if (categoryId && categoryId !== "null") {
+            const categoryObjectId = new mongoose.Types.ObjectId(categoryId);
+            // Optional: Validate category existence
+            const categoryExists = await Category.findById(categoryObjectId);
+            if (!categoryExists) {
+                throw new CustomError(404, "Category not found.");
+            }
+            match.categoryId = categoryObjectId;
+        }
+
+        // Add sub-category filter if provided
+        if (subCategoryId && subCategoryId !== "null") {
+            const subCategoryObjectId = new mongoose.Types.ObjectId(subCategoryId);
+            // Optional: Validate sub-category existence
+            const subCategoryExists = await SubCategory.findById(subCategoryObjectId);
+            if (!subCategoryExists) {
+                throw new CustomError(404, "Sub-category not found.");
+            }
+            match.subCategoryId = subCategoryObjectId;
+        }
+
+        // Get total count for pagination
+        const total = await ProductBlueprint.countDocuments(match);
+
+        // Fetch paginated results (optionally populate references if needed for the response)
+        const products = await ProductBlueprint.find(match)
+            .skip(skip)
+            .limit(limitNum)
+            .populate('categoryId', 'name') // Optional: populate category name; adjust fields as needed
+            .populate('subCategoryId', 'name') // Optional: populate sub-category name
+            .exec();
+
+        return {
+            products,
+            total,
+            currentPage: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+            perPage: limitNum
+        };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing products: ${error.message}`);
+    }
+};
+
+
+
+
 module.exports = {
     create,
     update,
@@ -1115,6 +1204,7 @@ module.exports = {
     getListStockOfSupplier,
     getListStockForCustomer,
     getListBlueprintsForCms,
+    getListSimilarBlueprints,
 
     getStockByProductId
 };

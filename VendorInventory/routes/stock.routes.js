@@ -146,6 +146,7 @@ router.get('/list/all/blueprints/for/cms', entityAuth.authorizeEntity("Product",
 
 router.get('/stock/by/product/:clientId/:productId', stockContrller.getStockByProductId);
 
+router.get('/list/all/similar/blueprints', stockContrller.listSimilarBlueprint)
 
 
 

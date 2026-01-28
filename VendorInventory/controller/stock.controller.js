@@ -666,3 +666,54 @@ exports.getStockByProductId = async (req, res, next) => {
 
 
 
+
+exports.listSimilarBlueprint = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const {
+            clientId,
+            keyword = '',
+            page: pageStr = '1',
+            perPage: perPageStr = '10',
+            categoryId = null,
+            subCategoryId = null,
+            exclude= null
+        } = req.query;
+
+
+        if (!clientId) {
+            return res.status(400).send({
+                message: "Client ID is required",
+            });
+        }
+
+        // Convert to numbers
+        const page = parseInt(pageStr, 10);
+        const perPage = parseInt(perPageStr, 10);
+
+        if (isNaN(page) || isNaN(perPage) || page < 1 || perPage < 1) {
+            return res.status(400).send({
+                message: "Invalid pagination parameters",
+            });
+        }
+
+        const result = await stockService.getListSimilarBlueprints(
+            clientId,
+            keyword,
+            categoryId,
+            subCategoryId,
+            exclude,
+            { page, limit: perPage }
+        );
+
+        return res.status(200).send({
+            message: "Products found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
