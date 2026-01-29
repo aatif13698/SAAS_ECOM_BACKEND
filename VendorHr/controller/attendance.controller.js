@@ -118,7 +118,7 @@ exports.punchOut = async (req, res, next) => {
         attendance.punchOut = todayDate;
 
         // Calculate totalWorkedMinutes (simplified, exclude breaks if implemented)
-        // attendance.totalWorkedMinutes = Math.floor((today - attendance.punchIn) / 60000);
+        attendance.totalWorkedMinutes = Math.floor((todayDate - attendance.punchIn) / 60000);
 
         // // Fetch shift
         // const employee = await Employee.findById(employeeId).populate('shiftId');
