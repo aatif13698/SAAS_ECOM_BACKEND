@@ -648,6 +648,42 @@ const defaultPersmissionsList = [
           softDelete: { id: 249, access: false, api: "/demo/path" },
           activeActive: { id: 250, access: false, api: "/demo/path" }
         }
+      },
+      {
+        name: "Landing Sections",
+        displayName: "All Landing Sections",
+        access: false,
+        subMenus: {
+          create: { id: 251, access: false, api: "/demo/path" },
+          view: { id: 252, access: false, api: "/demo/path" },
+          update: { id: 253, access: false, api: "/demo/path" },
+          softDelete: { id: 254, access: false, api: "/demo/path" },
+          activeActive: { id: 255, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Banners",
+        displayName: "All Banners",
+        access: false,
+        subMenus: {
+          create: { id: 256, access: false, api: "/demo/path" },
+          view: { id: 257, access: false, api: "/demo/path" },
+          update: { id: 258, access: false, api: "/demo/path" },
+          softDelete: { id: 259, access: false, api: "/demo/path" },
+          activeActive: { id: 260, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "About Us",
+        displayName: "All About Us",
+        access: false,
+        subMenus: {
+          create: { id: 261, access: false, api: "/demo/path" },
+          view: { id: 262, access: false, api: "/demo/path" },
+          update: { id: 263, access: false, api: "/demo/path" },
+          softDelete: { id: 264, access: false, api: "/demo/path" },
+          activeActive: { id: 265, access: false, api: "/demo/path" }
+        }
       }
     ]
   }
@@ -1299,6 +1335,42 @@ const vendorPersmissionsList = [
           update: { id: 248, access: true, api: "/demo/path" },
           softDelete: { id: 249, access: true, api: "/demo/path" },
           activeActive: { id: 250, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Landing Sections",
+        displayName: "All Landing Sections",
+        access: true,
+        subMenus: {
+          create: { id: 251, access: true, api: "/demo/path" },
+          view: { id: 252, access: true, api: "/demo/path" },
+          update: { id: 253, access: true, api: "/demo/path" },
+          softDelete: { id: 254, access: true, api: "/demo/path" },
+          activeActive: { id: 255, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Banners",
+        displayName: "All Banners",
+        access: true,
+        subMenus: {
+          create: { id: 256, access: true, api: "/demo/path" },
+          view: { id: 257, access: true, api: "/demo/path" },
+          update: { id: 258, access: true, api: "/demo/path" },
+          softDelete: { id: 259, access: true, api: "/demo/path" },
+          activeActive: { id: 260, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "About Us",
+        displayName: "All About Us",
+        access: true,
+        subMenus: {
+          create: { id: 261, access: true, api: "/demo/path" },
+          view: { id: 262, access: true, api: "/demo/path" },
+          update: { id: 263, access: true, api: "/demo/path" },
+          softDelete: { id: 264, access: true, api: "/demo/path" },
+          activeActive: { id: 265, access: true, api: "/demo/path" }
         }
       }
     ]
