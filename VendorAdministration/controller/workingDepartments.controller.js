@@ -268,8 +268,8 @@ exports.list = async (req, res, next) => {
         } else if (level == "warehouse" && levelId) { 
             filters = { 
                 ...filters, 
-                // isBuLevel: true, 
-                isWarehouseLevel: levelId 
+                // isWarehouseLevel: true,
+                warehouse:  levelId, 
             } 
         } 
  

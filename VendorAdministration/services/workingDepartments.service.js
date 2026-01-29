@@ -63,7 +63,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const { page, limit } = options;
         const skip = (page - 1) * limit;
         const [department, total] = await Promise.all([
-            WorkingDepartment.find(filters).skip(skip)
+            WorkingDepartment.find(filters).skip(skip).sort({ _id: -1 })
                 .populate({
                     path: "businessUnit",
                     model: BusinessUnit,

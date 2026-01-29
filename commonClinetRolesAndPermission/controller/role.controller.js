@@ -251,7 +251,7 @@ exports.getRolesList = async (req, res) => {
         if (roleIdOfCurrentUser !== 1) {
            filter = {
             ...filter,
-            createdBy : admin._id
+            // createdBy : admin._id
            }
         }
 
