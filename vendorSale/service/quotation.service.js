@@ -147,7 +147,6 @@ const changeStatus = async (clientId, quotationId, data) => {
 
             // await PurchaseInvoice.create(invoiceData)
         } else if (data.status == "performa_conversion") {
-            console.log("purchaseOrder.supplier", purchaseOrder.supplier);
             const User = clientConnection.model("clientUsers", clinetUserSchema)
 
 
