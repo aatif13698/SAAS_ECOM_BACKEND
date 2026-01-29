@@ -29,9 +29,9 @@ const itemNameSchema = new Schema({
 // Sub-schema for Purchase Order Item
 const salesQuotationItemSchema = new Schema({
     srNo: { type: Number, required: true, min: 1 },
-    itemName: { type: itemNameSchema, required: true }, 
+    itemName: { type: itemNameSchema, required: true },
     quantity: { type: Number, required: true, min: 1 },
-    mrp: { type: Number, default: 0, min: 0 }, 
+    mrp: { type: Number, default: 0, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
     taxableAmount: { type: Number, default: 0, min: 0 },
     gstPercent: { type: Number, default: 0, min: 0 }, // Overall GST percentage
@@ -66,10 +66,10 @@ const saleQuotationSchema = new Schema(
         isWarehouseLevel: { type: Boolean, default: false },
 
 
-        customer: { type: ObjectId, ref: "ClientUser", required: true, index: true }, 
+        customer: { type: ObjectId, ref: "ClientUser", required: true, index: true },
         customerLedger: { type: ObjectId, ref: 'ledger', required: true },
         shippingAddress: { type: shippingAddressSchema, required: true },
-        sqNumber: { type: String, trim: true, required: true, unique: true, index: true }, 
+        sqNumber: { type: String, trim: true, required: true, unique: true, index: true },
         sqDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
 
         // Items array
@@ -85,16 +85,17 @@ const saleQuotationSchema = new Schema(
         payedFrom: [
             {
                 id: { type: ObjectId, ref: 'ledger', default: null },
-                paymentType: { type: String, default: null },              
+                paymentType: { type: String, default: null },
                 linkedId: { type: String, default: null },
                 amount: { type: Number, required: true }
             }
         ],
         balance: { type: Number, default: 0, min: 0 },
+        grandTotal: { type: Number, default: 0, min: 0 },
 
-        status: { type: String, enum: ['draft', 'issued', 'invoiced', 'partially_invoiced', 'pending_approval', 'approved', 'closed', 'canceled'], default: "draft" },
+        status: { type: String, enum: ['draft', 'issued', 'performa_conversion', 'invoice_conversion', 'approved', 'closed', 'canceled'], default: "draft" },
 
-        auditStatus: { type: String, enum: ['completed','pending'], default: "pending" },
+        auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },
 
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
