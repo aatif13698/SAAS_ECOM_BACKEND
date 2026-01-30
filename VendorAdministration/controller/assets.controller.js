@@ -371,6 +371,28 @@ exports.assign = async (req, res, next) => {
     }
 };
 
+
+// assets of employee
+exports.getAssetsOfEmployee = async (req, res, next) => {
+    try {
+        const { clientId, empId } = req.params;
+        
+        if (!clientId || !empId) {
+            return res.status(400).send({
+                message: "Client id and employee id is required.",
+            });
+        }
+        const assets = await assetService.assetsOfEmployee(clientId, empId);
+        return res.status(200).send({
+            message: message.lblAssetFoundSucessfully,
+            data: assets,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
+
 // unassign
 // exports.unAssign = async (req, res, next) => {
 //     try {

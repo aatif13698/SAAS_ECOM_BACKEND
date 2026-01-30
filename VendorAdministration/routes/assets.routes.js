@@ -24,6 +24,9 @@ router.post("/activeInactive/asset", entityAuth.authorizeEntity("Human resources
 
 router.post('/assign/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.assign );
 
+router.get('/get/assest/of/employee/:clientId/:empId', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.getAssetsOfEmployee);
+
+
 // router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.unAssign );
 
 router.post('/create/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.createRequest );

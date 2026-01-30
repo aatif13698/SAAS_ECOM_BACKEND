@@ -85,6 +85,27 @@ const getById = async (clientId, assetId) => {
 };
 
 
+
+const assetsOfEmployee = async (clientId, empId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema);
+        const emp = await User.findById(empId)
+            .populate({
+                path: "assignedAssets.assetId",
+                model: Asset,
+            })
+        if (!emp) {
+            throw new CustomError(statusCode.NotFound, "Employee not found.");
+        }
+        return emp.assignedAssets;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting asset: ${error.message}`);
+    }
+};
+
+
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -226,6 +247,9 @@ module.exports = {
     list,
     activeInactive,
     assignToEmployee,
+    assetsOfEmployee,
+
+
     unAssignToEmployee,
     createRequest
 };
