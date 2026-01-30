@@ -417,7 +417,6 @@ exports.createRequest = async (req, res, next) => {
             employeeId,
             requestType,
             reason,
-            status,
             notes,
         } = req.body;
         const mainUser = req.user;
@@ -430,7 +429,6 @@ exports.createRequest = async (req, res, next) => {
             employeeId,
             requestType,
             reason,
-            status,
             notes,
         ];
 
@@ -444,7 +442,6 @@ exports.createRequest = async (req, res, next) => {
             employeeId,
             requestType,
             reason,
-            status,
             notes,
             createdBy: mainUser._id,
         };
