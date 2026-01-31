@@ -86,7 +86,8 @@ const financialYear = require("./VendorAccount/routes/financialYear.routes.js");
 const currency = require("./VendorAccount/routes/currency.routes.js");
 const voucherGroup = require("./VendorAccount/routes/voucherGroup.routes.js");
 const Voucher = require("./VendorAccount/routes/voucher.routes.js");
-const purhcasePaymentConfigure = require("./VendorAccount/routes/purchasePaymentConfig.routes.js")
+const purhcasePaymentConfigure = require("./VendorAccount/routes/purchasePaymentConfig.routes.js");
+const salePaymentInConfigure = require("./vendorSale//routes/salePaymentInConfigure.routes.js");
 
 
 const PurchaseOrder = require("./vendorPurchase/routes/purchaseOrder.routes.js");
@@ -205,6 +206,7 @@ app.use("/api/vendor/accounts/cu", currency.router);
 app.use("/api/vendor/accounts/vg", voucherGroup.router);
 app.use("/api/vendor/accounts/vo", Voucher.router);
 app.use("/api/vendor/accounts/settings/pur", purhcasePaymentConfigure.router);
+app.use("/api/vendor/accounts/settings/sale", salePaymentInConfigure.router);
 
 
 
