@@ -31,6 +31,10 @@ router.get('/get/assest/of/employee/:clientId/:empId', entityAuth.authorizeEntit
 
 router.post('/create/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.createRequest );
 
+router.get('/list/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.listAssetRequest);
+
+router.get('/list/asset/request/of/employee/:clientId/:empId', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.getAssetRequestOfEmployee);
+
 
 // # create, update, view, list, activate/inactive  woring department
 

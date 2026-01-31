@@ -227,10 +227,130 @@ const unAssignToEmployee = async (clientId, useId, assetId) => {
 const createRequest = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const AssetRequest = clientConnection.model('assetRequest', clientAssetRequestSchema)
-        return await AssetRequest.create(data);
+        const AssetRequest = clientConnection.model('assetRequest', clientAssetRequestSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema);
+
+        const emp = await User.findById(data?.employeeId);
+
+        if (!emp) {
+            throw new CustomError(statusCode.NotFound, "Employee not found.");
+        }
+
+
+        const dataObject = {
+            businessUnit: emp.businessUnit,
+            branch: emp.branch,
+            warehouse: emp.warehouse,
+
+            isVendorLevel: emp.isVendorLevel,
+            isBuLevel: emp.isBuLevel,
+            isBranchLevel: emp.isBranchLevel,
+            isWarehouseLevel: emp.isWarehouseLevel,
+
+            ...data
+        }
+
+
+
+        return await AssetRequest.create(dataObject);
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating asset request: ${error.message}`);
+    }
+};
+
+
+const listAssetRequest = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const AssetRequest = clientConnection.model('assetRequest', clientAssetRequestSchema);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+
+        const User = clientConnection.model('clientUsers', clientUserSchema)
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const { page, limit } = options;
+        const skip = (page - 1) * limit;
+        const [assetRequests, total] = await Promise.all([
+            AssetRequest.find(filters).skip(skip).sort({ _id: -1 })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                })
+                .populate({
+                    path: "employeeId",
+                    model: User,
+                    select: "firstName lastName email phone profileImage"
+                })
+                .populate({
+                    path: "assetId",
+                    model: Asset,
+                    select: "assetName"
+                }),
+            AssetRequest.countDocuments(filters),
+        ]);
+        return { count: total, assetRequests };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing asset: ${error.message}`);
+    }
+};
+
+
+const assetRequestsOfEmployee = async (clientId, empId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+        const AssetRequest = clientConnection.model('assetRequest', clientAssetRequestSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema)
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const emp = await User.findById(empId);
+        if (!emp) {
+            throw new CustomError(statusCode.NotFound, "Employee not found.");
+        };
+
+        const requests = await AssetRequest.find({ employeeId: empId }).sort({ _id: -1 })
+            .populate({
+                path: "businessUnit",
+                model: BusinessUnit,
+                select: "name"
+            })
+            .populate({
+                path: "branch",
+                model: Branch,
+                select: "name"
+            })
+            .populate({
+                path: "warehouse",
+                model: Warehouse,
+                select: "name"
+            })
+            .populate({
+                path: "employeeId",
+                model: User,
+                select: "firstName lastName email phone profileImage"
+            })
+            .populate({
+                path: "assetId",
+                model: Asset,
+                select: "assetName"
+            });
+
+        return requests;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error getting asset: ${error.message}`);
     }
 };
 
@@ -248,8 +368,9 @@ module.exports = {
     activeInactive,
     assignToEmployee,
     assetsOfEmployee,
-
+    assetRequestsOfEmployee,
 
     unAssignToEmployee,
-    createRequest
+    createRequest,
+    listAssetRequest
 };

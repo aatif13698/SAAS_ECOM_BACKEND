@@ -455,6 +455,77 @@ exports.createRequest = async (req, res, next) => {
     }
 };
 
+exports.listAssetRequest = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            ...(keyword && {
+                $or: [
+                    { assetName: { $regex: keyword.trim(), $options: "i" } },
+                ],
+            }),
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+
+        const result = await assetService.listAssetRequest(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: "Asset requests found successfully. ",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.getAssetRequestOfEmployee = async (req, res, next) => {
+    try {
+        const { clientId, empId } = req.params;
+        
+        if (!clientId || !empId) {
+            return res.status(400).send({
+                message: "Client id and employee id is required.",
+            });
+        }
+        const assets = await assetService.assetRequestsOfEmployee(clientId, empId);
+        return res.status(200).send({
+            message: "Requests found successfully.",
+            data: assets,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
 
 
 

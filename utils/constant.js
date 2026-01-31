@@ -80,8 +80,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Leave Category",
-        displayName: "All Leave Category",
+        name: "Asset Requests",
+        displayName: "All Asset Requests",
         access: false,
         subMenus: {
           create: { id: 31, access: false, api: "/demo/path" },
@@ -92,8 +92,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Leave Allotment",
-        displayName: "All Leave Allotment",
+        name: "Leave Category",
+        displayName: "All Leave Category",
         access: false,
         subMenus: {
           create: { id: 36, access: false, api: "/demo/path" },
@@ -104,8 +104,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Leave Requests",
-        displayName: "All Leave Requests",
+        name: "Leave Allotment",
+        displayName: "All Leave Allotment",
         access: false,
         subMenus: {
           create: { id: 41, access: false, api: "/demo/path" },
@@ -116,8 +116,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Holiday",
-        displayName: "All Holiday",
+        name: "Leave Requests",
+        displayName: "All Leave Requests",
         access: false,
         subMenus: {
           create: { id: 46, access: false, api: "/demo/path" },
@@ -125,6 +125,18 @@ const defaultPersmissionsList = [
           update: { id: 48, access: false, api: "/demo/path" },
           softDelete: { id: 49, access: false, api: "/demo/path" },
           activeActive: { id: 50, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Holiday",
+        displayName: "All Holiday",
+        access: false,
+        subMenus: {
+          create: { id: 51, access: false, api: "/demo/path" },
+          view: { id: 52, access: false, api: "/demo/path" },
+          update: { id: 53, access: false, api: "/demo/path" },
+          softDelete: { id: 54, access: false, api: "/demo/path" },
+          activeActive: { id: 55, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -138,18 +150,6 @@ const defaultPersmissionsList = [
         displayName: "All Roles & Permissions",
         access: false,
         subMenus: {
-          create: { id: 51, access: false, api: "/demo/path" },
-          view: { id: 52, access: false, api: "/demo/path" },
-          update: { id: 53, access: false, api: "/demo/path" },
-          softDelete: { id: 54, access: false, api: "/demo/path" },
-          activeActive: { id: 55, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Employee",
-        displayName: "All Employee",
-        access: false,
-        subMenus: {
           create: { id: 56, access: false, api: "/demo/path" },
           view: { id: 57, access: false, api: "/demo/path" },
           update: { id: 58, access: false, api: "/demo/path" },
@@ -158,8 +158,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Customer",
-        displayName: "All Customer",
+        name: "Employee",
+        displayName: "All Employee",
         access: false,
         subMenus: {
           create: { id: 61, access: false, api: "/demo/path" },
@@ -170,8 +170,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "BusinessUnit",
-        displayName: "All BusinessUnit",
+        name: "Customer",
+        displayName: "All Customer",
         access: false,
         subMenus: {
           create: { id: 66, access: false, api: "/demo/path" },
@@ -182,8 +182,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Branch",
-        displayName: "All Branch",
+        name: "BusinessUnit",
+        displayName: "All BusinessUnit",
         access: false,
         subMenus: {
           create: { id: 71, access: false, api: "/demo/path" },
@@ -194,8 +194,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Warehouse",
-        displayName: "All Warehouse",
+        name: "Branch",
+        displayName: "All Branch",
         access: false,
         subMenus: {
           create: { id: 76, access: false, api: "/demo/path" },
@@ -203,6 +203,18 @@ const defaultPersmissionsList = [
           update: { id: 78, access: false, api: "/demo/path" },
           softDelete: { id: 79, access: false, api: "/demo/path" },
           activeActive: { id: 80, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Warehouse",
+        displayName: "All Warehouse",
+        access: false,
+        subMenus: {
+          create: { id: 81, access: false, api: "/demo/path" },
+          view: { id: 82, access: false, api: "/demo/path" },
+          update: { id: 83, access: false, api: "/demo/path" },
+          softDelete: { id: 84, access: false, api: "/demo/path" },
+          activeActive: { id: 85, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -216,18 +228,6 @@ const defaultPersmissionsList = [
         displayName: "All SubCategory",
         access: false,
         subMenus: {
-          create: { id: 81, access: false, api: "/demo/path" },
-          view: { id: 82, access: false, api: "/demo/path" },
-          update: { id: 83, access: false, api: "/demo/path" },
-          softDelete: { id: 84, access: false, api: "/demo/path" },
-          activeActive: { id: 85, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Brand",
-        displayName: "All Brand",
-        access: false,
-        subMenus: {
           create: { id: 86, access: false, api: "/demo/path" },
           view: { id: 87, access: false, api: "/demo/path" },
           update: { id: 88, access: false, api: "/demo/path" },
@@ -236,8 +236,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Manufacturer",
-        displayName: "All Manufacturer",
+        name: "Brand",
+        displayName: "All Brand",
         access: false,
         subMenus: {
           create: { id: 91, access: false, api: "/demo/path" },
@@ -248,8 +248,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Product",
-        displayName: "All Product",
+        name: "Manufacturer",
+        displayName: "All Manufacturer",
         access: false,
         subMenus: {
           create: { id: 96, access: false, api: "/demo/path" },
@@ -260,8 +260,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Product QA",
-        displayName: "All Product QA",
+        name: "Product",
+        displayName: "All Product",
         access: false,
         subMenus: {
           create: { id: 101, access: false, api: "/demo/path" },
@@ -272,8 +272,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Product QA Out",
-        displayName: "All Product QA Out",
+        name: "Product QA",
+        displayName: "All Product QA",
         access: false,
         subMenus: {
           create: { id: 106, access: false, api: "/demo/path" },
@@ -284,8 +284,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Query",
-        displayName: "All Query",
+        name: "Product QA Out",
+        displayName: "All Product QA Out",
         access: false,
         subMenus: {
           create: { id: 111, access: false, api: "/demo/path" },
@@ -296,8 +296,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Attribute",
-        displayName: "All Attribute",
+        name: "Query",
+        displayName: "All Query",
         access: false,
         subMenus: {
           create: { id: 116, access: false, api: "/demo/path" },
@@ -308,8 +308,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Variant",
-        displayName: "All Variant",
+        name: "Attribute",
+        displayName: "All Attribute",
         access: false,
         subMenus: {
           create: { id: 121, access: false, api: "/demo/path" },
@@ -320,8 +320,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Pricing",
-        displayName: "All Pricing",
+        name: "Variant",
+        displayName: "All Variant",
         access: false,
         subMenus: {
           create: { id: 126, access: false, api: "/demo/path" },
@@ -329,6 +329,18 @@ const defaultPersmissionsList = [
           update: { id: 128, access: false, api: "/demo/path" },
           softDelete: { id: 129, access: false, api: "/demo/path" },
           activeActive: { id: 130, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Pricing",
+        displayName: "All Pricing",
+        access: false,
+        subMenus: {
+          create: { id: 131, access: false, api: "/demo/path" },
+          view: { id: 132, access: false, api: "/demo/path" },
+          update: { id: 133, access: false, api: "/demo/path" },
+          softDelete: { id: 134, access: false, api: "/demo/path" },
+          activeActive: { id: 135, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -342,18 +354,6 @@ const defaultPersmissionsList = [
         displayName: "All Transport",
         access: false,
         subMenus: {
-          create: { id: 131, access: false, api: "/demo/path" },
-          view: { id: 132, access: false, api: "/demo/path" },
-          update: { id: 133, access: false, api: "/demo/path" },
-          softDelete: { id: 134, access: false, api: "/demo/path" },
-          activeActive: { id: 135, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Stock",
-        displayName: "All Stock",
-        access: false,
-        subMenus: {
           create: { id: 136, access: false, api: "/demo/path" },
           view: { id: 137, access: false, api: "/demo/path" },
           update: { id: 138, access: false, api: "/demo/path" },
@@ -362,8 +362,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Audit Stock",
-        displayName: "All Audit Stock",
+        name: "Stock",
+        displayName: "All Stock",
         access: false,
         subMenus: {
           create: { id: 141, access: false, api: "/demo/path" },
@@ -374,8 +374,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Order",
-        displayName: "All Order",
+        name: "Audit Stock",
+        displayName: "All Audit Stock",
         access: false,
         subMenus: {
           create: { id: 146, access: false, api: "/demo/path" },
@@ -383,6 +383,18 @@ const defaultPersmissionsList = [
           update: { id: 148, access: false, api: "/demo/path" },
           softDelete: { id: 149, access: false, api: "/demo/path" },
           activeActive: { id: 150, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Order",
+        displayName: "All Order",
+        access: false,
+        subMenus: {
+          create: { id: 151, access: false, api: "/demo/path" },
+          view: { id: 152, access: false, api: "/demo/path" },
+          update: { id: 153, access: false, api: "/demo/path" },
+          softDelete: { id: 154, access: false, api: "/demo/path" },
+          activeActive: { id: 155, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -396,18 +408,6 @@ const defaultPersmissionsList = [
         displayName: "All Financial Year",
         access: false,
         subMenus: {
-          create: { id: 151, access: false, api: "/demo/path" },
-          view: { id: 152, access: false, api: "/demo/path" },
-          update: { id: 153, access: false, api: "/demo/path" },
-          softDelete: { id: 154, access: false, api: "/demo/path" },
-          activeActive: { id: 155, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Currency",
-        displayName: "All Currency",
-        access: false,
-        subMenus: {
           create: { id: 156, access: false, api: "/demo/path" },
           view: { id: 157, access: false, api: "/demo/path" },
           update: { id: 158, access: false, api: "/demo/path" },
@@ -416,8 +416,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Ledger",
-        displayName: "All Ledger",
+        name: "Currency",
+        displayName: "All Currency",
         access: false,
         subMenus: {
           create: { id: 161, access: false, api: "/demo/path" },
@@ -428,8 +428,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Group",
-        displayName: "All Group",
+        name: "Ledger",
+        displayName: "All Ledger",
         access: false,
         subMenus: {
           create: { id: 166, access: false, api: "/demo/path" },
@@ -440,8 +440,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Voucher Group",
-        displayName: "All Voucher Group",
+        name: "Group",
+        displayName: "All Group",
         access: false,
         subMenus: {
           create: { id: 171, access: false, api: "/demo/path" },
@@ -452,8 +452,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Voucher",
-        displayName: "All Voucher",
+        name: "Voucher Group",
+        displayName: "All Voucher Group",
         access: false,
         subMenus: {
           create: { id: 176, access: false, api: "/demo/path" },
@@ -461,6 +461,18 @@ const defaultPersmissionsList = [
           update: { id: 178, access: false, api: "/demo/path" },
           softDelete: { id: 179, access: false, api: "/demo/path" },
           activeActive: { id: 180, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Voucher",
+        displayName: "All Voucher",
+        access: false,
+        subMenus: {
+          create: { id: 181, access: false, api: "/demo/path" },
+          view: { id: 182, access: false, api: "/demo/path" },
+          update: { id: 183, access: false, api: "/demo/path" },
+          softDelete: { id: 184, access: false, api: "/demo/path" },
+          activeActive: { id: 185, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -474,18 +486,6 @@ const defaultPersmissionsList = [
         displayName: "All Supplier",
         access: false,
         subMenus: {
-          create: { id: 181, access: false, api: "/demo/path" },
-          view: { id: 182, access: false, api: "/demo/path" },
-          update: { id: 183, access: false, api: "/demo/path" },
-          softDelete: { id: 184, access: false, api: "/demo/path" },
-          activeActive: { id: 185, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Purchase Invoices",
-        displayName: "All Purchase Invoices",
-        access: false,
-        subMenus: {
           create: { id: 186, access: false, api: "/demo/path" },
           view: { id: 187, access: false, api: "/demo/path" },
           update: { id: 188, access: false, api: "/demo/path" },
@@ -494,8 +494,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Payment Out",
-        displayName: "All Payment Out",
+        name: "Purchase Invoices",
+        displayName: "All Purchase Invoices",
         access: false,
         subMenus: {
           create: { id: 191, access: false, api: "/demo/path" },
@@ -506,8 +506,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Purchase Returns",
-        displayName: "All Purchase Returns",
+        name: "Payment Out",
+        displayName: "All Payment Out",
         access: false,
         subMenus: {
           create: { id: 196, access: false, api: "/demo/path" },
@@ -518,8 +518,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Debit Note",
-        displayName: "All Debit Note",
+        name: "Purchase Returns",
+        displayName: "All Purchase Returns",
         access: false,
         subMenus: {
           create: { id: 201, access: false, api: "/demo/path" },
@@ -530,8 +530,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Purchase Order",
-        displayName: "All Purchase Order",
+        name: "Debit Note",
+        displayName: "All Debit Note",
         access: false,
         subMenus: {
           create: { id: 206, access: false, api: "/demo/path" },
@@ -539,6 +539,18 @@ const defaultPersmissionsList = [
           update: { id: 208, access: false, api: "/demo/path" },
           softDelete: { id: 209, access: false, api: "/demo/path" },
           activeActive: { id: 210, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Purchase Order",
+        displayName: "All Purchase Order",
+        access: false,
+        subMenus: {
+          create: { id: 211, access: false, api: "/demo/path" },
+          view: { id: 212, access: false, api: "/demo/path" },
+          update: { id: 213, access: false, api: "/demo/path" },
+          softDelete: { id: 214, access: false, api: "/demo/path" },
+          activeActive: { id: 215, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -552,18 +564,6 @@ const defaultPersmissionsList = [
         displayName: "All Sales Invoices",
         access: false,
         subMenus: {
-          create: { id: 211, access: false, api: "/demo/path" },
-          view: { id: 212, access: false, api: "/demo/path" },
-          update: { id: 213, access: false, api: "/demo/path" },
-          softDelete: { id: 214, access: false, api: "/demo/path" },
-          activeActive: { id: 215, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Quotation",
-        displayName: "All Quotation",
-        access: false,
-        subMenus: {
           create: { id: 216, access: false, api: "/demo/path" },
           view: { id: 217, access: false, api: "/demo/path" },
           update: { id: 218, access: false, api: "/demo/path" },
@@ -572,8 +572,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Payment In",
-        displayName: "All Payment In",
+        name: "Quotation",
+        displayName: "All Quotation",
         access: false,
         subMenus: {
           create: { id: 221, access: false, api: "/demo/path" },
@@ -584,8 +584,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Sales Returns",
-        displayName: "All Sales Returns",
+        name: "Payment In",
+        displayName: "All Payment In",
         access: false,
         subMenus: {
           create: { id: 226, access: false, api: "/demo/path" },
@@ -596,8 +596,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Credit Note",
-        displayName: "All Credit Note",
+        name: "Sales Returns",
+        displayName: "All Sales Returns",
         access: false,
         subMenus: {
           create: { id: 231, access: false, api: "/demo/path" },
@@ -608,8 +608,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Performa Invoice",
-        displayName: "All Performa Invoice",
+        name: "Credit Note",
+        displayName: "All Credit Note",
         access: false,
         subMenus: {
           create: { id: 236, access: false, api: "/demo/path" },
@@ -620,8 +620,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Delivery Challan",
-        displayName: "All Delivery Challan",
+        name: "Performa Invoice",
+        displayName: "All Performa Invoice",
         access: false,
         subMenus: {
           create: { id: 241, access: false, api: "/demo/path" },
@@ -629,6 +629,18 @@ const defaultPersmissionsList = [
           update: { id: 243, access: false, api: "/demo/path" },
           softDelete: { id: 244, access: false, api: "/demo/path" },
           activeActive: { id: 245, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Delivery Challan",
+        displayName: "All Delivery Challan",
+        access: false,
+        subMenus: {
+          create: { id: 246, access: false, api: "/demo/path" },
+          view: { id: 247, access: false, api: "/demo/path" },
+          update: { id: 248, access: false, api: "/demo/path" },
+          softDelete: { id: 249, access: false, api: "/demo/path" },
+          activeActive: { id: 250, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -642,18 +654,6 @@ const defaultPersmissionsList = [
         displayName: "All Statements",
         access: false,
         subMenus: {
-          create: { id: 246, access: false, api: "/demo/path" },
-          view: { id: 247, access: false, api: "/demo/path" },
-          update: { id: 248, access: false, api: "/demo/path" },
-          softDelete: { id: 249, access: false, api: "/demo/path" },
-          activeActive: { id: 250, access: false, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Landing Sections",
-        displayName: "All Landing Sections",
-        access: false,
-        subMenus: {
           create: { id: 251, access: false, api: "/demo/path" },
           view: { id: 252, access: false, api: "/demo/path" },
           update: { id: 253, access: false, api: "/demo/path" },
@@ -662,8 +662,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Banners",
-        displayName: "All Banners",
+        name: "Landing Sections",
+        displayName: "All Landing Sections",
         access: false,
         subMenus: {
           create: { id: 256, access: false, api: "/demo/path" },
@@ -674,8 +674,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "About Us",
-        displayName: "All About Us",
+        name: "Banners",
+        displayName: "All Banners",
         access: false,
         subMenus: {
           create: { id: 261, access: false, api: "/demo/path" },
@@ -683,6 +683,18 @@ const defaultPersmissionsList = [
           update: { id: 263, access: false, api: "/demo/path" },
           softDelete: { id: 264, access: false, api: "/demo/path" },
           activeActive: { id: 265, access: false, api: "/demo/path" }
+        }
+      },
+      {
+        name: "About Us",
+        displayName: "All About Us",
+        access: false,
+        subMenus: {
+          create: { id: 266, access: false, api: "/demo/path" },
+          view: { id: 267, access: false, api: "/demo/path" },
+          update: { id: 268, access: false, api: "/demo/path" },
+          softDelete: { id: 269, access: false, api: "/demo/path" },
+          activeActive: { id: 270, access: false, api: "/demo/path" }
         }
       }
     ]
@@ -768,8 +780,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Leave Category",
-        displayName: "All Leave Category",
+        name: "Asset Requests",
+        displayName: "All Asset Requests",
         access: true,
         subMenus: {
           create: { id: 31, access: true, api: "/demo/path" },
@@ -780,8 +792,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Leave Allotment",
-        displayName: "All Leave Allotment",
+        name: "Leave Category",
+        displayName: "All Leave Category",
         access: true,
         subMenus: {
           create: { id: 36, access: true, api: "/demo/path" },
@@ -792,8 +804,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Leave Requests",
-        displayName: "All Leave Requests",
+        name: "Leave Allotment",
+        displayName: "All Leave Allotment",
         access: true,
         subMenus: {
           create: { id: 41, access: true, api: "/demo/path" },
@@ -804,8 +816,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Holiday",
-        displayName: "All Holiday",
+        name: "Leave Requests",
+        displayName: "All Leave Requests",
         access: true,
         subMenus: {
           create: { id: 46, access: true, api: "/demo/path" },
@@ -813,6 +825,18 @@ const vendorPersmissionsList = [
           update: { id: 48, access: true, api: "/demo/path" },
           softDelete: { id: 49, access: true, api: "/demo/path" },
           activeActive: { id: 50, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Holiday",
+        displayName: "All Holiday",
+        access: true,
+        subMenus: {
+          create: { id: 51, access: true, api: "/demo/path" },
+          view: { id: 52, access: true, api: "/demo/path" },
+          update: { id: 53, access: true, api: "/demo/path" },
+          softDelete: { id: 54, access: true, api: "/demo/path" },
+          activeActive: { id: 55, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -826,18 +850,6 @@ const vendorPersmissionsList = [
         displayName: "All Roles & Permissions",
         access: true,
         subMenus: {
-          create: { id: 51, access: true, api: "/demo/path" },
-          view: { id: 52, access: true, api: "/demo/path" },
-          update: { id: 53, access: true, api: "/demo/path" },
-          softDelete: { id: 54, access: true, api: "/demo/path" },
-          activeActive: { id: 55, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Employee",
-        displayName: "All Employee",
-        access: true,
-        subMenus: {
           create: { id: 56, access: true, api: "/demo/path" },
           view: { id: 57, access: true, api: "/demo/path" },
           update: { id: 58, access: true, api: "/demo/path" },
@@ -846,8 +858,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Customer",
-        displayName: "All Customer",
+        name: "Employee",
+        displayName: "All Employee",
         access: true,
         subMenus: {
           create: { id: 61, access: true, api: "/demo/path" },
@@ -858,8 +870,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "BusinessUnit",
-        displayName: "All BusinessUnit",
+        name: "Customer",
+        displayName: "All Customer",
         access: true,
         subMenus: {
           create: { id: 66, access: true, api: "/demo/path" },
@@ -870,8 +882,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Branch",
-        displayName: "All Branch",
+        name: "BusinessUnit",
+        displayName: "All BusinessUnit",
         access: true,
         subMenus: {
           create: { id: 71, access: true, api: "/demo/path" },
@@ -882,8 +894,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Warehouse",
-        displayName: "All Warehouse",
+        name: "Branch",
+        displayName: "All Branch",
         access: true,
         subMenus: {
           create: { id: 76, access: true, api: "/demo/path" },
@@ -891,6 +903,18 @@ const vendorPersmissionsList = [
           update: { id: 78, access: true, api: "/demo/path" },
           softDelete: { id: 79, access: true, api: "/demo/path" },
           activeActive: { id: 80, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Warehouse",
+        displayName: "All Warehouse",
+        access: true,
+        subMenus: {
+          create: { id: 81, access: true, api: "/demo/path" },
+          view: { id: 82, access: true, api: "/demo/path" },
+          update: { id: 83, access: true, api: "/demo/path" },
+          softDelete: { id: 84, access: true, api: "/demo/path" },
+          activeActive: { id: 85, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -904,18 +928,6 @@ const vendorPersmissionsList = [
         displayName: "All SubCategory",
         access: true,
         subMenus: {
-          create: { id: 81, access: true, api: "/demo/path" },
-          view: { id: 82, access: true, api: "/demo/path" },
-          update: { id: 83, access: true, api: "/demo/path" },
-          softDelete: { id: 84, access: true, api: "/demo/path" },
-          activeActive: { id: 85, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Brand",
-        displayName: "All Brand",
-        access: true,
-        subMenus: {
           create: { id: 86, access: true, api: "/demo/path" },
           view: { id: 87, access: true, api: "/demo/path" },
           update: { id: 88, access: true, api: "/demo/path" },
@@ -924,8 +936,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Manufacturer",
-        displayName: "All Manufacturer",
+        name: "Brand",
+        displayName: "All Brand",
         access: true,
         subMenus: {
           create: { id: 91, access: true, api: "/demo/path" },
@@ -936,8 +948,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Product",
-        displayName: "All Product",
+        name: "Manufacturer",
+        displayName: "All Manufacturer",
         access: true,
         subMenus: {
           create: { id: 96, access: true, api: "/demo/path" },
@@ -948,8 +960,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Product QA",
-        displayName: "All Product QA",
+        name: "Product",
+        displayName: "All Product",
         access: true,
         subMenus: {
           create: { id: 101, access: true, api: "/demo/path" },
@@ -960,8 +972,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Product QA Out",
-        displayName: "All Product QA Out",
+        name: "Product QA",
+        displayName: "All Product QA",
         access: true,
         subMenus: {
           create: { id: 106, access: true, api: "/demo/path" },
@@ -972,8 +984,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Query",
-        displayName: "All Query",
+        name: "Product QA Out",
+        displayName: "All Product QA Out",
         access: true,
         subMenus: {
           create: { id: 111, access: true, api: "/demo/path" },
@@ -984,8 +996,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Attribute",
-        displayName: "All Attribute",
+        name: "Query",
+        displayName: "All Query",
         access: true,
         subMenus: {
           create: { id: 116, access: true, api: "/demo/path" },
@@ -996,8 +1008,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Variant",
-        displayName: "All Variant",
+        name: "Attribute",
+        displayName: "All Attribute",
         access: true,
         subMenus: {
           create: { id: 121, access: true, api: "/demo/path" },
@@ -1008,8 +1020,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Pricing",
-        displayName: "All Pricing",
+        name: "Variant",
+        displayName: "All Variant",
         access: true,
         subMenus: {
           create: { id: 126, access: true, api: "/demo/path" },
@@ -1017,6 +1029,18 @@ const vendorPersmissionsList = [
           update: { id: 128, access: true, api: "/demo/path" },
           softDelete: { id: 129, access: true, api: "/demo/path" },
           activeActive: { id: 130, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Pricing",
+        displayName: "All Pricing",
+        access: true,
+        subMenus: {
+          create: { id: 131, access: true, api: "/demo/path" },
+          view: { id: 132, access: true, api: "/demo/path" },
+          update: { id: 133, access: true, api: "/demo/path" },
+          softDelete: { id: 134, access: true, api: "/demo/path" },
+          activeActive: { id: 135, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -1030,18 +1054,6 @@ const vendorPersmissionsList = [
         displayName: "All Transport",
         access: true,
         subMenus: {
-          create: { id: 131, access: true, api: "/demo/path" },
-          view: { id: 132, access: true, api: "/demo/path" },
-          update: { id: 133, access: true, api: "/demo/path" },
-          softDelete: { id: 134, access: true, api: "/demo/path" },
-          activeActive: { id: 135, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Stock",
-        displayName: "All Stock",
-        access: true,
-        subMenus: {
           create: { id: 136, access: true, api: "/demo/path" },
           view: { id: 137, access: true, api: "/demo/path" },
           update: { id: 138, access: true, api: "/demo/path" },
@@ -1050,8 +1062,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Audit Stock",
-        displayName: "All Audit Stock",
+        name: "Stock",
+        displayName: "All Stock",
         access: true,
         subMenus: {
           create: { id: 141, access: true, api: "/demo/path" },
@@ -1062,8 +1074,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Order",
-        displayName: "All Order",
+        name: "Audit Stock",
+        displayName: "All Audit Stock",
         access: true,
         subMenus: {
           create: { id: 146, access: true, api: "/demo/path" },
@@ -1071,6 +1083,18 @@ const vendorPersmissionsList = [
           update: { id: 148, access: true, api: "/demo/path" },
           softDelete: { id: 149, access: true, api: "/demo/path" },
           activeActive: { id: 150, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Order",
+        displayName: "All Order",
+        access: true,
+        subMenus: {
+          create: { id: 151, access: true, api: "/demo/path" },
+          view: { id: 152, access: true, api: "/demo/path" },
+          update: { id: 153, access: true, api: "/demo/path" },
+          softDelete: { id: 154, access: true, api: "/demo/path" },
+          activeActive: { id: 155, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -1084,18 +1108,6 @@ const vendorPersmissionsList = [
         displayName: "All Financial Year",
         access: true,
         subMenus: {
-          create: { id: 151, access: true, api: "/demo/path" },
-          view: { id: 152, access: true, api: "/demo/path" },
-          update: { id: 153, access: true, api: "/demo/path" },
-          softDelete: { id: 154, access: true, api: "/demo/path" },
-          activeActive: { id: 155, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Currency",
-        displayName: "All Currency",
-        access: true,
-        subMenus: {
           create: { id: 156, access: true, api: "/demo/path" },
           view: { id: 157, access: true, api: "/demo/path" },
           update: { id: 158, access: true, api: "/demo/path" },
@@ -1104,8 +1116,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Ledger",
-        displayName: "All Ledger",
+        name: "Currency",
+        displayName: "All Currency",
         access: true,
         subMenus: {
           create: { id: 161, access: true, api: "/demo/path" },
@@ -1116,8 +1128,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Group",
-        displayName: "All Group",
+        name: "Ledger",
+        displayName: "All Ledger",
         access: true,
         subMenus: {
           create: { id: 166, access: true, api: "/demo/path" },
@@ -1128,8 +1140,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Voucher Group",
-        displayName: "All Voucher Group",
+        name: "Group",
+        displayName: "All Group",
         access: true,
         subMenus: {
           create: { id: 171, access: true, api: "/demo/path" },
@@ -1140,8 +1152,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Voucher",
-        displayName: "All Voucher",
+        name: "Voucher Group",
+        displayName: "All Voucher Group",
         access: true,
         subMenus: {
           create: { id: 176, access: true, api: "/demo/path" },
@@ -1149,6 +1161,18 @@ const vendorPersmissionsList = [
           update: { id: 178, access: true, api: "/demo/path" },
           softDelete: { id: 179, access: true, api: "/demo/path" },
           activeActive: { id: 180, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Voucher",
+        displayName: "All Voucher",
+        access: true,
+        subMenus: {
+          create: { id: 181, access: true, api: "/demo/path" },
+          view: { id: 182, access: true, api: "/demo/path" },
+          update: { id: 183, access: true, api: "/demo/path" },
+          softDelete: { id: 184, access: true, api: "/demo/path" },
+          activeActive: { id: 185, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -1162,18 +1186,6 @@ const vendorPersmissionsList = [
         displayName: "All Supplier",
         access: true,
         subMenus: {
-          create: { id: 181, access: true, api: "/demo/path" },
-          view: { id: 182, access: true, api: "/demo/path" },
-          update: { id: 183, access: true, api: "/demo/path" },
-          softDelete: { id: 184, access: true, api: "/demo/path" },
-          activeActive: { id: 185, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Purchase Invoices",
-        displayName: "All Purchase Invoices",
-        access: true,
-        subMenus: {
           create: { id: 186, access: true, api: "/demo/path" },
           view: { id: 187, access: true, api: "/demo/path" },
           update: { id: 188, access: true, api: "/demo/path" },
@@ -1182,8 +1194,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Payment Out",
-        displayName: "All Payment Out",
+        name: "Purchase Invoices",
+        displayName: "All Purchase Invoices",
         access: true,
         subMenus: {
           create: { id: 191, access: true, api: "/demo/path" },
@@ -1194,8 +1206,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Purchase Returns",
-        displayName: "All Purchase Returns",
+        name: "Payment Out",
+        displayName: "All Payment Out",
         access: true,
         subMenus: {
           create: { id: 196, access: true, api: "/demo/path" },
@@ -1206,8 +1218,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Debit Note",
-        displayName: "All Debit Note",
+        name: "Purchase Returns",
+        displayName: "All Purchase Returns",
         access: true,
         subMenus: {
           create: { id: 201, access: true, api: "/demo/path" },
@@ -1218,8 +1230,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Purchase Order",
-        displayName: "All Purchase Order",
+        name: "Debit Note",
+        displayName: "All Debit Note",
         access: true,
         subMenus: {
           create: { id: 206, access: true, api: "/demo/path" },
@@ -1227,6 +1239,18 @@ const vendorPersmissionsList = [
           update: { id: 208, access: true, api: "/demo/path" },
           softDelete: { id: 209, access: true, api: "/demo/path" },
           activeActive: { id: 210, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Purchase Order",
+        displayName: "All Purchase Order",
+        access: true,
+        subMenus: {
+          create: { id: 211, access: true, api: "/demo/path" },
+          view: { id: 212, access: true, api: "/demo/path" },
+          update: { id: 213, access: true, api: "/demo/path" },
+          softDelete: { id: 214, access: true, api: "/demo/path" },
+          activeActive: { id: 215, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -1240,18 +1264,6 @@ const vendorPersmissionsList = [
         displayName: "All Sales Invoices",
         access: true,
         subMenus: {
-          create: { id: 211, access: true, api: "/demo/path" },
-          view: { id: 212, access: true, api: "/demo/path" },
-          update: { id: 213, access: true, api: "/demo/path" },
-          softDelete: { id: 214, access: true, api: "/demo/path" },
-          activeActive: { id: 215, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Quotation",
-        displayName: "All Quotation",
-        access: true,
-        subMenus: {
           create: { id: 216, access: true, api: "/demo/path" },
           view: { id: 217, access: true, api: "/demo/path" },
           update: { id: 218, access: true, api: "/demo/path" },
@@ -1260,8 +1272,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Payment In",
-        displayName: "All Payment In",
+        name: "Quotation",
+        displayName: "All Quotation",
         access: true,
         subMenus: {
           create: { id: 221, access: true, api: "/demo/path" },
@@ -1272,8 +1284,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Sales Returns",
-        displayName: "All Sales Returns",
+        name: "Payment In",
+        displayName: "All Payment In",
         access: true,
         subMenus: {
           create: { id: 226, access: true, api: "/demo/path" },
@@ -1284,8 +1296,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Credit Note",
-        displayName: "All Credit Note",
+        name: "Sales Returns",
+        displayName: "All Sales Returns",
         access: true,
         subMenus: {
           create: { id: 231, access: true, api: "/demo/path" },
@@ -1296,8 +1308,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Performa Invoice",
-        displayName: "All Performa Invoice",
+        name: "Credit Note",
+        displayName: "All Credit Note",
         access: true,
         subMenus: {
           create: { id: 236, access: true, api: "/demo/path" },
@@ -1308,8 +1320,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Delivery Challan",
-        displayName: "All Delivery Challan",
+        name: "Performa Invoice",
+        displayName: "All Performa Invoice",
         access: true,
         subMenus: {
           create: { id: 241, access: true, api: "/demo/path" },
@@ -1317,6 +1329,18 @@ const vendorPersmissionsList = [
           update: { id: 243, access: true, api: "/demo/path" },
           softDelete: { id: 244, access: true, api: "/demo/path" },
           activeActive: { id: 245, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "Delivery Challan",
+        displayName: "All Delivery Challan",
+        access: true,
+        subMenus: {
+          create: { id: 246, access: true, api: "/demo/path" },
+          view: { id: 247, access: true, api: "/demo/path" },
+          update: { id: 248, access: true, api: "/demo/path" },
+          softDelete: { id: 249, access: true, api: "/demo/path" },
+          activeActive: { id: 250, access: true, api: "/demo/path" }
         }
       }
     ]
@@ -1330,18 +1354,6 @@ const vendorPersmissionsList = [
         displayName: "All Statements",
         access: true,
         subMenus: {
-          create: { id: 246, access: true, api: "/demo/path" },
-          view: { id: 247, access: true, api: "/demo/path" },
-          update: { id: 248, access: true, api: "/demo/path" },
-          softDelete: { id: 249, access: true, api: "/demo/path" },
-          activeActive: { id: 250, access: true, api: "/demo/path" }
-        }
-      },
-      {
-        name: "Landing Sections",
-        displayName: "All Landing Sections",
-        access: true,
-        subMenus: {
           create: { id: 251, access: true, api: "/demo/path" },
           view: { id: 252, access: true, api: "/demo/path" },
           update: { id: 253, access: true, api: "/demo/path" },
@@ -1350,8 +1362,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Banners",
-        displayName: "All Banners",
+        name: "Landing Sections",
+        displayName: "All Landing Sections",
         access: true,
         subMenus: {
           create: { id: 256, access: true, api: "/demo/path" },
@@ -1362,8 +1374,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "About Us",
-        displayName: "All About Us",
+        name: "Banners",
+        displayName: "All Banners",
         access: true,
         subMenus: {
           create: { id: 261, access: true, api: "/demo/path" },
@@ -1371,6 +1383,18 @@ const vendorPersmissionsList = [
           update: { id: 263, access: true, api: "/demo/path" },
           softDelete: { id: 264, access: true, api: "/demo/path" },
           activeActive: { id: 265, access: true, api: "/demo/path" }
+        }
+      },
+      {
+        name: "About Us",
+        displayName: "All About Us",
+        access: true,
+        subMenus: {
+          create: { id: 266, access: true, api: "/demo/path" },
+          view: { id: 267, access: true, api: "/demo/path" },
+          update: { id: 268, access: true, api: "/demo/path" },
+          softDelete: { id: 269, access: true, api: "/demo/path" },
+          activeActive: { id: 270, access: true, api: "/demo/path" }
         }
       }
     ]
