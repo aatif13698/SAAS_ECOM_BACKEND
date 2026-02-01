@@ -20,16 +20,18 @@ router.get('/get/:clientId/:asset', entityAuth.authorizeEntity("Human resources"
 
 router.get('/list/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.list);
 
+router.get('/list/asset/available', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.listAvailableAssets);
+
 router.post("/activeInactive/asset", entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.activeinactive);
 
-router.post('/assign/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.assign );
+router.post('/assign/asset', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.assign);
 
 router.get('/get/assest/of/employee/:clientId/:empId', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.getAssetsOfEmployee);
 
 
 // router.post('/asset/:assetId/unassign', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.unAssign );
 
-router.post('/create/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.createRequest );
+router.post('/create/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.createRequest);
 
 router.get('/list/asset/request', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.listAssetRequest);
 
@@ -39,7 +41,9 @@ router.get('/list/asset/request/of/employee/:clientId/:empId', entityAuth.author
 // # create, update, view, list, activate/inactive  woring department
 
 
-// app.patch('/api/asset-requests/:requestId', async (req, res) => {
+router.post('/asset/request/action', entityAuth.authorizeEntity("Human resources", "Assets & Tools", "create"), assetController.actionAssetRequest);
+
+// async (req, res) => {
 //   const { status, approvedBy } = req.body;
 //   try {
 //     const request = await AssetRequest.findById(req.params.requestId).populate('assetId');
@@ -58,9 +62,7 @@ router.get('/list/asset/request/of/employee/:clientId/:empId', entityAuth.author
 //   } catch (err) {
 //     res.status(400).json({ error: err.message });
 //   }
-// });
-
-
+// }
 
 
 exports.router = router;

@@ -334,6 +334,53 @@ exports.list = async (req, res, next) => {
     }
 };
 
+exports.listAvailableAssets = async (req, res, next) => {
+    try {
+
+        const mainUser = req.user;
+        const { clientId, keyword = '', page = 1, perPage = 10, level = "vendor", levelId = "" } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            status: "available",
+        };
+
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+
+        const result = await assetService.listAvailableAssets(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblAssetFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // active inactive
 exports.activeinactive = async (req, res, next) => {
     try {
@@ -448,6 +495,46 @@ exports.createRequest = async (req, res, next) => {
         const newRequest = await assetService.createRequest(clientId, dataObject);
         return res.status(statusCode.OK).send({
             message: "Request submitted successfully",
+            data: { request: newRequest._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.actionAssetRequest = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            assetRequestId,
+            status,
+            newAssetId
+
+        } = req.body;
+        const mainUser = req.user;
+        // Validate required fields
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+        const requiredFields = [
+            clientId,
+            assetRequestId,
+            status,
+        ];
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+        // Base data object
+        const dataObject = {
+            status,
+            newAssetId: newAssetId ? newAssetId : null,
+            approvedBy: mainUser._id,
+        };
+        const newRequest = await assetService.actionAssetRequest(clientId, assetRequestId, dataObject, mainUser);
+        return res.status(statusCode.OK).send({
+            message: "Action submitted successfully",
             data: { request: newRequest._id },
         });
     } catch (error) {

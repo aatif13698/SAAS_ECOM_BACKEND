@@ -146,6 +146,40 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const listAvailableAssets = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema)
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const [assets, total] = await Promise.all([
+            Asset.find(filters).sort({ _id: -1 })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
+                }),
+            Asset.countDocuments(filters),
+        ]);
+        return { count: total, assets };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing asset: ${error.message}`);
+    }
+};
+
+
 
 const activeInactive = async (clientId, assetId, data) => {
     try {
@@ -253,6 +287,61 @@ const createRequest = async (clientId, data) => {
 
 
         return await AssetRequest.create(dataObject);
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error creating asset request: ${error.message}`);
+    }
+};
+
+
+const actionAssetRequest = async (clientId, assetRequestId, data, mainUser) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const AssetRequest = clientConnection.model('assetRequest', clientAssetRequestSchema);
+        const User = clientConnection.model('clientUsers', clientUserSchema);
+        const Asset = clientConnection.model('clientAsset', clientAssetSchema);
+
+        const request = await AssetRequest.findById(assetRequestId);
+        if (!request) {
+            throw new CustomError(statusCode.NotFound, "Request not found.");
+        };
+
+        const employee = await User.findById(request.employeeId);
+        const currentAsset = await Asset.findById(request.assetId);
+
+        if (!currentAsset) {
+            throw new CustomError(statusCode.NotFound, "Asset not found.");
+        };
+
+        Object.assign(request, data);
+
+        await request.save();
+
+        currentAsset.auditLogs.push({ action: data?.status, user: mainUser._id, date: new Date() });
+
+        if (data.status == "approved") {
+            currentAsset.status = "available";
+            currentAsset.assignedTo = null;
+            employee.assignedAssets = employee.assignedAssets.filter(
+                ass => ass.assetId.toString() !== request.assetId.toString()   // ← important if IDs are ObjectId
+            );
+            await employee.save();
+
+            console.log("employee", employee.assignedAssets);
+            
+        }
+
+        await currentAsset.save();
+
+        if (data.newAssetId) {
+            const newAsset = await Asset.findById(data.newAssetId);
+            newAsset.assignedTo = request.employeeId;
+            newAsset.status = 'assigned';
+            employee.assignedAssets.push({ assetId: data.newAssetId });
+            newAsset.auditLogs.push({ action: 'assigned', user: mainUser._id, date: new Date() });
+            await newAsset.save();
+            await employee.save();
+        }
+        return request
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating asset request: ${error.message}`);
     }
@@ -369,6 +458,8 @@ module.exports = {
     assignToEmployee,
     assetsOfEmployee,
     assetRequestsOfEmployee,
+    listAvailableAssets,
+    actionAssetRequest,
 
     unAssignToEmployee,
     createRequest,
