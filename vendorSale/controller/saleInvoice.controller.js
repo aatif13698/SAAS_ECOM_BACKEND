@@ -26,7 +26,7 @@ exports.create = async (req, res, next) => {
             customerLedger,
             shippingAddress,
             siNumber,
-            spDate,
+            siDate,
             items,
             notes,
             bankDetails,
@@ -53,7 +53,7 @@ exports.create = async (req, res, next) => {
             customerLedger,
             shippingAddress,
             siNumber,
-            spDate,
+            siDate,
             items,
             grandTotal,
             // notes,
@@ -83,7 +83,7 @@ exports.create = async (req, res, next) => {
             customerLedger,
             shippingAddress,
             siNumber,
-            spDate,
+            siDate,
             items,
             notes,
             bankDetails,
@@ -96,6 +96,8 @@ exports.create = async (req, res, next) => {
             receivedIn,
             createdBy: mainUser._id,
         };
+
+        
 
         // Level-specific validation and assignment 
         const levelConfig = {
@@ -137,7 +139,7 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newInvoice = await saleInvoiceService.create(clientId, dataObject);
+        const newInvoice = await saleInvoiceService.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
             message: "Invoice created successfully.",
             data: { invoiceId: newInvoice._id },
@@ -331,7 +333,7 @@ exports.list = async (req, res, next) => {
         }
         const result = await saleInvoiceService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
-            message: message.lblHolidayFoundSucessfully,
+            message: "Invoice found successfully",
             data: result,
         });
     } catch (error) {
