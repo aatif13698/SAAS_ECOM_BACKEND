@@ -276,15 +276,15 @@ exports.issueMail = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, performaId } = req.params;
-        if (!clientId || !performaId) {
+        const { clientId, invoiceId } = req.params;
+        if (!clientId || !invoiceId) {
             return res.status(400).send({
-                message: "Client id and performa id is required.",
+                message: "Client id and invoice id is required.",
             });
         }
-        const asset = await saleInvoiceService.getById(clientId, performaId);
+        const asset = await saleInvoiceService.getById(clientId, invoiceId);
         return res.status(200).send({
-            message: "Performa found successfully",
+            message: "Invoice found successfully",
             data: asset,
         });
     } catch (error) {

@@ -163,11 +163,11 @@ const create = async (clientId, data, mainUser) => {
 
 
 
-const update = async (clientId, performaId, updateData) => {
+const update = async (clientId, invoiceId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Performa = clientConnection.model('salePerforma', salePerformaSchema);
-        const performa = await Performa.findById(performaId);
+        const performa = await Performa.findById(invoiceId);
         if (!performa) {
             throw new CustomError(statusCode.NotFound, "Performa not found.");
         }
@@ -180,20 +180,20 @@ const update = async (clientId, performaId, updateData) => {
 };
 
 
-const getById = async (clientId, performaId) => {
+const getById = async (clientId, invoiceId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const Performa = clientConnection.model('salePerforma', salePerformaSchema);
+        const SaleInvoice = clientConnection.model('saleInvoice', SaleInvoiceSchema);
         const Client = clientConnection.model('clientUsers', clinetUserSchema);
-        const performa = await Performa.findById(performaId)
+        const saleInvoice = await SaleInvoice.findById(invoiceId)
             .populate({
                 path: "customer",
                 model: Client,
             });
-        if (!performa) {
-            throw new CustomError(statusCode.NotFound, "Performa not found.");
+        if (!saleInvoice) {
+            throw new CustomError(statusCode.NotFound, "Invoice not found.");
         }
-        return performa;
+        return saleInvoice;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
     }
@@ -231,13 +231,13 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 };
 
 
-const changeStatus = async (clientId, performaId, data) => {
+const changeStatus = async (clientId, invoiceId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('saleQuotation', quotationSchema);
         const SaleInvoice = clientConnection.model('SaleInvoice', SaleInvoiceSchema);
 
-        const purchaseOrder = await PurchaseOrder.findById(performaId);
+        const purchaseOrder = await PurchaseOrder.findById(invoiceId);
         if (!purchaseOrder) {
             throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
         }
