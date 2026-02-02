@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const attendanceSchema = require("../../client/model/attendance");
 const holidaySchema = require("../../client/model/holiday");
 const clientRoleSchema = require("../../client/model/role");
@@ -241,6 +242,95 @@ exports.canPunchIn = async (req, res, next) => {
     }
 
 }
+
+
+
+
+// exports.getAttendanceOfEmployee = async (req, res, next) => {
+//     const { employeeId, clientId } = req.params;
+
+//     try {
+
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const Attendance = clientConnection.model('attendance', attendanceSchema);
+//         const User = clientConnection.model('clientUsers', clinetUserSchema); // Note: fix typo 'clinetUserSchema' → 'clientUserSchema'
+
+//         const employee = await User.findById(employeeId);
+//         if (!employee) {
+//             return res.status(404).json({ canPunch: false, message: 'Employee not found' });
+//         }
+
+//         const attendance = await Attendance.find({ employeeId: employeeId });
+
+//         return res.status(200).json({ success: true, message: 'Attendance found successfully', data: attendance });
+
+//     } catch (error) {
+//         console.error("Error in canPunchIn:", error);
+//         next(error);
+//     }
+
+// }
+
+
+// controllers/attendanceController.js
+exports.getAttendanceOfEmployee = async (req, res, next) => {
+  const { employeeId, clientId } = req.params;
+  const { startDate, endDate, year, month, week } = req.query;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(employeeId)) {
+      return res.status(400).json({ success: false, message: 'Invalid employeeId' });
+    }
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const Attendance = clientConnection.model('attendance', attendanceSchema);
+
+    let query = { employeeId: new mongoose.Types.ObjectId(employeeId) };
+
+    // Priority 1: Explicit date range (best practice)
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      query.date = { $gte: start, $lte: end };
+    }
+    // Priority 2: Year + Month
+    else if (year && month) {
+      const start = dayjs(`${year}-${month}-01`).startOf('month').toDate();
+      const end = dayjs(start).endOf('month').toDate();
+      query.date = { $gte: start, $lte: end };
+    }
+    // Priority 3: Year + ISO Week
+    else if (year && week) {
+      const start = dayjs().year(Number(year)).isoWeek(Number(week)).startOf('isoWeek').toDate();
+      const end = dayjs(start).endOf('isoWeek').toDate();
+      query.date = { $gte: start, $lte: end };
+    }
+    // Default: current month
+    else {
+      const start = dayjs().startOf('month').toDate();
+      const end = dayjs().endOf('month').toDate();
+      query.date = { $gte: start, $lte: end };
+    }
+
+    const attendance = await Attendance.find(query)
+      .sort({ date: 1 })
+      .lean()
+      .select('-__v -createdAt -updatedAt'); // exclude unnecessary fields
+
+    return res.status(200).json({
+      success: true,
+      message: 'Attendance records fetched successfully',
+      data: attendance,
+      count: attendance.length,
+    });
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    next(error);
+  }
+};
 
 
 
