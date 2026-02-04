@@ -73,6 +73,10 @@ const clinetWarehouseSchema = new Schema(
             trim: true,
         },
 
+        lat: {type: Number, default: 28.613939},
+        lng: {type: Number, default: 77.209021},
+        radiusInMeter: {type: Number, default: 100},
+
         isActive: { type: Boolean, default: false },
 
         // handlign created by

@@ -61,14 +61,14 @@ const uploadIconToS3 = async (file, clientId) => {
 // create warehouse by vendor
 exports.createWarehouseByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnit, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, businessUnit, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !radiusInMeter) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -78,7 +78,7 @@ exports.createWarehouseByVendor = async (req, res, next) => {
             name,
             emailContact,
             contactNumber,
-            city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark,
+            city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter,
             createdBy: mainUser._id,
         }
         if (req.file) {
@@ -99,20 +99,20 @@ exports.createWarehouseByVendor = async (req, res, next) => {
 // update  warehouse by vendor
 exports.updateWarehouseByVendor = async (req, res, next) => {
     try {
-        const { clientId, warehouseId, businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, warehouseId, businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         if (!clientId || !warehouseId) {
             return res.status(400).send({
                 message: message.lblWarehouseIdIdAndClientIdRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !radiusInMeter) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
 
         let dataObject = {
-            businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark
+            businessUnitId, branchId, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter
         }
 
         // if (req.file && req.file.filename) {
