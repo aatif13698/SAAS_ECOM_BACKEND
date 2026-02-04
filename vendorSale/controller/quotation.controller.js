@@ -342,15 +342,26 @@ exports.list = async (req, res, next) => {
 // active inactive 
 exports.changeStatus = async (req, res, next) => {
     try {
-        const {  id, status, clientId, } = req.body;
+        const { id, status, clientId, workOrderNumber, workOrderDate } = req.body;
         if (!clientId || !id) {
             return res.status(400).send({
                 message: message.lblHolidayIdIdAndClientIdRequired,
             });
         }
-        const updated = await quotationService.changeStatus(clientId, id, {
+
+        const dataObject = {
             status: status,
-        });
+        }
+
+        if (workOrderNumber) {
+            dataObject.workOrderNumber = workOrderNumber
+        }
+
+        if (workOrderDate) {
+            dataObject.workOrderDate = workOrderDate
+        }
+
+        const updated = await quotationService.changeStatus(clientId, id, dataObject);
 
         return res.status(statusCode.OK).send({
             message: "Status updated successfully",
