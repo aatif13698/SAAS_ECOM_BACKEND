@@ -60,7 +60,7 @@ const uploadIconToS3 = async (file, clientId) => {
 // create Branch by vendor
 exports.createBranchByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         const mainUser = req.user;
         console.log("body", req.body);
 
@@ -69,7 +69,7 @@ exports.createBranchByVendor = async (req, res, next) => {
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber || !radiusInMeter) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -84,6 +84,7 @@ exports.createBranchByVendor = async (req, res, next) => {
             houseOrFlat,
             streetOrLocality,
             landmark,
+            lat, lng, radiusInMeter,
             createdBy: mainUser._id,
         }
 
@@ -107,19 +108,19 @@ exports.createBranchByVendor = async (req, res, next) => {
 // update  Branch by vendor
 exports.updateBranchByVendor = async (req, res, next) => {
     try {
-        const { clientId, branchId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, branchId, businessUnit, name, emailContact, contactNumber, gstInNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         if (!clientId || !branchId) {
             return res.status(400).send({
                 message: message.lblBranchIdIdAndClientIdRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !country || !ZipCode || !address || !gstInNumber || !radiusInMeter) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
         }
         let dataObject = {
-            gstInNumber, businessUnit, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark
+            gstInNumber, businessUnit, name, emailContact, contactNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter
         }
 
         if (req.file) {

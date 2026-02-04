@@ -60,14 +60,14 @@ const uploadIconToS3 = async (file, clientId) => {
 // create business unit by vendor
 exports.createBusinessUnitByVendor = async (req, res, next) => {
     try {
-        const { clientId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         const mainUser = req.user;
         if (!clientId) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblClinetIdIsRequired,
             });
         }
-        if (!name || !emailContact || !contactNumber || !city || !state || !ZipCode || !address || !panNumber) {
+        if (!name || !emailContact || !contactNumber || !city || !state || !ZipCode || !address || !panNumber || !radiusInMeter) {
             return res.status(statusCode.BadRequest).send({
                 message: message.lblRequiredFieldMissing,
             });
@@ -117,6 +117,7 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
             houseOrFlat,
             streetOrLocality,
             landmark,
+            lat, lng, radiusInMeter,
             createdBy: mainUser._id,
         }
 
@@ -169,7 +170,7 @@ exports.createBusinessUnitByVendor = async (req, res, next) => {
 // update  business unit by vendor
 exports.updateBusinessUnitByVendor = async (req, res, next) => {
     try {
-        const { clientId, businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark } = req.body;
+        const { clientId, businessUnitId, name, emailContact, contactNumber, tinNumber, businessLicenseNumber, cinNumber, tanNumber, panNumber, city, state, country, ZipCode, address, houseOrFlat, streetOrLocality, landmark, lat, lng, radiusInMeter } = req.body;
         const mainUser = req.user;
 
         if (!clientId) {
@@ -202,6 +203,9 @@ exports.updateBusinessUnitByVendor = async (req, res, next) => {
         if (houseOrFlat !== undefined) dataObject.houseOrFlat = houseOrFlat;
         if (streetOrLocality !== undefined) dataObject.streetOrLocality = streetOrLocality;
         if (landmark !== undefined) dataObject.landmark = landmark;
+        if(radiusInMeter) dataObject.radiusInMeter = radiusInMeter;
+        if(lat) dataObject.lat = lat;
+        if(lng) dataObject.lng = lng;
         dataObject.updatedBy = mainUser._id;
 
         // Handle file uploads if provided
