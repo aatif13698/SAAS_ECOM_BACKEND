@@ -289,10 +289,44 @@ const changeStatus = async (clientId, invoiceId, data) => {
 };
 
 
+const unpaid = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SaleInvoice = clientConnection.model('SaleInvoice', SaleInvoiceSchema);
+        const User = clientConnection.model("clientUsers", clinetUserSchema)
+
+        const query = {
+            ...filters,
+            balance: { $gt: 0 }
+        };
+
+        console.log("query", query);
+        
+
+        const [invoices, total] = await Promise.all([
+            SaleInvoice.find(query)
+                .sort({ createdAt: -1 })  // Sort by creation date descending (latest first)
+                .populate({
+                    path: "customer",
+                    model: User,
+                    select: "-items"
+                }),
+            SaleInvoice.countDocuments(query),
+        ]);
+        console.log("invoices", invoices);
+        
+        return { count: total, invoices };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
 module.exports = {
     create,
     update,
     getById,
     list,
     changeStatus,
+    unpaid
 }; 

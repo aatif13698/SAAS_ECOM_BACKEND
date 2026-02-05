@@ -28,6 +28,7 @@ const voucherSchema = new mongoose.Schema({
 
   purchaseInvoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'purchaseInvoice', default: null },
   paymentOutId: { type: mongoose.Schema.Types.ObjectId, ref: 'payementOut', default: null },
+  paymentInId: { type: mongoose.Schema.Types.ObjectId, ref: 'payementIn', default: null },
   //   relatedInvoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Document', default: null }, // Optional: Link to invoice
   isSingleEntry: { type: Boolean, default: false },// Not used for standard accounting
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "clientUsers", index: true },

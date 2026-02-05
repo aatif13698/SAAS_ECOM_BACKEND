@@ -21,5 +21,8 @@ router.get('/list/invoice', entityAuth.authorizeEntity("Administration", "Employ
 
 router.post("/change/status/invoice", entityAuth.authorizeEntity("Administration", "Employee", "create"), invoiceController.changeStatus);
 
+router.get('/unpaid/invoice', entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), invoiceController.unpaidInvoices);
+
+
 
 exports.router = router; 

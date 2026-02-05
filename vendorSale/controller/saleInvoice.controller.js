@@ -362,3 +362,50 @@ exports.changeStatus = async (req, res, next) => {
         next(error);
     }
 }; 
+
+
+
+exports.unpaidInvoices = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, level = "vendor", levelId = "", customer, customerLedger } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            customer,
+            customerLedger,
+        };
+        if (level == "vendor") {
+
+        } else if (level == "business" && levelId) {
+            filters = {
+                ...filters,
+                isBuLevel: true,
+                businessUnit: levelId
+            }
+        } else if (level == "branch" && levelId) {
+            filters = {
+                ...filters,
+                isBranchLevel: true,
+                branch: levelId
+            }
+        } else if (level == "warehouse" && levelId) {
+            filters = {
+                ...filters,
+                isWarehouseLevel: true,
+                warehouse: levelId
+            }
+        }
+        const result = await saleInvoiceService.unpaid(clientId, filters,);
+        return res.status(statusCode.OK).send({
+            message: "List found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
