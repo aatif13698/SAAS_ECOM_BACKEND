@@ -96,6 +96,10 @@ const saleInvoiceSchema = new Schema(
 
         auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },
 
+        workOrderNumber: { type: String, trim: true, default: null },
+        workOrderDate: { type: Date },
+
+
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes

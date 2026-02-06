@@ -11,6 +11,7 @@ const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
 const crypto = require('crypto');
 const clinetUserSchema = require("../../client/model/user");
 const salePerformaSchema = require("../../client/model/salePerforma");
+const saleInvoiceSchema = require("../../client/model/saleInvoice");
 
 
 const create = async (clientId, data) => {
@@ -101,6 +102,7 @@ const changeStatus = async (clientId, quotationId, data) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SalePerforma = clientConnection.model('salePerforma', salePerformaSchema);
         const Quotation = clientConnection.model('saleQuotation', quotationSchema);
+        const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema)
 
 
         const quotation = await Quotation.findById(quotationId);
@@ -108,44 +110,50 @@ const changeStatus = async (clientId, quotationId, data) => {
             throw new CustomError(statusCode.NotFound, "Quotation not found");
         }
         if (data.status == "invoice_conversion") {
-            // const Supplier = clientConnection.model("supplier", supplierSchema);
-            // console.log("purchaseOrder.supplier", purchaseOrder.supplier);
-            // const User = clientConnection.model("clientUsers", clinetUserSchema)
+            const User = clientConnection.model("clientUsers", clinetUserSchema)
+            const customer = await User.findById(quotation.customer.toString());
+            let customerLedger = null;
+            if (!customer) {
+                throw new CustomError(statusCode.NotFound, "Customer");
+            }
+            if (!customer.ledgerLinkedId) {
+                throw new CustomError(statusCode.NotFound, "Customer ledger id not found.");
+            }
+            customerLedger = customer.ledgerLinkedId;
+            const invoiceaData = {
+                businessUnit: quotation.businessUnit,
+                branch: quotation.branch,
+                warehouse: quotation.warehouse,
 
+                isVendorLevel: quotation.isVendorLevel,
+                isBuLevel: quotation.isBuLevel,
+                isBranchLevel: quotation.isBranchLevel,
+                isWarehouseLevel: quotation.isWarehouseLevel,
 
-            // const supplier = await Supplier.findById(purchaseOrder.supplier.toString());
-            // let customerLedger = null;
-            // if (!supplier) {
-            //     throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
-            // }
-            // if (!supplier.ledgerLinkedId) {
-            //     throw new CustomError(statusCode.NotFound, "Supplier ledger id not found.");
-            // }
-            // customerLedger = supplier.ledgerLinkedId;
-            // const invoiceData = {
-            //     businessUnit: purchaseOrder.businessUnit,
-            //     branch: purchaseOrder.branch,
-            //     warehouse: purchaseOrder.warehouse,
+                customer: quotation.customer, // Assumed ref to Supplier model
+                customerLedger: customerLedger,
+                shippingAddress: quotation.shippingAddress,
+                siNumber: crypto.randomInt(100000, 1000000).toString(), // Unique for business integrity
+                items: quotation.items,
+                notes: quotation.notes,
+                isInterState: quotation.isInterState, // Determines IGST vs CGST/SGST
+                roundOff: quotation.roundOff,
+                status: "full_due",
+                grandTotal: quotation.grandTotal,
+                balance: quotation.grandTotal,
+                createdBy: quotation.createdBy,
+            }
 
-            //     isVendorLevel: purchaseOrder.isVendorLevel,
-            //     isBuLevel: purchaseOrder.isBuLevel,
-            //     isBranchLevel: purchaseOrder.isBranchLevel,
-            //     isWarehouseLevel: purchaseOrder.isWarehouseLevel,
+            if (data?.workOrderNumber) {
+                invoiceaData.workOrderNumber = data?.workOrderNumber
+            }
 
-            //     supplier: purchaseOrder.supplier, // Assumed ref to Supplier model
-            //     customerLedger: customerLedger,
-            //     shippingAddress: purchaseOrder.shippingAddress,
-            //     piNumber: crypto.randomInt(100000, 1000000).toString(), // Unique for business integrity
-            //     items: purchaseOrder.items,
-            //     notes: purchaseOrder.notes,
-            //     isInterState: purchaseOrder.isInterState, // Determines IGST vs CGST/SGST
-            //     roundOff: purchaseOrder.roundOff,
-            //     status: "full_due",
-            //     balance: purchaseOrder.grandTotal,
-            //     createdBy: purchaseOrder.createdBy,
-            // }
+            if (data?.workOrderDate) {
+                invoiceaData.workOrderDate = data?.workOrderDate
+            }
 
-            // await PurchaseInvoice.create(invoiceData)
+            await SaleInvoice.create(invoiceaData)
+
         } else if (data.status == "performa_conversion") {
             const User = clientConnection.model("clientUsers", clinetUserSchema)
 
@@ -180,6 +188,15 @@ const changeStatus = async (clientId, quotationId, data) => {
                 status: "draft",
                 grandTotal: quotation.grandTotal,
                 createdBy: quotation.createdBy,
+            }
+
+
+            if (data?.workOrderNumber) {
+                performaData.workOrderNumber = data?.workOrderNumber
+            }
+
+            if (data?.workOrderDate) {
+                performaData.workOrderDate = data?.workOrderDate
             }
 
             await SalePerforma.create(performaData)
