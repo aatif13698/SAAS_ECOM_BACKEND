@@ -11,6 +11,7 @@ const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
 const crypto = require('crypto');
 const clinetUserSchema = require("../../client/model/user");
 const salePerformaSchema = require("../../client/model/salePerforma");
+const saleInvoiceSchema = require("../../client/model/saleInvoice");
 
 
 const create = async (clientId, data) => {
@@ -98,55 +99,60 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
 const changeStatus = async (clientId, performaId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('saleQuotation', quotationSchema);
-        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const Performa = clientConnection.model('salePerforma', salePerformaSchema);
+        const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema)
 
-        const purchaseOrder = await PurchaseOrder.findById(performaId);
-        if (!purchaseOrder) {
-            throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
+        const performa = await Performa.findById(performaId);
+        if (!performa) {
+            throw new CustomError(statusCode.NotFound, "Performa not found.");
         }
         if (data.status == "invoiced") {
-            const Supplier = clientConnection.model("supplier", supplierSchema);
-            console.log("purchaseOrder.supplier", purchaseOrder.supplier);
-
-            const supplier = await Supplier.findById(purchaseOrder.supplier.toString());
-            let supplierLedger = null;
-            if (!supplier) {
-                throw new CustomError(statusCode.NotFound, message.lblSupplierNotFound);
+            const User = clientConnection.model("clientUsers", clinetUserSchema)
+            const customer = await User.findById(performa.customer.toString());
+            let customerLedger = null;
+            if (!customer) {
+                throw new CustomError(statusCode.NotFound, "Customer");
             }
-            if (!supplier.ledgerLinkedId) {
-                throw new CustomError(statusCode.NotFound, "Supplier ledger id not found.");
+            if (!customer.ledgerLinkedId) {
+                throw new CustomError(statusCode.NotFound, "Customer ledger id not found.");
             }
-            supplierLedger = supplier.ledgerLinkedId;
-            const invoiceData = {
-                businessUnit: purchaseOrder.businessUnit,
-                branch: purchaseOrder.branch,
-                warehouse: purchaseOrder.warehouse,
+            customerLedger = customer.ledgerLinkedId;
+            const invoiceaData = {
+                businessUnit: performa.businessUnit,
+                branch: performa.branch,
+                warehouse: performa.warehouse,
 
-                isVendorLevel: purchaseOrder.isVendorLevel,
-                isBuLevel: purchaseOrder.isBuLevel,
-                isBranchLevel: purchaseOrder.isBranchLevel,
-                isWarehouseLevel: purchaseOrder.isWarehouseLevel,
+                isVendorLevel: performa.isVendorLevel,
+                isBuLevel: performa.isBuLevel,
+                isBranchLevel: performa.isBranchLevel,
+                isWarehouseLevel: performa.isWarehouseLevel,
 
-                supplier: purchaseOrder.supplier, // Assumed ref to Supplier model
-                supplierLedger: supplierLedger,
-                shippingAddress: purchaseOrder.shippingAddress,
-                piNumber: crypto.randomInt(100000, 1000000).toString(), // Unique for business integrity
-                items: purchaseOrder.items,
-                notes: purchaseOrder.notes,
-                isInterState: purchaseOrder.isInterState, // Determines IGST vs CGST/SGST
-                roundOff: purchaseOrder.roundOff,
+                customer: performa.customer, // Assumed ref to Supplier model
+                customerLedger: customerLedger,
+                shippingAddress: performa.shippingAddress,
+                siNumber: crypto.randomInt(100000, 1000000).toString(), // Unique for business integrity
+                items: performa.items,
+                notes: performa.notes,
+                isInterState: performa.isInterState, // Determines IGST vs CGST/SGST
+                roundOff: performa.roundOff,
                 status: "full_due",
-                balance: purchaseOrder.grandTotal,
-                createdBy: purchaseOrder.createdBy,
+                grandTotal: performa.grandTotal,
+                balance: performa.grandTotal,
+                createdBy: performa.createdBy,
             }
 
-            await PurchaseInvoice.create(invoiceData);
+            if (data?.workOrderNumber) {
+                invoiceaData.workOrderNumber = data?.workOrderNumber
+            }
+
+            if (data?.workOrderDate) {
+                invoiceaData.workOrderDate = data?.workOrderDate
+            }
+
+            await SaleInvoice.create(invoiceaData)
         }
-
-
-        Object.assign(purchaseOrder, data);
-        return await purchaseOrder.save();
+        Object.assign(performa, data);
+        return await performa.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error in changing status: ${error.message}`);
     }
