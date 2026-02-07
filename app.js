@@ -120,6 +120,10 @@ const section = require("./VendorCMS/routes/section.routes.js");
 const banner = require("./VendorCMS/routes/banner.routes.js");
 
 
+// settings 
+const transactionSeries = require("./vendorSettings/routes/transactionSeries.routes.js")
+
+
 
 // model import
 const Roles = require("./model/role.js");
@@ -244,6 +248,10 @@ app.use("/api/customer/order", productOrder.router);
 app.use("/api/vendor/cms/statement", statement.router);
 app.use("/api/vendor/cms/section", section.router);
 app.use("/api/vendor/cms/banner", banner.router);
+
+
+// setting
+app.use("/api/vendor/settings/general/ts", transactionSeries.router);
 
 
 
