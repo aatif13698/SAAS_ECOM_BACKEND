@@ -125,8 +125,9 @@ const banner = require("./VendorCMS/routes/banner.routes.js");
 const Roles = require("./model/role.js");
 const User = require("./model/user.js");
 const clientRoleSchema = require("./client/model/role.js");
-const { defaultPersmissionsList } = require("./utils/constant.js");
-const {vendorPersmissionsList} = require("./utils/constant.js");
+const { defaultPersmissionsList, serialNumber } = require("./utils/constant.js");
+const { vendorPersmissionsList } = require("./utils/constant.js");
+const transactionSerialNumebrSchema = require("./client/model/transactionSeries.js");
 
 
 // middleware setup
@@ -134,10 +135,10 @@ const {vendorPersmissionsList} = require("./utils/constant.js");
 // app.use(cors());
 
 app.use(cors({
-  origin: ['http://192.168.1.127:5173/', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app', 'https://seal-app-qjy6w.ondigitalocean.app'], // Allow Vite dev server
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // If your app uses cookies or auth
+    origin: ['http://192.168.1.127:5173/', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app', 'https://seal-app-qjy6w.ondigitalocean.app'], // Allow Vite dev server
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true, // If your app uses cookies or auth
 }));
 
 app.use(express.json())
@@ -338,7 +339,7 @@ async function createNewRole(params) {
         const role = await Roles.findOne({ name: roleData.name });
 
         if (role) {
-            
+
             console.log("ROle already Exisits", role);
 
             return
@@ -362,7 +363,7 @@ async function createNewRole(params) {
 async function createRoleInDatbaseInstance() {
     try {
         const clientId = "67cdae13e177fa43c603b832";
-        const data =  { id: 4, name: 'Warehouse Head', capability: defaultPersmissionsList };
+        const data = { id: 4, name: 'Warehouse Head', capability: defaultPersmissionsList };
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Role = clientConnection.model('clientRoles', clientRoleSchema);
         const existing = await Role.findOne({ id: 4 });
@@ -404,7 +405,55 @@ async function updateRoleInDatbaseInstance() {
 
 
 // create items
-// helper.createItems()
+// helper.createItems();
+
+function getFiscalYearRange(date) {
+    const year = date.getFullYear();
+    const nextYear = year + 1;
+    const nextYearShort = nextYear % 100; // Gets the last two digits
+    return `${year}-${nextYearShort.toString().padStart(2, '0')}`; // Ensures two digits, e.g., 2025-26
+}
+
+async function insertSerialNumber() {
+    const clientId = "67cdae13e177fa43c603b832";
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+    const currentDate = new Date();
+    const financialYear = getFiscalYearRange(currentDate);
+
+    const series = serialNumber?.map((ser) => {
+        return {...ser, year: financialYear }
+    });
+
+    for (let index = 0; index < series.length; index++) {
+        const element = series[index];
+        const existingSeriesOfCurrentFinancialYear = await SerialNumber.findOne({collectionName: element.collectionName, year : element.year});
+        if(existingSeriesOfCurrentFinancialYear){
+            console.log(`Seris for ${element.collectionName} for year ${element.year} already exists.`);
+        }else{
+            await SerialNumber.create(element)
+        }
+    }
+    
+
+
+    // SerialNumber.countDocuments({})
+    //     .exec()
+    //     .then((count) => {
+    //         if (count === 0) {
+    //             // Insert predefined roles into the Role collection
+    //             return SerialNumber.insertMany(data.serialNumber);
+    //         } else {
+    //             console.log("Serial Number already exist in the database.");
+    //         }
+    //     })
+    //     .catch((err) => {
+    //         console.error("Error in inserting serial number:", err);
+    //     })
+}
+
+// insertSerialNumber()
 
 
 
@@ -418,9 +467,9 @@ const port = process.env.PORT;
 // listening server
 server.listen(port, async () => {
 
-await ConnectDb(DATABASE_URL);
+    await ConnectDb(DATABASE_URL);
 
-await insertRole()
+    await insertRole()
 
     console.log(`APP STARTED SUCCESSFULLY on port ${port}....`)
 });

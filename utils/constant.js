@@ -1414,6 +1414,25 @@ const clientRoles = [
 
 
 
+const serialNumber = [
+    { collectionName: "purchase_order", prefix: "PO" },
+    { collectionName: "purchase_invoice", prefix: "PI" },
+    { collectionName: "purchase_return", prefix: "PR" },
+    { collectionName: "debit_note", prefix: "DN" },
+    { collectionName: "payment_out", prefix: "PTO" },
+
+    { collectionName: "sale_quotation", prefix: "SQ" },
+    { collectionName: "sale_performa", prefix: "SP" },
+    { collectionName: "sale_invoice", prefix: "SQ" },
+    { collectionName: "sale_return", prefix: "SR" },
+    { collectionName: "credit_note", prefix: "CN" },
+    { collectionName: "payment_in", prefix: "PTI" },
+    { collectionName: "delivery_challan", prefix: "DC" },
+]
+
+
+
 exports.clientRoles = clientRoles;
 exports.defaultPersmissionsList = defaultPersmissionsList;
 exports.vendorPersmissionsList = vendorPersmissionsList;
+exports.serialNumber = serialNumber;
