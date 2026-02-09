@@ -12,17 +12,23 @@ const crypto = require('crypto');
 const clinetUserSchema = require("../../client/model/user");
 const salePerformaSchema = require("../../client/model/salePerforma");
 const saleInvoiceSchema = require("../../client/model/saleInvoice");
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Quotation = clientConnection.model('saleQuotation', quotationSchema);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
         const existingSq = await Quotation.findOne({ sqNumber: data?.poNumber }).lean();
         if (existingSq) {
             throw new CustomError(statusCode.BadRequest, 'Quotation number already exists.')
         }
-        return await Quotation.create(data);
+        const quotation = await Quotation.create(data);
+        if (quotation) {
+            await SerialNumber.findOneAndUpdate({ collectionName: "sale_quotation" }, { $inc: { nextNum: 1 } })
+        }
+        return quotation;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }

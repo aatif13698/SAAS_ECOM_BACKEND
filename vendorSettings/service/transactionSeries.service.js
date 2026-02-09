@@ -27,8 +27,25 @@ const getAllSeries = async (clientId, year) => {
     }
 };
 
+const getSeriesNextValue = async (clientId, year, collectionName) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+        const currentDate = new Date();
+        const financialYear = getFiscalYearRange(currentDate);
+        const series = await SerialNumber.findOne({ year: year, collectionName: collectionName } );
+        if (series.length == 0) {
+            throw new CustomError(httpStatusCode.NotFound, "Series not found.");
+        }
+        return series;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
+    }
+};
+
 
 
 module.exports = {
     getAllSeries,
+    getSeriesNextValue
 }

@@ -8,5 +8,7 @@ const entityAuth = require("../../middleware/authorization/commonEntityAuthoriza
 
 router.get('/get/all/:clientId/:year', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.getAllSeries);
 
+router.get('/get/series/next/value/:clientId/:year/:collectionName', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.getSeriesNextValue)
+
 
 exports.router = router; 
