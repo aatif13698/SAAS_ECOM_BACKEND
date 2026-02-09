@@ -1,5 +1,7 @@
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 const { getClientDatabaseConnection } = require("../../db/connection");
+const CustomError = require("../../utils/customeError");
+const httpStatusCode = require("../../utils/http-status-code");
 
 
 function getFiscalYearRange(date) {
@@ -15,13 +17,13 @@ const getAllSeries = async (clientId, year) => {
         const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
         const currentDate = new Date();
         const financialYear = getFiscalYearRange(currentDate);
-        const series = await SerialNumber.find({ year: financialYear });
-        if (!series) {
-            throw new CustomError(statusCode.NotFound, "series not found.");
+        const series = await SerialNumber.find({ year: year });
+        if (series.length == 0) {
+            throw new CustomError(httpStatusCode.NotFound, "Series not found.");
         }
         return series;
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
     }
 };
 
