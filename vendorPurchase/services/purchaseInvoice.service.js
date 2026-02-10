@@ -16,6 +16,7 @@ const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const stockLedgerSchema = require("../../client/model/stockLedger");
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 // const create = async (clientId, data, mainUser) => {
@@ -111,6 +112,7 @@ const create = async (clientId, data, mainUser) => {
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
 
     const session = await clientConnection.startSession();
 
@@ -202,6 +204,10 @@ const create = async (clientId, data, mainUser) => {
                     ordered: true   // safe even for 1 document
                 });
 
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
+                }
+
                 return pi;
 
             } else {
@@ -219,6 +225,11 @@ const create = async (clientId, data, mainUser) => {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
+                }
+
                 return pi;
             }
         });

@@ -17,6 +17,7 @@ const { path } = require("pdfkit");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 
@@ -27,7 +28,9 @@ const create = async (clientId, data, mainUser) => {
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
-    const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
+    const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
     const session = await clientConnection.startSession();
     try {
         const result = await session.withTransaction(async (session) => {
@@ -160,6 +163,10 @@ const create = async (clientId, data, mainUser) => {
 
                 // Important: ordered: true when using session + multiple docs
                 await Voucher.create(voucherDocs, { session, ordered: true });
+
+                if (po) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "payment_out" }, { $inc: { nextNum: 1 } })
+                }
                 return po;
 
             }

@@ -9,19 +9,27 @@ const { model } = require("mongoose");
 const supplierSchema = require("../../client/model/supplier");
 const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
 const crypto = require('crypto');
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
         const existingPo = await PurchaseOrder.findOne({ poNumber: data?.poNumber }).lean();
         console.log("existingPo", existingPo);
 
         if (existingPo) {
             throw new CustomError(statusCode.BadRequest, 'Purchase order number already exists.')
         }
-        return await PurchaseOrder.create(data);
+        const purchaseOrder = await PurchaseOrder.create(data);
+        if (purchaseOrder) {
+            await SerialNumber.findOneAndUpdate({ collectionName: "purchase_order" }, { $inc: { nextNum: 1 } })
+        }
+        return purchaseOrder
+
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
@@ -110,7 +118,7 @@ const changeStatus = async (clientId, purchaseOrderId, data) => {
         if (data.status == "invoiced") {
             const Supplier = clientConnection.model("supplier", supplierSchema);
             console.log("purchaseOrder.supplier", purchaseOrder.supplier);
-            
+
             const supplier = await Supplier.findById(purchaseOrder.supplier.toString());
             let supplierLedger = null;
             if (!supplier) {
