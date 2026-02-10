@@ -13,7 +13,7 @@ const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
 const paymentOutSchema = require("../../client/model/paymentOut");
 const purchaseInvoiceAndPaymentConnectionSchema = require("../../client/model/purchaseInvoiceAndPaymentConnection");
-const { path } = require("pdfkit");
+const { path, polygon } = require("pdfkit");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const clinetBranchSchema = require("../../client/model/branch");
 const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
@@ -21,6 +21,7 @@ const saleInvoiceSchema = require("../../client/model/saleInvoice");
 const paymentInSchema = require("../../client/model/paymentIn");
 const saleInvoiceAndPaymentConnectionSchema = require("../../client/model/saleInvoiceAndPaymentConnection");
 const clinetUserSchema = require("../../client/model/user");
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 
@@ -35,7 +36,9 @@ const create = async (clientId, data, mainUser) => {
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
     const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
-    const SaleInvoiceAndPaymentConnection = clientConnection.model("saleInvoiceAndPaymentConnection", saleInvoiceAndPaymentConnectionSchema)
+    const SaleInvoiceAndPaymentConnection = clientConnection.model("saleInvoiceAndPaymentConnection", saleInvoiceAndPaymentConnectionSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
     const session = await clientConnection.startSession();
     try {
         const result = await session.withTransaction(async (session) => {
@@ -168,8 +171,10 @@ const create = async (clientId, data, mainUser) => {
 
                 // Important: ordered: true when using session + multiple docs
                 await Voucher.create(voucherDocs, { session, ordered: true });
+                if (po) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "payment_in" }, { $inc: { nextNum: 1 } })
+                }
                 return po;
-
             }
         });
 

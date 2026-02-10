@@ -15,6 +15,7 @@ const ledgerSchema = require("../../client/model/ledger");
 const voucherGroupSchema = require("../../client/model/voucherGroup");
 const voucherSchema = require("../../client/model/voucher");
 const { v4: uuidv4 } = require('uuid');
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 // const create = async (clientId, data) => {
@@ -39,6 +40,7 @@ const create = async (clientId, data, mainUser) => {
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
 
     const session = await clientConnection.startSession();
 
@@ -127,6 +129,10 @@ const create = async (clientId, data, mainUser) => {
                     ordered: true   // safe even for 1 document
                 });
 
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "sale_invoice" }, { $inc: { nextNum: 1 } })
+                }
+
                 return pi;
 
             } else {
@@ -144,6 +150,13 @@ const create = async (clientId, data, mainUser) => {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "sale_invoice" }, { $inc: { nextNum: 1 } })
+                }
+
+
+
                 return pi;
             }
         });
@@ -301,7 +314,7 @@ const unpaid = async (clientId, filters = {}) => {
         };
 
         console.log("query", query);
-        
+
 
         const [invoices, total] = await Promise.all([
             SaleInvoice.find(query)
@@ -314,7 +327,7 @@ const unpaid = async (clientId, filters = {}) => {
             SaleInvoice.countDocuments(query),
         ]);
         console.log("invoices", invoices);
-        
+
         return { count: total, invoices };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);

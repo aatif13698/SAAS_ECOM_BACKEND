@@ -1423,7 +1423,7 @@ const serialNumber = [
 
     { collectionName: "sale_quotation", prefix: "SQ" },
     { collectionName: "sale_performa", prefix: "SP" },
-    { collectionName: "sale_invoice", prefix: "SQ" },
+    { collectionName: "sale_invoice", prefix: "SI" },
     { collectionName: "sale_return", prefix: "SR" },
     { collectionName: "credit_note", prefix: "CN" },
     { collectionName: "payment_in", prefix: "PTI" },
