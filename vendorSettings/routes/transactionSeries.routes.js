@@ -10,5 +10,7 @@ router.get('/get/all/:clientId/:year', entityAuth.authorizeEntity("Administratio
 
 router.get('/get/series/next/value/:clientId/:year/:collectionName', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.getSeriesNextValue)
 
+router.post('/update/serial', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.update);
+
 
 exports.router = router; 
