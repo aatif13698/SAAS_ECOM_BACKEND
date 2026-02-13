@@ -6,6 +6,7 @@ const { getClientDatabaseConnection } = require("../../db/connection");
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 const { default: mongoose } = require("mongoose");
 const httpStatusCode = require("../../utils/http-status-code");
+const CustomError = require("../../utils/customeError");
 
 exports.getAllSeries = async (req, res, next) => {
     try {
@@ -149,4 +150,27 @@ exports.update = async (req, res, next) => {
     }
 };
 
+
+exports.getUniqueSerialYear = async (req, res, next) => {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(400).send({
+                message: "Client id is required.",
+            });
+        }
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+        let years = await SerialNumber.distinct('year');
+        // Sort descending (newest year first) - looks professional in UI
+        years.sort((a, b) => b.localeCompare(a));
+        return res.status(200).send({
+            success: true,
+            count: years.length,
+            data: years
+        });
+    } catch (error) {
+        next(error)
+    }
+};
 

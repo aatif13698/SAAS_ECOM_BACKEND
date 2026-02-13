@@ -14,5 +14,7 @@ router.post('/create/serial', entityAuth.authorizeEntity("Administration", "Empl
 
 router.post('/update/serial', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.update);
 
+router.get('/get/unique/serial-year/:clientId', entityAuth.authorizeEntity("Administration", "Employee", "create"), transactionSeriesController.getUniqueSerialYear);
+
 
 exports.router = router; 
