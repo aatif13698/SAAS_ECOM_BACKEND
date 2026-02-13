@@ -5,6 +5,7 @@ const transactionSeriesService = require("../service/transactionSeries.service")
 const { getClientDatabaseConnection } = require("../../db/connection");
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 const { default: mongoose } = require("mongoose");
+const httpStatusCode = require("../../utils/http-status-code");
 
 exports.getAllSeries = async (req, res, next) => {
     try {
@@ -41,6 +42,56 @@ exports.getSeriesNextValue = async (req, res, next) => {
         next(error)
     }
 };
+
+exports.create = async (req, res, next) => {
+    try {
+
+        const { clientId, financialYear, series } = req.body;
+
+        if (!clientId) {
+            return res.status(400).send({
+                message: "Client id is required.",
+            });
+        }
+
+        // Validate payload
+        if (!financialYear || !Array.isArray(series) || series.length === 0) {
+            throw new CustomError(httpStatusCode.BadRequest, "Invalid payload: financialYear and series array are required");
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+        // Check if any series already exists for this year
+        const existing = await SerialNumber.findOne({ year: financialYear });
+        if (existing) {
+            throw new CustomError(httpStatusCode.BadRequest, `Transaction series already exists for financial year ${financialYear}`);
+
+        }
+        // Prepare documents
+        const documents = series.map(item => ({
+            year: financialYear,
+            collectionName: item.collectionName,
+            prefix: item.prefix.trim().toUpperCase(),
+            nextNum: Number(item.nextNum)
+        }));
+
+
+        // Bulk insert (very fast)
+        const result = await SerialNumber.insertMany(documents);
+
+        return res.status(200).json({
+            success: true,
+            message: `Transaction series created successfully for ${financialYear}`,
+            count: result.length,
+            data: result
+        });
+
+    } catch (error) {
+        next(error)
+    }
+};
+
 
 exports.update = async (req, res, next) => {
     try {
@@ -81,7 +132,7 @@ exports.update = async (req, res, next) => {
                         nextNum: item.nextNum
                     }
                 },
-                upsert: false  
+                upsert: false
             }
         }));
 

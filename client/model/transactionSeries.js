@@ -5,7 +5,7 @@ const transactionSerialNumebrSchema = mongoose.Schema({
     year: { type: String, required: true },
     prefix: {
         type: String, required: true,
-        trim: true, unique: true
+        trim: true, 
     },
     nextNum: { type: Number, default: 10001 }
 })
