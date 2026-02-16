@@ -57,20 +57,53 @@ const all = async (clientId) => {
     }
 };
 
+// const activeInactive = async (clientId, financialYearId, data) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+//         const financialYear = await FinancialYear.findById(financialYearId);
+//         if (!financialYear) {
+//             throw new CustomError(statusCode.NotFound, message.lblFinancialYearNotFound);
+//         }
+//         Object.assign(financialYear, data);
+//         return await financialYear.save();
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
+//     }
+// };
+
 const activeInactive = async (clientId, financialYearId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
-        const financialYear = await FinancialYear.findById(financialYearId);
-        if (!financialYear) {
+
+        if (data.isWorking === true) {
+            await FinancialYear.updateMany(
+                { _id: { $ne: financialYearId } },
+                { $set: { isWorking: false } }
+            );
+        }
+
+        const updated = await FinancialYear.findByIdAndUpdate(
+            financialYearId,
+            { $set: { isWorking: data.isWorking } },
+            { new: true }
+        );
+
+        if (!updated) {
             throw new CustomError(statusCode.NotFound, message.lblFinancialYearNotFound);
         }
-        Object.assign(financialYear, data);
-        return await financialYear.save();
+
+        return updated;
+
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error active inactive: ${error.message}`);
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error active inactive: ${error.message}`
+        );
     }
 };
+
 
 const update = async (clientId, financialYearId, updateData) => {
     try {

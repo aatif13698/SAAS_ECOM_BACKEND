@@ -121,7 +121,7 @@ exports.activeinactive = async (req, res, next) => {
             });
         }
         const updated = await financialYearService.activeInactive(clientId, id, {
-            isActive: status == "1",
+            isWorking: status == "1",
         });
         this.list(req, res, next)
     } catch (error) {

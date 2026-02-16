@@ -56,8 +56,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Documents",
-        displayName: "All Documents",
+        name: "Document Type",
+        displayName: "All Document Type",
         access: false,
         subMenus: {
           create: { id: 21, access: false, api: "/demo/path" },
@@ -272,8 +272,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Product QA",
-        displayName: "All Product QA",
+        name: "FAQs",
+        displayName: "All FAQs",
         access: false,
         subMenus: {
           create: { id: 106, access: false, api: "/demo/path" },
@@ -296,8 +296,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Query",
-        displayName: "All Query",
+        name: "Customer Query",
+        displayName: "All Customer Query",
         access: false,
         subMenus: {
           create: { id: 116, access: false, api: "/demo/path" },
@@ -756,8 +756,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Documents",
-        displayName: "All Documents",
+        name: "Document Type",
+        displayName: "All Document Type",
         access: true,
         subMenus: {
           create: { id: 21, access: true, api: "/demo/path" },
@@ -972,8 +972,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Product QA",
-        displayName: "All Product QA",
+        name: "FAQs",
+        displayName: "All FAQs",
         access: true,
         subMenus: {
           create: { id: 106, access: true, api: "/demo/path" },
@@ -996,8 +996,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Query",
-        displayName: "All Query",
+        name: "Customer Query",
+        displayName: "All Customer Query",
         access: true,
         subMenus: {
           create: { id: 116, access: true, api: "/demo/path" },

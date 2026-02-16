@@ -8,6 +8,7 @@ const financialYearSchema = new mongoose.Schema({
   isClosed: { type: Boolean, default: false },
   closingDate: { type: Date },
   isSeriesCreated: {type: Boolean, default: false},
+  isWorking: {type: Boolean, default: false},
   notes: { type: String }
 });
 
