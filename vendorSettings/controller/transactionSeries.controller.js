@@ -7,6 +7,7 @@ const transactionSerialNumebrSchema = require("../../client/model/transactionSer
 const { default: mongoose } = require("mongoose");
 const httpStatusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
+const financialYearSchema = require("../../client/model/financialYear");
 
 exports.getAllSeries = async (req, res, next) => {
     try {
@@ -62,6 +63,7 @@ exports.create = async (req, res, next) => {
 
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
 
         // Check if any series already exists for this year
         const existing = await SerialNumber.findOne({ year: financialYear });
@@ -80,6 +82,11 @@ exports.create = async (req, res, next) => {
 
         // Bulk insert (very fast)
         const result = await SerialNumber.insertMany(documents);
+
+        await FinancialYear.findOneAndUpdate(
+            { name: financialYear },
+            { $set: { isSeriesCreated: true } },
+        );
 
         return res.status(200).json({
             success: true,

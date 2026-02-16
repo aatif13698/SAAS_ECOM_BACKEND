@@ -4,13 +4,24 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const financialYearSchema = require("../../client/model/financialYear");
+const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
-        const financialYear = await FinancialYear.create(data);
+        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+        const series = await SerialNumber.findOne({ year: data.name });
+        let dataObject = {
+            ...data
+        }
+
+        if (series) {
+            dataObject.isSeriesCreated = true
+        }
+        const financialYear = await FinancialYear.create(dataObject);
         return financialYear
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating financial year : ${error.message}`);

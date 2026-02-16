@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
 const financialYearSchema = new mongoose.Schema({
-  name: { type: String, require: true},
+  name: { type: String, require: true, unique: true},
   alias: { type: String, require: true, unique: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   isClosed: { type: Boolean, default: false },
   closingDate: { type: Date },
+  isSeriesCreated: {type: Boolean, default: false},
   notes: { type: String }
 });
 
