@@ -23,6 +23,9 @@ router.get('/all/financialYear', entityAuth.authorizeEntity("Accounting Master",
 
 router.get('/working/financialYear/:clientId', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), financialYearController.workingFy);
 
+router.get('/all/nonworking/financialYear/:clientId', entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), financialYearController.allNonWorking);
+
+router.post("/set/working/financialYear", entityAuth.authorizeEntity("Accounting Master", "Financial Year", "create"), financialYearController.setWorking);
 
 
 // # create, update, view, list, activate/inactive financial year

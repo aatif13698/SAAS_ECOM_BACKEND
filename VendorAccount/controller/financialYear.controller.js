@@ -49,7 +49,7 @@ exports.create = async (req, res, next) => {
         // Base data object
         const dataObject = {
             startDate, endDate, notes, name,
-            alias, 
+            alias,
             createdBy: mainUser._id,
         };
 
@@ -120,6 +120,45 @@ exports.workingFy = async (req, res, next) => {
         return res.status(statusCode.OK).send({
             message: message.lblFinancialYearFoundSucessfully,
             data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.allNonWorking = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const result = await financialYearService.allNonWorking(clientId);
+        return res.status(statusCode.OK).send({
+            message: message.lblFinancialYearFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.setWorking = async (req, res, next) => {
+    try {
+        const { id, status, clientId } = req.body;
+        if (!clientId || !id) {
+            return res.status(400).send({
+                message: message.lblFinancialYearIdAndClientIdRequired,
+            });
+        }
+        const updated = await financialYearService.setWorking(clientId, id, {
+            isWorking: status == "1",
+        });
+       return res.status(statusCode.OK).send({
+            message: "Working year updated successfully.",
+            data: updated,
         });
     } catch (error) {
         next(error);

@@ -68,6 +68,18 @@ const working = async (clientId) => {
     }
 };
 
+const allNonWorking = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const financialYear = await FinancialYear.find({})
+        return financialYear;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing financial year: ${error.message}`);
+    }
+};
+
+
 // const activeInactive = async (clientId, financialYearId, data) => {
 //     try {
 //         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -114,6 +126,40 @@ const activeInactive = async (clientId, financialYearId, data) => {
         );
     }
 };
+
+
+const setWorking = async (clientId, financialYearId, data) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+
+        if (data.isWorking === true) {
+            await FinancialYear.updateMany(
+                { _id: { $ne: financialYearId } },
+                { $set: { isWorking: false } }
+            );
+        }
+
+        const updated = await FinancialYear.findByIdAndUpdate(
+            financialYearId,
+            { $set: { isWorking: data.isWorking } },
+            { new: true }
+        );
+
+        if (!updated) {
+            throw new CustomError(statusCode.NotFound, message.lblFinancialYearNotFound);
+        }
+
+        return updated;
+
+    } catch (error) {
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error active inactive: ${error.message}`
+        );
+    }
+};
+
 
 
 const update = async (clientId, financialYearId, updateData) => {
@@ -169,5 +215,7 @@ module.exports = {
     update,
     activeInactive,
     all,
-    working
+    working,
+    allNonWorking,
+    setWorking
 };
