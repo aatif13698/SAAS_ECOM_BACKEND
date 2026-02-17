@@ -107,6 +107,25 @@ exports.all = async (req, res, next) => {
     }
 };
 
+exports.workingFy = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const result = await financialYearService.working(clientId);
+        return res.status(statusCode.OK).send({
+            message: message.lblFinancialYearFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // active inactive
 exports.activeinactive = async (req, res, next) => {
     try {

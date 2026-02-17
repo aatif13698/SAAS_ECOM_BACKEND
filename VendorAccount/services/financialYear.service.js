@@ -57,6 +57,17 @@ const all = async (clientId) => {
     }
 };
 
+const working = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const financialYear = await FinancialYear.findOne({ isWorking: true })
+        return financialYear;
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing financial year: ${error.message}`);
+    }
+};
+
 // const activeInactive = async (clientId, financialYearId, data) => {
 //     try {
 //         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -157,5 +168,6 @@ module.exports = {
     list,
     update,
     activeInactive,
-    all
+    all,
+    working
 };
