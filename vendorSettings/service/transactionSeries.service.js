@@ -1,3 +1,4 @@
+const financialYearSchema = require("../../client/model/financialYear");
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 const { getClientDatabaseConnection } = require("../../db/connection");
 const CustomError = require("../../utils/customeError");
@@ -31,9 +32,12 @@ const getSeriesNextValue = async (clientId, year, collectionName) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
-        const currentDate = new Date();
-        const financialYear = getFiscalYearRange(currentDate);
-        const series = await SerialNumber.findOne({ year: year, collectionName: collectionName } );
+        const FinancialYear = clientConnection.model("financialYear", financialYearSchema);
+        const financialYear = await FinancialYear.findOne({ isWorking: true });
+        if (!financialYear) {
+            throw new CustomError(httpStatusCode.NotFound, "No working finanacial year has been set yet.");
+        }
+        const series = await SerialNumber.findOne({ year: financialYear.name, collectionName: collectionName });
         if (series.length == 0) {
             throw new CustomError(httpStatusCode.NotFound, "Series not found.");
         }
