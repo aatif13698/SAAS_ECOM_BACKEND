@@ -35,10 +35,10 @@ exports.getSeriesNextValue = async (req, res, next) => {
                 message: "Client id is required.",
             });
         }
-        const series = await transactionSeriesService.getSeriesNextValue(clientId, year, collectionName);
+        const result = await transactionSeriesService.getSeriesNextValue(clientId, year, collectionName);
         return res.status(200).send({
             message: "series found successfully",
-            data: series,
+            data: result,
         });
     } catch (error) {
         next(error)

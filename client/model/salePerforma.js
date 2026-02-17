@@ -29,9 +29,9 @@ const itemNameSchema = new Schema({
 // Sub-schema for Purchase Order Item
 const salesQuotationItemSchema = new Schema({
     srNo: { type: Number, required: true, min: 1 },
-    itemName: { type: itemNameSchema, required: true }, 
+    itemName: { type: itemNameSchema, required: true },
     quantity: { type: Number, required: true, min: 1 },
-    mrp: { type: Number, default: 0, min: 0 }, 
+    mrp: { type: Number, default: 0, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
     taxableAmount: { type: Number, default: 0, min: 0 },
     gstPercent: { type: Number, default: 0, min: 0 }, // Overall GST percentage
@@ -60,16 +60,19 @@ const salePerformaSchema = new Schema(
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
+        financialYear: { type: ObjectId, ref: "financialYear", default: null, index: true },
+
+
         isVendorLevel: { type: Boolean, default: false },
         isBuLevel: { type: Boolean, default: false },
         isBranchLevel: { type: Boolean, default: false },
         isWarehouseLevel: { type: Boolean, default: false },
 
 
-        customer: { type: ObjectId, ref: "ClientUser", required: true, index: true }, 
+        customer: { type: ObjectId, ref: "ClientUser", required: true, index: true },
         customerLedger: { type: ObjectId, ref: 'ledger', required: true },
         shippingAddress: { type: shippingAddressSchema, required: true },
-        spNumber: { type: String, trim: true, required: true, unique: true, index: true }, 
+        spNumber: { type: String, trim: true, required: true, unique: true, index: true },
         spDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
 
         // Items array
@@ -85,7 +88,7 @@ const salePerformaSchema = new Schema(
         payedFrom: [
             {
                 id: { type: ObjectId, ref: 'ledger', default: null },
-                paymentType: { type: String, default: null },              
+                paymentType: { type: String, default: null },
                 linkedId: { type: String, default: null },
                 amount: { type: Number, required: true }
             }
@@ -95,7 +98,7 @@ const salePerformaSchema = new Schema(
 
         status: { type: String, enum: ['draft', 'issued', 'invoiced', 'approved', 'closed', 'canceled'], default: "draft" },
 
-        auditStatus: { type: String, enum: ['completed','pending'], default: "pending" },
+        auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },
 
         workOrderNumber: { type: String, trim: true, default: null },
         workOrderDate: { type: Date },

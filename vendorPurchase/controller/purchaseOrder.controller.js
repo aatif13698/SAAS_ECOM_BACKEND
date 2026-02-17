@@ -21,7 +21,7 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
-
+            financialYear,
 
 
             supplier,
@@ -93,6 +93,10 @@ exports.create = async (req, res, next) => {
             grandTotal,
             createdBy: mainUser._id,
         };
+
+        if (financialYear) {
+            dataObject.financialYear = financialYear
+        }
 
         // Level-specific validation and assignment 
         const levelConfig = {
@@ -339,7 +343,7 @@ exports.list = async (req, res, next) => {
 // active inactive 
 exports.changeStatus = async (req, res, next) => {
     try {
-        const {  id, status, clientId, } = req.body;
+        const { id, status, clientId, } = req.body;
         if (!clientId || !id) {
             return res.status(400).send({
                 message: message.lblHolidayIdIdAndClientIdRequired,

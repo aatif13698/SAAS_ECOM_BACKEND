@@ -41,7 +41,7 @@ const getSeriesNextValue = async (clientId, year, collectionName) => {
         if (series.length == 0) {
             throw new CustomError(httpStatusCode.NotFound, "Series not found.");
         }
-        return series;
+        return {series, financialYear};
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error: ${error.message}`);
     }

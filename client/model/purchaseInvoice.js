@@ -60,6 +60,9 @@ const purchaseInvoiceSchema = new Schema(
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
+        financialYear: { type: ObjectId, ref: "financialYear", default: null, index: true },
+
+
         isVendorLevel: { type: Boolean, default: false },
         isBuLevel: { type: Boolean, default: false },
         isBranchLevel: { type: Boolean, default: false },
@@ -95,7 +98,7 @@ const purchaseInvoiceSchema = new Schema(
 
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
 
-        auditStatus: { type: String, enum: ['completed','pending'], default: "pending" },
+        auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },
 
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency

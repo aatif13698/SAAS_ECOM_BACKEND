@@ -60,6 +60,9 @@ const saleQuotationSchema = new Schema(
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
+        financialYear: { type: ObjectId, ref: "financialYear", default: null, index: true },
+
+
         isVendorLevel: { type: Boolean, default: false },
         isBuLevel: { type: Boolean, default: false },
         isBranchLevel: { type: Boolean, default: false },
