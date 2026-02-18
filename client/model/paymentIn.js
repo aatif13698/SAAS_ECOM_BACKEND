@@ -8,6 +8,8 @@ const paymentInSchema = new Schema(
         businessUnit: { type: ObjectId, ref: "businessUnit", default: null, index: true },
         branch: { type: ObjectId, ref: "branch", default: null, index: true },
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
+        financialYear: { type: ObjectId, ref: "financialYear", default: null, index: true },
+
 
         isVendorLevel: { type: Boolean, default: false },
         isBuLevel: { type: Boolean, default: false },

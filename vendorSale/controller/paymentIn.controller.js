@@ -12,6 +12,7 @@ exports.create = async (req, res, next) => {
             businessUnit,
             branch,
             warehouse,
+            financialYear,
 
             customer,
             customerLedger,
@@ -69,6 +70,10 @@ exports.create = async (req, res, next) => {
             payments,
             createdBy: mainUser._id,
         };
+
+        if (financialYear) {
+            dataObject.financialYear = financialYear
+        }
 
         // Level-specific validation and assignment 
         const levelConfig = {
