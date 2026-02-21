@@ -35,5 +35,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "autocannon": "^8.0.0"
+  }
 }
