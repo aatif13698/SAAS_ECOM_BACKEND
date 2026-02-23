@@ -100,7 +100,7 @@ exports.create = async (req, res, next) => {
             createdBy: mainUser._id,
         };
 
-        if(financialYear){
+        if (financialYear) {
             dataObject.financialYear = financialYear
         }
 
@@ -378,6 +378,35 @@ exports.list = async (req, res, next) => {
             }
         }
         const result = await purchaseInvoice.list(clientId, filters, { page, limit: perPage });
+        return res.status(statusCode.OK).send({
+            message: message.lblHolidayFoundSucessfully,
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+exports.all = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, id } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!id) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Supplier Id is required.",
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            supplier: id
+        };
+        const result = await purchaseInvoice.allBySupplier(clientId, filters);
         return res.status(statusCode.OK).send({
             message: message.lblHolidayFoundSucessfully,
             data: result,

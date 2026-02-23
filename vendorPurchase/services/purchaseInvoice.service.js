@@ -608,6 +608,24 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
     }
 };
 
+const allBySupplier = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const [purchaseInvoices] = await Promise.all([
+            PurchaseInvoice.find(filters)
+                .sort({ createdAt: -1 }),  // Sort by creation date descending (latest first)
+        ]);
+        return { purchaseInvoices };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
 
 const unpaid = async (clientId, filters = {}) => {
     try {
@@ -661,6 +679,7 @@ module.exports = {
     update,
     getById,
     list,
+    allBySupplier,
     changeStatus,
     unpaid
 }; 

@@ -15,6 +15,7 @@ router.get('/get/audit/purchaseInvoice/:clientId/:purchaseOrderId', entityAuth.a
 
 router.post('/audit/item/purchaseInvoice', entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), purchaseInvoiceController.auditItem);
 
+router.get('/all/bySupplier/purchaseInvoice', entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), purchaseInvoiceController.all);
 
 
 
