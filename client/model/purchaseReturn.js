@@ -61,6 +61,8 @@ const purchaseReturnSchema = new Schema(
         warehouse: { type: ObjectId, ref: "warehouse", default: null, index: true },
 
         financialYear: { type: ObjectId, ref: "financialYear", default: null, index: true },
+        purchaseInvId: { type: ObjectId, ref: "purchaseInvoice", default: null, index: true },
+        purchaseInvLinkedNumber: { type: String, default: null },
 
         isVendorLevel: { type: Boolean, default: false },
         isBuLevel: { type: Boolean, default: false },
@@ -71,8 +73,8 @@ const purchaseReturnSchema = new Schema(
         // Core PO fields
         supplier: { type: ObjectId, ref: "supplier", required: true, index: true }, // Assumed ref to Supplier model
         shippingAddress: { type: shippingAddressSchema, required: true },
-        poNumber: { type: String, trim: true, required: true, unique: true, index: true }, // Unique for business integrity
-        poDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
+        prNumber: { type: String, trim: true, required: true, unique: true, index: true }, // Unique for business integrity
+        prDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
 
         // Items array
         items: [purchaseReturnItemSchema],

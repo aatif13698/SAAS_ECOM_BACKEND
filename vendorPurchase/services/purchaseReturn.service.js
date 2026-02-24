@@ -10,63 +10,60 @@ const supplierSchema = require("../../client/model/supplier");
 const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
 const crypto = require('crypto');
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
+const purchaseReturnSchema = require("../../client/model/purchaseReturn");
 
 
 const create = async (clientId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
         const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
-
-        const existingPo = await PurchaseOrder.findOne({ poNumber: data?.poNumber }).lean();
-        console.log("existingPo", existingPo);
-
-        if (existingPo) {
-            throw new CustomError(statusCode.BadRequest, 'Purchase order number already exists.')
+        const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber }).lean();
+        if (existingPr) {
+            throw new CustomError(statusCode.BadRequest, 'Purchase return number already exists.')
         }
-        const purchaseOrder = await PurchaseOrder.create(data);
-        if (purchaseOrder) {
-            await SerialNumber.findOneAndUpdate({ collectionName: "purchase_order" }, { $inc: { nextNum: 1 } })
+        const purchaseReturn = await PurchaseReturn.create(data);
+        if (purchaseReturn) {
+            await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
         }
-        return purchaseOrder
-
+        return purchaseReturn
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
     }
 };
 
-const update = async (clientId, purchaseOrderId, updateData) => {
+const update = async (clientId, purchaseReturnId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
-        const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
-        if (!purchaseOrder) {
-            throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
+        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
+        const purchaseReturn = await PurchaseReturn.findById(purchaseReturnId);
+        if (!purchaseReturn) {
+            throw new CustomError(statusCode.NotFound, message.lblPurchaseReturnNotFound);
         }
-        Object.assign(purchaseOrder, updateData);
-        await purchaseOrder.save();
-        return purchaseOrder
+        Object.assign(purchaseReturn, updateData);
+        await purchaseReturn.save();
+        return purchaseReturn
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error updating purchaseOrder: ${error.message}`);
+        throw new CustomError(error.statusCode || 500, `Error updating purchase return: ${error.message}`);
     }
 };
 
 
-const getById = async (clientId, purchaseOrderId) => {
+const getById = async (clientId, purchaseReturnId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
-        const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId)
+        const purchaseReturn = await PurchaseReturn.findById(purchaseReturnId)
             .populate({
                 path: "supplier",
                 model: Supplier,
                 select: "-items"
             });
-        if (!purchaseOrder) {
-            throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
+        if (!purchaseReturn) {
+            throw new CustomError(statusCode.NotFound, message.lblPurchaseReturnNotFound);
         }
-        return purchaseOrder;
+        return purchaseReturn;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
     }
@@ -76,18 +73,14 @@ const getById = async (clientId, purchaseOrderId) => {
 const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
+        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
-
-        console.log("options", options);
-
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
-        console.log("skip", skip);
 
-        const [purchaseOrders, total] = await Promise.all([
-            PurchaseOrder.find(filters)
+        const [purchaseReturns, total] = await Promise.all([
+            PurchaseReturn.find(filters)
                 .skip(skip)
                 .sort({ createdAt: -1 })  // Sort by creation date descending (latest first)
                 .limit(Number(limit))
@@ -96,24 +89,24 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     model: Supplier,
                     select: "-items"
                 }),
-            PurchaseOrder.countDocuments(filters),
+            PurchaseReturn.countDocuments(filters),
         ]);
-        return { count: total, purchaseOrders };
+        return { count: total, purchaseReturns };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
     }
 };
 
 
-const changeStatus = async (clientId, purchaseOrderId, data) => {
+const changeStatus = async (clientId, purchaseReturnId, data) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseOrder = clientConnection.model('purchaseOrder', purchaseOrderSchema);
         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
 
-        const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
+        const purchaseOrder = await PurchaseOrder.findById(purchaseReturnId);
         if (!purchaseOrder) {
-            throw new CustomError(statusCode.NotFound, message.lblPurchaseOrderNotFound);
+            throw new CustomError(statusCode.NotFound, message.lblPurchaseReturnNotFound);
         }
         if (data.status == "invoiced") {
             const Supplier = clientConnection.model("supplier", supplierSchema);

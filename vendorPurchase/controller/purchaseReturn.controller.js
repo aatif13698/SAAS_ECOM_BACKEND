@@ -23,11 +23,15 @@ exports.create = async (req, res, next) => {
             warehouse,
             financialYear,
 
+            purchaseInvId,
+            purchaseInvLinkedNumber,
+
+
 
             supplier,
             shippingAddress,
-            poNumber,
-            poDate,
+            prNumber,
+            prDate,
             items,
             notes,
             bankDetails,
@@ -51,10 +55,13 @@ exports.create = async (req, res, next) => {
         const requiredFields = [
             supplier,
             shippingAddress,
-            poNumber,
-            poDate,
+            prNumber,
+            prDate,
             items,
             grandTotal,
+
+            purchaseInvId,
+            purchaseInvLinkedNumber,
             // notes,
             // bankDetails,
             // paymentMethod,
@@ -78,10 +85,12 @@ exports.create = async (req, res, next) => {
 
         // Base data object 
         const dataObject = {
+            purchaseInvId,
+            purchaseInvLinkedNumber,
             supplier,
             shippingAddress,
-            poNumber,
-            poDate,
+            prNumber,
+            prDate,
             items,
             notes,
             bankDetails,
@@ -138,10 +147,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseOrder = await purchaseReturnService.create(clientId, dataObject);
+        const newPurchaseReturn = await purchaseReturnService.create(clientId, dataObject);
         return res.status(statusCode.OK).send({
-            message: message.lblPurchaseOrderCreatedSuccess,
-            data: { holidayId: newPurchaseOrder._id },
+            message: message.lblPurchaseReturnCreatedSuccess,
+            data: { holidayId: newPurchaseReturn._id },
         });
     } catch (error) {
         next(error);
@@ -305,7 +314,7 @@ exports.list = async (req, res, next) => {
             deletedAt: null,
             ...(keyword && {
                 $or: [
-                    { poNumber: { $regex: keyword.trim(), $options: "i" } },
+                    { prNumber: { $regex: keyword.trim(), $options: "i" } },
                 ],
             }),
         };

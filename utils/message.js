@@ -316,6 +316,16 @@ module.exports = {
   lblPurchaseOrderIdIdAndClientIdRequired: "PurchaseOrder Id and Client Id are required!",
   lblPurchaseOrderIdIdRequired: "PurchaseOrder Id id required!",
 
+  // purchase return
+  lblPurchaseReturnAlreadyExists: "PurchaseReturn already exists with this email or phone!",
+  lblPurchaseReturnCreatedSuccess: "PurchaseReturn created successfully!",
+  lblPurchaseReturnUpdatedSuccess: "PurchaseReturn updated successfully!",
+  lblPurchaseReturnIdAndClientIdRequired: " PurchaseReturn Id and Client Id are required!",
+  lblPurchaseReturnNotFound: "PurchaseReturn not found!",
+  lblPurchaseReturnFoundSucessfully: "PurchaseReturn found successfully!",
+  lblPurchaseReturnIdIdAndClientIdRequired: "PurchaseReturn Id and Client Id are required!",
+  lblPurchaseReturnIdIdRequired: "PurchaseReturn Id id required!",
+
   // purchase invoice
   lblPurchaseInvoiceAlreadyExists: "PurchaseInvoice already exists with this email or phone!",
   lblPurchaseInvoiceCreatedSuccess: "PurchaseInvoice created successfully!",
