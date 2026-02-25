@@ -13,22 +13,174 @@ const transactionSerialNumebrSchema = require("../../client/model/transactionSer
 const purchaseReturnSchema = require("../../client/model/purchaseReturn");
 
 
-const create = async (clientId, data) => {
+const ledgerSchema = require("../../client/model/ledger");
+const voucherGroupSchema = require("../../client/model/voucherGroup");
+const voucherSchema = require("../../client/model/voucher");
+const { v4: uuidv4 } = require('uuid');
+const productMainStockSchema = require("../../client/model/productMainStock");
+const clinetBusinessUnitSchema = require("../../client/model/businessUnit");
+const clinetBranchSchema = require("../../client/model/branch");
+const clinetWarehouseSchema = require("../../client/model/warehouse");
+const stockLedgerSchema = require("../../client/model/stockLedger");
+
+
+// const create = async (clientId, data) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
+//         const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+//         const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber }).lean();
+//         if (existingPr) {
+//             throw new CustomError(statusCode.BadRequest, 'Purchase return number already exists.')
+//         }
+//         const purchaseReturn = await PurchaseReturn.create(data);
+//         if (purchaseReturn) {
+//             await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
+//         }
+//         return purchaseReturn
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
+//     }
+// };
+
+
+const create = async (clientId, data, mainUser) => {
+    const clientConnection = await getClientDatabaseConnection(clientId);
+
+    const SaleInvoice = clientConnection.model('saleInvoice', SaleInvoiceSchema);
+    const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
+    const Ledger = clientConnection.model("ledger", ledgerSchema);
+    const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
+    const Voucher = clientConnection.model("voucher", voucherSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+    const session = await clientConnection.startSession();
+
     try {
-        const clientConnection = await getClientDatabaseConnection(clientId);
-        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
-        const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
-        const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber }).lean();
-        if (existingPr) {
-            throw new CustomError(statusCode.BadRequest, 'Purchase return number already exists.')
-        }
-        const purchaseReturn = await PurchaseReturn.create(data);
-        if (purchaseReturn) {
-            await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
-        }
-        return purchaseReturn
+        const result = await session.withTransaction(async (session) => {
+            let pi;
+
+            // ── Payment part ───────────────────────────────────────
+            if (data?.paidAmount > 0) {
+                const customerLedger = await Ledger.findById(data.customerLedger).session(session);
+                if (!customerLedger) throw new CustomError(400, 'Customer ledger not found.');
+
+                const receivedInLedger = await Ledger.findById(data?.receivedIn).session(session);
+                if (!receivedInLedger) throw new CustomError(400, 'Received ledger not found.');
+
+                // if (receivedInLedger.balance < data.paidAmount) {
+                //     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
+                // }
+
+                const voucherGroup = await VoucherGroup.findOne({
+                    warehouse: data?.warehouse,
+                    isWarehouseLevel: true,
+                    name: "Receipt"
+                }).session(session);
+
+                if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
+
+                const voucherLinkId = uuidv4();
+
+                const voucherDocs = [
+                    {
+                        businessUnit: data?.businessUnit,
+                        branch: data?.branch,
+                        warehouse: data?.warehouse,
+                        isWarehouseLevel: true,
+                        voucherGroup: voucherGroup._id,
+                        narration: "Purchase return receipt.",
+                        voucherLinkId,
+                        ledger: data.customerLedger,
+                        debit: data.paidAmount,
+                        credit: 0,
+                        isSingleEntry: false,
+                        createdBy: mainUser._id,
+                    },
+                    {
+                        businessUnit: data?.businessUnit,
+                        branch: data?.branch,
+                        warehouse: data?.warehouse,
+                        isWarehouseLevel: true,
+                        voucherGroup: voucherGroup._id,
+                        narration: "Purchase return receipt.",
+                        voucherLinkId,
+                        ledger: data.receivedIn,
+                        debit: 0,
+                        credit: data.paidAmount,
+                        isSingleEntry: false,
+                        createdBy: mainUser._id,
+                    }
+                ];
+
+                // Important: ordered: true when using session + multiple docs
+                await Voucher.create(voucherDocs, { session, ordered: true });
+
+                // Update ledgers
+                receivedInLedger.balance += Number(data.paidAmount);
+                await receivedInLedger.save({ session });
+
+                customerLedger.balance -= Number(data.paidAmount);
+                await customerLedger.save({ session });
+
+
+                // ── Duplicate check ────────────────────────────────────
+                const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber })
+                    .session(session)
+                    .lean();
+
+                if (existingPr) {
+                    throw new CustomError(400, 'Purchase return number already exists.');
+                }
+
+                console.log("Number(receivedInLedger.balance)", Number(receivedInLedger.balance));
+
+                // ── Create Purchase Invoice ────────────────────────────
+                [pi] = await PurchaseReturn.create([{ ...data, receivedIn: [{ id: data.receivedIn, paymentType: "Receipt", amount: Number(data.paidAmount) }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
+                    session,
+                    ordered: true   // safe even for 1 document
+                });
+
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "sale_invoice" }, { $inc: { nextNum: 1 } })
+                }
+
+                return pi;
+
+            } else {
+                console.log("coming here");
+
+                // ── Duplicate check ────────────────────────────────────
+                const existingPr = await SaleInvoice.findOne({ prNumber: data?.prNumber })
+                    .session(session)
+                    .lean();
+                if (existingPr) {
+                    throw new CustomError(400, 'Purchase invoice number already exists.');
+                }
+                // ── Create Purchase Invoice ────────────────────────────
+                [pi] = await SaleInvoice.create([{ ...data, receivedIn: [], paymentMethod: "", status: "full_due" }], {
+                    session,
+                    ordered: true   // safe even for 1 document
+                });
+
+                if (pi) {
+                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
+                }
+
+
+
+                return pi;
+            }
+        });
+
+        return result;
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error creating : ${error.message}`);
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error creating purchase invoice: ${error.message}`
+        );
+    } finally {
+        session.endSession();
     }
 };
 

@@ -40,7 +40,8 @@ exports.create = async (req, res, next) => {
             paymentMethod,
             paidAmount,
             balance,
-            grandTotal
+            grandTotal,
+            receivedIn,
 
         } = req.body;
 
@@ -101,6 +102,7 @@ exports.create = async (req, res, next) => {
             balance,
             grandTotal,
             createdBy: mainUser._id,
+            receivedIn,
         };
 
         if (financialYear) {
