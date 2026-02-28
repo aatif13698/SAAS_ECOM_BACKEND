@@ -99,8 +99,8 @@ const create = async (clientId, data, mainUser) => {
                         narration: "Purchase return receipt.",
                         voucherLinkId,
                         ledger: data.supplierLedger,
-                        credit: data.paidAmount,
-                        debit: 0,
+                        credit: 0,
+                        debit: data.paidAmount,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     },
@@ -113,8 +113,8 @@ const create = async (clientId, data, mainUser) => {
                         narration: "Purchase return receipt.",
                         voucherLinkId,
                         ledger: data.receivedIn,
-                        debit: data.paidAmount,
-                        credit: 0,
+                        debit: 0,
+                        credit: data.paidAmount,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     }
@@ -234,7 +234,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
-        
+
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
 
