@@ -47,7 +47,6 @@ const stockLedgerSchema = require("../../client/model/stockLedger");
 const create = async (clientId, data, mainUser) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
 
-    const SaleInvoice = clientConnection.model('saleInvoice', SaleInvoiceSchema);
     const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
@@ -60,10 +59,13 @@ const create = async (clientId, data, mainUser) => {
         const result = await session.withTransaction(async (session) => {
             let pi;
 
+            console.log("data?.paidAmount", data?.paidAmount);
+
+
             // ── Payment part ───────────────────────────────────────
             if (data?.paidAmount > 0) {
-                const customerLedger = await Ledger.findById(data.customerLedger).session(session);
-                if (!customerLedger) throw new CustomError(400, 'Customer ledger not found.');
+                const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
+                if (!supplierLedger) throw new CustomError(400, 'Customer ledger not found.');
 
                 const receivedInLedger = await Ledger.findById(data?.receivedIn).session(session);
                 if (!receivedInLedger) throw new CustomError(400, 'Received ledger not found.');
@@ -82,6 +84,11 @@ const create = async (clientId, data, mainUser) => {
 
                 const voucherLinkId = uuidv4();
 
+                console.log("voucherGroup", voucherGroup);
+                console.log("mainUser", mainUser);
+
+
+
                 const voucherDocs = [
                     {
                         businessUnit: data?.businessUnit,
@@ -91,9 +98,9 @@ const create = async (clientId, data, mainUser) => {
                         voucherGroup: voucherGroup._id,
                         narration: "Purchase return receipt.",
                         voucherLinkId,
-                        ledger: data.customerLedger,
-                        debit: data.paidAmount,
-                        credit: 0,
+                        ledger: data.supplierLedger,
+                        credit: data.paidAmount,
+                        debit: 0,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     },
@@ -106,8 +113,8 @@ const create = async (clientId, data, mainUser) => {
                         narration: "Purchase return receipt.",
                         voucherLinkId,
                         ledger: data.receivedIn,
-                        debit: 0,
-                        credit: data.paidAmount,
+                        debit: data.paidAmount,
+                        credit: 0,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     }
@@ -120,8 +127,8 @@ const create = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                customerLedger.balance -= Number(data.paidAmount);
-                await customerLedger.save({ session });
+                supplierLedger.balance -= Number(data.paidAmount);
+                await supplierLedger.save({ session });
 
 
                 // ── Duplicate check ────────────────────────────────────
@@ -142,23 +149,22 @@ const create = async (clientId, data, mainUser) => {
                 });
 
                 if (pi) {
-                    await SerialNumber.findOneAndUpdate({ collectionName: "sale_invoice" }, { $inc: { nextNum: 1 } })
+                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
                 }
 
                 return pi;
 
             } else {
-                console.log("coming here");
 
                 // ── Duplicate check ────────────────────────────────────
-                const existingPr = await SaleInvoice.findOne({ prNumber: data?.prNumber })
+                const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber })
                     .session(session)
                     .lean();
                 if (existingPr) {
                     throw new CustomError(400, 'Purchase invoice number already exists.');
                 }
                 // ── Create Purchase Invoice ────────────────────────────
-                [pi] = await SaleInvoice.create([{ ...data, receivedIn: [], paymentMethod: "", status: "full_due" }], {
+                [pi] = await PurchaseReturn.create([{ ...data, receivedIn: [], paymentMethod: "", status: "full_due" }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
@@ -166,8 +172,6 @@ const create = async (clientId, data, mainUser) => {
                 if (pi) {
                     await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
                 }
-
-
 
                 return pi;
             }
@@ -177,7 +181,7 @@ const create = async (clientId, data, mainUser) => {
     } catch (error) {
         throw new CustomError(
             error.statusCode || 500,
-            `Error creating purchase invoice: ${error.message}`
+            `Error creating purchase returns: ${error.message}`
         );
     } finally {
         session.endSession();
@@ -227,7 +231,10 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
         const Supplier = clientConnection.model('supplier', supplierSchema);
-
+        const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
+        const Branch = clientConnection.model('branch', clinetBranchSchema);
+        const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
 
@@ -240,7 +247,23 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                     path: "supplier",
                     model: Supplier,
                     select: "-items"
+                })
+                .populate({
+                    path: "businessUnit",
+                    model: BusinessUnit,
+                    select: "name"
+                })
+                .populate({
+                    path: "branch",
+                    model: Branch,
+                    select: "name"
+                })
+                .populate({
+                    path: "warehouse",
+                    model: Warehouse,
+                    select: "name"
                 }),
+            ,
             PurchaseReturn.countDocuments(filters),
         ]);
         return { count: total, purchaseReturns };

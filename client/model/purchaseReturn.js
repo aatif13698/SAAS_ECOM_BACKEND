@@ -70,8 +70,9 @@ const purchaseReturnSchema = new Schema(
         isWarehouseLevel: { type: Boolean, default: false },
 
 
-        // Core PO fields
+        // Core PR fields
         supplier: { type: ObjectId, ref: "supplier", required: true, index: true }, // Assumed ref to Supplier model
+        supplierLedger: { type: ObjectId, ref: 'ledger', required: true },
         shippingAddress: { type: shippingAddressSchema, required: true },
         prNumber: { type: String, trim: true, required: true, unique: true, index: true }, // Unique for business integrity
         prDate: { type: Date, default: Date.now, required: true }, // Stored as Date; frontend formats as needed
@@ -88,8 +89,16 @@ const purchaseReturnSchema = new Schema(
         paidAmount: { type: Number, default: 0, min: 0 },
         balance: { type: Number, default: 0, min: 0 },
         grandTotal: { type: Number, default: 0, min: 0 },
+        receivedIn: [
+            {
+                id: { type: ObjectId, ref: 'ledger', default: null },
+                paymentType: { type: String, default: null },
+                linkedId: { type: String, default: null },
+                amount: { type: Number, required: true }
+            }
+        ],
 
-        status: { type: String, enum: ['draft', 'issued', 'invoiced', 'partially_invoiced', 'pending_approval', 'approved', 'closed', 'canceled'], default: "draft" },
+        status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes

@@ -15,7 +15,7 @@ router.post('/issue/purchaseReturn/mail', entityAuth.authorizeEntity("Administra
 
 router.put('/update/purchaseReturn', entityAuth.authorizeEntity("Administration", "Employee", "update"), purchaseReturnController.update);
 
-router.get('/get/:clientId/:purchaseReturn', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseReturnController.getParticular);
+router.get('/get/:clientId/:purchaseReturnId', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseReturnController.getParticular);
 
 router.get('/list/purchaseReturn', entityAuth.authorizeEntity("Administration", "Employee", "create"), purchaseReturnController.list);
 

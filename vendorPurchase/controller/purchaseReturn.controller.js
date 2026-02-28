@@ -29,6 +29,7 @@ exports.create = async (req, res, next) => {
 
 
             supplier,
+            supplierLedger,
             shippingAddress,
             prNumber,
             prDate,
@@ -55,6 +56,7 @@ exports.create = async (req, res, next) => {
 
         const requiredFields = [
             supplier,
+            supplierLedger,
             shippingAddress,
             prNumber,
             prDate,
@@ -77,9 +79,6 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        console.log("coming here");
-
-
         if (items?.length == 0) {
             return res.status(statusCode.BadRequest).send({ message: "Items is required" })
         }
@@ -89,6 +88,7 @@ exports.create = async (req, res, next) => {
             purchaseInvId,
             purchaseInvLinkedNumber,
             supplier,
+            supplierLedger,
             shippingAddress,
             prNumber,
             prDate,
@@ -149,10 +149,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseReturn = await purchaseReturnService.create(clientId, dataObject);
+        const newPurchaseReturn = await purchaseReturnService.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
             message: message.lblPurchaseReturnCreatedSuccess,
-            data: { holidayId: newPurchaseReturn._id },
+            data: { newPurchaseReturn: newPurchaseReturn },
         });
     } catch (error) {
         next(error);
@@ -286,16 +286,16 @@ exports.issueMail = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, purchaseOrderId } = req.params;
-        if (!clientId || !purchaseOrderId) {
+        const { clientId, purchaseReturnId } = req.params;
+        if (!clientId || !purchaseReturnId) {
             return res.status(400).send({
-                message: message.lblPurchaseOrderIdIdAndClientIdRequired,
+                message: message.lblPurchaseReturnIdAndClientIdRequired,
             });
         }
-        const asset = await purchaseReturnService.getById(clientId, purchaseOrderId);
+        const pr = await purchaseReturnService.getById(clientId, purchaseReturnId);
         return res.status(200).send({
-            message: message.lblHolidayFoundSucessfully,
-            data: asset,
+            message: message.lblPurchaseReturnFoundSucessfully,
+            data: pr,
         });
     } catch (error) {
         next(error)
@@ -343,7 +343,7 @@ exports.list = async (req, res, next) => {
         }
         const result = await purchaseReturnService.list(clientId, filters, { page, limit: perPage });
         return res.status(statusCode.OK).send({
-            message: message.lblHolidayFoundSucessfully,
+            message: message.lblPurchaseReturnFoundSucessfully,
             data: result,
         });
     } catch (error) {
