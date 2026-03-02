@@ -9,6 +9,8 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 router.post('/create/payment/in', entityAuth.authorizeEntity("Purchases", "Payment Out", "create"), paymentInController.create);
 
+router.post('/create/received-payment', entityAuth.authorizeEntity("Purchases", "Payment Out", "create"), paymentInController.createReceivedPayment);
+
 router.get('/list/payment/in', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentInController.list);
 
 router.get('/get/payment/in/:id/:clientId', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentInController.getParticularPaymentOut);

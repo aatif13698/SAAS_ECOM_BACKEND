@@ -30,6 +30,8 @@ exports.getAllSeries = async (req, res, next) => {
 exports.getSeriesNextValue = async (req, res, next) => {
     try {
         const { clientId, year, collectionName } = req.params;
+        console.log("req.params", req.params);
+        
         if (!clientId) {
             return res.status(400).send({
                 message: "Client id is required.",
