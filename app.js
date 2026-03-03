@@ -151,10 +151,7 @@ app.use(express.static('public'))
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 
-app.head('/api/ping', (req, res) => res.sendStatus(200));
-
-
-
+app.get('/api/ping', (req, res) => res.status(200).json({ status: 'ok' })); // Or just res.sendStatus(200) if no body
 
 // connecting database
 const DATABASE_URL = process.env.DATABASE_URL;
