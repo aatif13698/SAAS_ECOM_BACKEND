@@ -151,6 +151,8 @@ app.use(express.static('public'))
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 
+app.head('/api/ping', (req, res) => res.sendStatus(200));
+
 
 
 
