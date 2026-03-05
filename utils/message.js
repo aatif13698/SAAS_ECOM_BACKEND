@@ -326,6 +326,17 @@ module.exports = {
   lblPurchaseReturnIdIdAndClientIdRequired: "PurchaseReturn Id and Client Id are required!",
   lblPurchaseReturnIdIdRequired: "PurchaseReturn Id id required!",
 
+
+  // debit Note
+  lblDebitNoteAlreadyExists: "DebitNote already exists with this email or phone!",
+  lblDebitNoteCreatedSuccess: "DebitNote created successfully!",
+  lblDebitNoteUpdatedSuccess: "DebitNote updated successfully!",
+  lblDebitNoteIdAndClientIdRequired: " DebitNote Id and Client Id are required!",
+  lblDebitNoteNotFound: "DebitNote not found!",
+  lblDebitNoteFoundSucessfully: "DebitNote found successfully!",
+  lblDebitNoteIdIdAndClientIdRequired: "DebitNote Id and Client Id are required!",
+  lblDebitNoteIdIdRequired: "DebitNote Id id required!",
+
   // purchase invoice
   lblPurchaseInvoiceAlreadyExists: "PurchaseInvoice already exists with this email or phone!",
   lblPurchaseInvoiceCreatedSuccess: "PurchaseInvoice created successfully!",

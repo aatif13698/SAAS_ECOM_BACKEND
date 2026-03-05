@@ -93,6 +93,7 @@ const salePaymentInConfigure = require("./vendorSale//routes/salePaymentInConfig
 const PurchaseOrder = require("./vendorPurchase/routes/purchaseOrder.routes.js");
 const PurchaseInvoice = require("./vendorPurchase/routes/purchaseInvoice.routes.js");
 const PurchaseReturn = require("./vendorPurchase/routes/purchaseReturns.routes.js");
+const DabitNote = require("./vendorPurchase/routes/debitNote.routes.js");
 const PaymentOut = require("./vendorPurchase/routes/paymentOut.routes.js");
 
 
@@ -222,6 +223,7 @@ app.use("/api/vendor/accounts/settings/sale", salePaymentInConfigure.router);
 app.use("/api/vendor/purhcase/po", PurchaseOrder.router);
 app.use("/api/vendor/purhcase/pi", PurchaseInvoice.router);
 app.use("/api/vendor/purhcase/pr", PurchaseReturn.router);
+app.use("/api/vendor/purhcase/dn", DabitNote.router);
 app.use("/api/vendor/purhcase/payment/out", PaymentOut.router);
 
 
