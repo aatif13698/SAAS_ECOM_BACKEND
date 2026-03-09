@@ -14,4 +14,4 @@ router.get('/list/payment/out', entityAuth.authorizeEntity("Purchases", "Payment
 router.get('/get/payment/out/:id/:clientId', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentOutController.getParticularPaymentOut);
 
 
-exports.router = router; 
+exports.router = router;  

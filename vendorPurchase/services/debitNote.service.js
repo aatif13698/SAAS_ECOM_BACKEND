@@ -23,6 +23,7 @@ const clinetBranchSchema = require("../../client/model/branch");
 const clinetWarehouseSchema = require("../../client/model/warehouse");
 const stockLedgerSchema = require("../../client/model/stockLedger");
 const debitNoteSchema = require("../../client/model/debitNote");
+const purchaseInvoiceAndDebitConnectionSchema = require("../../client/model/purchaseInvoiceAndDebitConnection");
 
 
 // const create = async (clientId, data) => {
@@ -188,6 +189,190 @@ const create = async (clientId, data, mainUser) => {
     }
 };
 
+const applyCreditToInvoice = async (clientId, data, mainUser) => {
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+    // const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
+    const Ledger = clientConnection.model("ledger", ledgerSchema);
+    const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
+    const Voucher = clientConnection.model("voucher", voucherSchema);
+    const DebitNote = clientConnection.model('debitNote', debitNoteSchema);
+
+    // const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema);
+    const PurchaseInvoiceAndDebitConnection = clientConnection.model("purchaseInvoiceAndDebitConnection", purchaseInvoiceAndDebitConnectionSchema);
+    const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+    const session = await clientConnection.startSession();
+    try {
+        const result = await session.withTransaction(async (session) => {
+            let po;
+            // ── Payment part ───────────────────────────────────────
+            if (data?.paidAmount > 0) {
+                // settlement of invoice 
+                const linkedId = uuidv4();
+                const invoices = data?.payments;
+                const noInvoice = [];
+                const settledInvoices = [];
+
+                for (let index = 0; index < invoices.length; index++) {
+                    const invoiceId = invoices[index].purchaseInvoice;
+                    const amount = invoices[index].amount;
+                    if (amount > 0) {
+                        const invoice = await PurchaseInvoice.findById(invoiceId);
+                        if (!invoice) {
+                            noInvoice.push(invoiceId);
+                        } else {
+                            invoice.paidAmount += Number(amount);
+
+                            invoice.payedFrom = [...invoice.payedFrom, { paymentType: "Credit Applied", linkedId: linkedId, amount: Number(amount) }];
+                            let newBalance;
+                            if (invoice.balance == 0) {
+
+                            } else {
+                                newBalance = Number(invoice.balance) - Number(amount);
+                            }
+
+                            if (newBalance == 0) {
+                                invoice.status = "paid"
+                            } else {
+                                invoice.status = "partially_paid"
+                            }
+                            invoice.balance = newBalance;
+                            await invoice.save({ session });
+                            settledInvoices.push({ id: invoice._id, settlementAmount: Number(amount) })
+                        }
+                    } else {
+                        noInvoice.push(invoiceId);
+                    }
+                }
+
+
+                // // Update ledgers
+                // payedFromLedger.balance -= Number(data.paidAmount);
+                // await payedFromLedger.save({ session });
+
+                // supplierLedger.balance += Number(data.paidAmount);
+                // await supplierLedger.save({ session });
+
+
+                // // ── Duplicate check ────────────────────────────────────
+                // const existingPaymentOut = await PaymentOut.findOne({ paymentOutNumber: data?.paymentOutNumber })
+                //     .session(session)
+                //     .lean();
+
+                // if (existingPaymentOut) {
+                //     throw new CustomError(400, 'Payment out number already exists.');
+                // }
+
+                // ── Create Purchase Invoice ────────────────────────────
+                // [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom }], linkedId: linkedId }], {
+                //     session,
+                //     ordered: true   // safe even for 1 document
+                // });
+
+                // payment out and invoices connection
+
+
+                // // voucher creation
+                // const voucherGroup = await VoucherGroup.findOne({
+                //     warehouse: data?.warehouse,
+                //     isWarehouseLevel: true,
+                //     name: "Payment"
+                // }).session(session);
+
+                // if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
+                // const voucherLinkId = uuidv4();
+                // const voucherDocs = [
+                //     {
+                //         businessUnit: data?.businessUnit,
+                //         branch: data?.branch,
+                //         warehouse: data?.warehouse,
+                //         isWarehouseLevel: true,
+                //         voucherGroup: voucherGroup._id,
+                //         narration: "Purchase invoice payment.",
+                //         voucherLinkId,
+                //         ledger: data.supplierLedger,
+                //         debit: 0,
+                //         credit: data.paidAmount,
+                //         isSingleEntry: false,
+                //         createdBy: mainUser._id,
+                //         paymentOutId: po._id
+                //     },
+                //     {
+                //         businessUnit: data?.businessUnit,
+                //         branch: data?.branch,
+                //         warehouse: data?.warehouse,
+                //         isWarehouseLevel: true,
+                //         voucherGroup: voucherGroup._id,
+                //         narration: "Purchase invoice payment.",
+                //         voucherLinkId,
+                //         ledger: data.payedFrom,
+                //         debit: data.paidAmount,
+                //         credit: 0,
+                //         isSingleEntry: false,
+                //         createdBy: mainUser._id,
+                //         paymentOutId: po._id
+                //     }
+                // ];
+
+                // // Important: ordered: true when using session + multiple docs
+                // await Voucher.create(voucherDocs, { session, ordered: true });
+
+                // if (po) {
+                //     await SerialNumber.findOneAndUpdate({ collectionName: "payment_out" }, { $inc: { nextNum: 1 } })
+                // }
+
+
+
+                // debit note updation
+                const dn = await DebitNote.findById(data.debitNoteId);
+                
+                if (!dn) {
+                    throw new CustomError(404, 'Debit note not found.');
+                } else {
+                    dn.paidAmount += Number(data.paidAmount);
+
+                    dn.receivedIn = [...dn.receivedIn, { id: null, paymentType: "Credit Used", linkedId: linkedId, amount: Number(data.paidAmount) }];
+                    let newBalance;
+                    if (dn.balance == 0) {
+
+                    } else {
+                        newBalance = Number(dn.balance) - Number(data.paidAmount);
+                    }
+
+                    if (newBalance == 0) {
+                        dn.status = "paid"
+                    } else {
+                        dn.status = "partially_paid"
+                    }
+                    dn.balance = newBalance;
+                    await dn.save({ session });
+                }
+
+                await PurchaseInvoiceAndDebitConnection.create(
+                    [{
+                        debitNote: dn._id,
+                        invoices: settledInvoices
+                    }],
+                    { session }
+                );
+
+                return dn;
+
+            }
+        });
+
+        return result;
+    } catch (error) {
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error creating payment out: ${error.message}`
+        );
+    } finally {
+        session.endSession();
+    }
+};
+
 const update = async (clientId, debitNoteId, updateData) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
@@ -333,6 +518,7 @@ const changeStatus = async (clientId, debitNoteId, data) => {
 
 module.exports = {
     create,
+    applyCreditToInvoice,
     update,
     getById,
     list,

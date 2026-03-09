@@ -159,6 +159,109 @@ exports.create = async (req, res, next) => {
     }
 };
 
+exports.applyCrditToInvoice = async (req, res, next) => {
+    const mainUser = req.user;
+    try {
+        const {
+            clientId,
+            level,
+            businessUnit,
+            branch,
+            warehouse,
+            financialYear,
+
+            debitNoteId,
+            paidAmount,
+            payments,
+
+        } = req.body;
+
+
+        const mainUser = req.user;
+
+        // Validate required fields 
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired });
+        }
+
+        const requiredFields = [
+            paidAmount,
+            debitNoteId,
+        ];
+
+        console.log("requiredFields", requiredFields);
+
+
+        if (requiredFields.some((field) => !field)) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
+        }
+
+        if (payments?.length == 0) {
+            return res.status(statusCode.BadRequest).send({ message: "Invoice is required" })
+        }
+
+        // Base data object 
+        const dataObject = {
+            paidAmount,
+            payments,
+            debitNoteId,
+            createdBy: mainUser._id,
+        };
+
+        if (financialYear) {
+            dataObject.financialYear = financialYear
+        }
+
+        // Level-specific validation and assignment 
+        const levelConfig = {
+            vendor: { isVendorLevel: true, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: false },
+            business: { isVendorLevel: false, isBuLevel: true, isBranchLevel: false, isWarehouseLevel: false },
+            branch: { isVendorLevel: false, isBuLevel: false, isBranchLevel: true, isWarehouseLevel: false },
+            warehouse: { isVendorLevel: false, isBuLevel: false, isBranchLevel: false, isWarehouseLevel: true },
+        };
+
+        if (!levelConfig[level]) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblInvalidLevel });
+        }
+
+        Object.assign(dataObject, levelConfig[level]);
+
+        if (['business', 'branch', 'warehouse'].includes(level) && !businessUnit) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBusinessUnitIdIdRequired });
+        }
+
+        if (['branch', 'warehouse'].includes(level) && !branch) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblBranchIdIdRequired });
+        }
+
+        if (level === 'warehouse' && !warehouse) {
+            return res.status(statusCode.BadRequest).send({ message: message.lblWarehouseIdIdRequired });
+        }
+
+        // Add optional fields based on level 
+        if (businessUnit) {
+            dataObject.businessUnit = businessUnit;
+        }
+        if (branch) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+        }
+        if (warehouse) {
+            dataObject.businessUnit = businessUnit;
+            dataObject.branch = branch;
+            dataObject.warehouse = warehouse;
+        }
+
+        const newPaymentOut = await debitNoteService.applyCreditToInvoice(clientId, dataObject, mainUser);
+        return res.status(statusCode.OK).send({
+            message: "Credit applied successfully.",
+            data: { holidayId: newPaymentOut._id },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // update   
 exports.update = async (req, res, next) => {
 
