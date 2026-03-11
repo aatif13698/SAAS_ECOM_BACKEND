@@ -408,7 +408,7 @@ async function updateRoleInDatbaseInstance() {
         }
 
     } catch (error) {
-        console.log("error while creating the petient", error);
+        console.log("error while updating the role", error);
     }
 }
 
