@@ -284,8 +284,8 @@ const defaultPersmissionsList = [
         }
       },
       {
-        name: "Product QA Out",
-        displayName: "All Product QA Out",
+        name: "Product Query",
+        displayName: "All Product Query",
         access: false,
         subMenus: {
           create: { id: 111, access: false, api: "/demo/path" },
@@ -650,8 +650,8 @@ const defaultPersmissionsList = [
     access: false,
     menu: [
       {
-        name: "Statements",
-        displayName: "All Statements",
+        name: "Legal Statements",
+        displayName: "All Legal Statements",
         access: false,
         subMenus: {
           create: { id: 251, access: false, api: "/demo/path" },
@@ -984,8 +984,8 @@ const vendorPersmissionsList = [
         }
       },
       {
-        name: "Product QA Out",
-        displayName: "All Product QA Out",
+        name: "Product Query",
+        displayName: "All Product Query",
         access: true,
         subMenus: {
           create: { id: 111, access: true, api: "/demo/path" },
@@ -1350,8 +1350,8 @@ const vendorPersmissionsList = [
     access: true,
     menu: [
       {
-        name: "Statements",
-        displayName: "All Statements",
+        name: "Legal Statements",
+        displayName: "All Legal Statements",
         access: true,
         subMenus: {
           create: { id: 251, access: true, api: "/demo/path" },
