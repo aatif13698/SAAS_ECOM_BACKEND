@@ -335,11 +335,28 @@ const unpaid = async (clientId, filters = {}) => {
 };
 
 
+const allByCustomer = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SaleInvoice = clientConnection.model('SaleInvoice', SaleInvoiceSchema);
+        const [saleInvoices] = await Promise.all([
+            SaleInvoice.find(filters)
+                .sort({ createdAt: -1 }),  // Sort by creation date descending (latest first)
+        ]);
+        return { saleInvoices };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error listing: ${error.message}`);
+    }
+};
+
+
+
 module.exports = {
     create,
     update,
     getById,
     list,
     changeStatus,
-    unpaid
+    unpaid,
+    allByCustomer
 }; 

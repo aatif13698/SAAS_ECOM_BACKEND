@@ -141,6 +141,8 @@ router.get("/listStock/all/of/supplier", entityAuth.authorizeEntity("Purchases",
 
 router.get("/listStock/all/of/supplier/by/purchaseInv", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.listStockOfSupplierByPurchInv);
 
+router.get("/listStock/all/of/customer/by/saleInv", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.listStockOfCustomerBySaleInv);
+
 router.get("/listStock/all/for/customer", entityAuth.authorizeEntity("Purchases", "Supplier", "create"), stockContrller.listStockForCustomer);
 
 

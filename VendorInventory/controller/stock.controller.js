@@ -519,6 +519,66 @@ exports.listStockOfSupplierByPurchInv = async (req, res, next) => {
     }
 };
 
+exports.listStockOfCustomerBySaleInv = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const {
+            clientId,
+            keyword = '',
+            page: pageStr = '1',
+            perPage: perPageStr = '10',
+            level = "vendor",
+            levelId = "",
+            categoryId = null,
+            subCategoryId = null,
+            customerId = null,
+            saleInvId,
+        } = req.query;
+
+
+        if (!clientId) {
+            return res.status(400).send({
+                message: "Client ID is required",
+            });
+        }
+
+         if (!saleInvId) {
+            return res.status(400).send({
+                message: "Sale inv ID is required",
+            });
+        }
+
+        // Convert to numbers
+        const page = parseInt(pageStr, 10);
+        const perPage = parseInt(perPageStr, 10);
+
+        if (isNaN(page) || isNaN(perPage) || page < 1 || perPage < 1) {
+            return res.status(400).send({
+                message: "Invalid pagination parameters",
+            });
+        }
+
+        const result = await stockService.getListStockOfCustomerBySaleInv(
+            clientId,
+            keyword,
+            categoryId,
+            subCategoryId,
+            level,
+            levelId,
+            customerId,
+            saleInvId,
+            { page, limit: perPage }
+        );
+
+        return res.status(200).send({
+            message: "Stock found successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // list stock for customer
 exports.listStockForCustomer = async (req, res, next) => {
     try {

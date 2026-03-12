@@ -414,3 +414,32 @@ exports.unpaidInvoices = async (req, res, next) => {
         next(error);
     }
 };
+
+
+exports.all = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const { clientId, id } = req.query;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        if (!id) {
+            return res.status(statusCode.BadRequest).send({
+                message: "Customer Id is required.",
+            });
+        }
+        let filters = {
+            deletedAt: null,
+            customer: id
+        };
+        const result = await saleInvoiceService.allByCustomer(clientId, filters);
+        return res.status(statusCode.OK).send({
+            message: "Invoice found successfully.",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
