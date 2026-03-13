@@ -100,8 +100,8 @@ const PaymentOut = require("./vendorPurchase/routes/paymentOut.routes.js");
 const PurchaseQuotation = require("./vendorSale/routes/quotation.routes.js");
 const SalePerforma = require("./vendorSale/routes/performa.routes.js");
 const SaleInvoice = require("./vendorSale/routes/saleInvoice.routes.js");
-// const SaleReturn = require("./vendorSale/routes/")
-const PaymentIn = require("./vendorSale/routes/paymentIn.routes.js")
+const SaleReturn = require("./vendorSale/routes/saleReturn.routes.js");
+const PaymentIn = require("./vendorSale/routes/paymentIn.routes.js");
 
 
 
@@ -233,7 +233,7 @@ app.use("/api/vendor/purhcase/payment/out", PaymentOut.router);
 app.use("/api/vendor/sale/pq", PurchaseQuotation.router);
 app.use("/api/vendor/sale/sp", SalePerforma.router);
 app.use("/api/vendor/sale/si", SaleInvoice.router);
-// app.use("/api/vendor/sale/sr", SaleInvoice.router);
+app.use("/api/vendor/sale/sr", SaleReturn.router);
 app.use("/api/vendor/sale/payment/in", PaymentIn.router);
 
 
