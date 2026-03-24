@@ -130,7 +130,7 @@ const create = async (clientId, data, mainUser) => {
                 receivedInLedger.balance -= Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                customerLedger.balance += Number(data.paidAmount);
+                customerLedger.balance -= Number(data.balance);
                 await customerLedger.save({ session });
 
 
@@ -158,6 +158,12 @@ const create = async (clientId, data, mainUser) => {
                 return pi;
 
             } else {
+
+                const customerLedger = await Ledger.findById(data.customerLedger).session(session);
+                if (!customerLedger) throw new CustomError(400, 'Customer ledger not found.');
+
+                customerLedger.balance -= Number(data.balance);
+                await customerLedger.save({ session });
 
                 // ── Duplicate check ────────────────────────────────────
                 const existingSr = await SaleReturn.findOne({ srNumber: data?.srNumber })
