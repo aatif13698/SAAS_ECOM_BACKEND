@@ -402,7 +402,8 @@ exports.all = async (req, res, next) => {
         }
         let filters = {
             deletedAt: null,
-            supplier: id
+            supplier: id,
+            isReturnCreated: false
         };
         const result = await purchaseInvoice.allBySupplier(clientId, filters);
         return res.status(statusCode.OK).send({

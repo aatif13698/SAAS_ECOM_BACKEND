@@ -95,6 +95,8 @@ const saleInvoiceSchema = new Schema(
         balance: { type: Number, default: 0, min: 0 },
         grandTotal: { type: Number, default: 0, min: 0 },
 
+        isReturnCreated: {type: Boolean, default: false},
+
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
 
         auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },

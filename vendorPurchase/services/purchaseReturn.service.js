@@ -48,6 +48,7 @@ const create = async (clientId, data, mainUser) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
 
     const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
+    const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
     const Ledger = clientConnection.model("ledger", ledgerSchema);
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
@@ -70,10 +71,6 @@ const create = async (clientId, data, mainUser) => {
                 const receivedInLedger = await Ledger.findById(data?.receivedIn).session(session);
                 if (!receivedInLedger) throw new CustomError(400, 'Received ledger not found.');
 
-                // if (receivedInLedger.balance < data.paidAmount) {
-                //     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
-                // }
-
                 const voucherGroup = await VoucherGroup.findOne({
                     warehouse: data?.warehouse,
                     isWarehouseLevel: true,
@@ -83,11 +80,6 @@ const create = async (clientId, data, mainUser) => {
                 if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
 
                 const voucherLinkId = uuidv4();
-
-                console.log("voucherGroup", voucherGroup);
-                console.log("mainUser", mainUser);
-
-
 
                 const voucherDocs = [
                     {
@@ -127,9 +119,8 @@ const create = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                supplierLedger.balance -= Number(data.paidAmount);
+                supplierLedger.balance += Number(data.balance);
                 await supplierLedger.save({ session });
-
 
                 // ── Duplicate check ────────────────────────────────────
                 const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber })
@@ -148,6 +139,15 @@ const create = async (clientId, data, mainUser) => {
                     ordered: true   // safe even for 1 document
                 });
 
+                  const purchaseInvoice = await PurchaseInvoice.findById(data?.purchaseInvId)
+                    .session(session);
+
+                if (!purchaseInvoice) {
+                    throw new CustomError(400, 'Purchase invoice not found.');
+                }
+                purchaseInvoice.isReturnCreated = true;
+                await purchaseInvoice.save({ session });
+
                 if (pi) {
                     await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })
                 }
@@ -156,18 +156,33 @@ const create = async (clientId, data, mainUser) => {
 
             } else {
 
+                const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
+                if (!supplierLedger) throw new CustomError(400, 'Customer ledger not found.');
+
+                supplierLedger.balance += Number(data.balance);
+                await supplierLedger.save({ session });
+
                 // ── Duplicate check ────────────────────────────────────
                 const existingPr = await PurchaseReturn.findOne({ prNumber: data?.prNumber })
                     .session(session)
                     .lean();
                 if (existingPr) {
-                    throw new CustomError(400, 'Purchase invoice number already exists.');
+                    throw new CustomError(400, 'Purchase return number already exists.');
                 }
                 // ── Create Purchase Invoice ────────────────────────────
                 [pi] = await PurchaseReturn.create([{ ...data, receivedIn: [], paymentMethod: "", status: "full_due" }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                const purchaseInvoice = await PurchaseInvoice.findById(data?.purchaseInvId)
+                    .session(session);
+
+                if (!purchaseInvoice) {
+                    throw new CustomError(400, 'Purchase invoice not found.');
+                }
+                purchaseInvoice.isReturnCreated = true;
+                await purchaseInvoice.save({ session });
 
                 if (pi) {
                     await SerialNumber.findOneAndUpdate({ collectionName: "purchase_return" }, { $inc: { nextNum: 1 } })

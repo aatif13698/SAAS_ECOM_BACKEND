@@ -643,8 +643,12 @@ const allBySupplier = async (clientId, filters = {}) => {
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
+        const queryFilters = {
+            ...filters,
+            isReturnCreated: { $ne: true }   // not equal to true (covers false, null, undefined)
+        };
         const [purchaseInvoices] = await Promise.all([
-            PurchaseInvoice.find(filters)
+            PurchaseInvoice.find(queryFilters)
                 .sort({ createdAt: -1 }),  // Sort by creation date descending (latest first)
         ]);
         return { purchaseInvoices };
