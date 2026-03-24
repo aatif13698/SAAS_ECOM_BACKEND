@@ -24,6 +24,8 @@ const stockLedgerSchema = new mongoose.Schema({
 
     purchaseInvoiceId: { type: ObjectId, ref: "purchaseInvoice", default: null },
     saleInvoiceId: { type: ObjectId, ref: "purchaseInvoice", default: null },
+    purchaseReturnId: { type: ObjectId, ref: "purchaseReturn", default: null },
+    saleReturnReturnId: { type: ObjectId, ref: "saleReturn", default: null },
 
     date: { type: Date },
 
