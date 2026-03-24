@@ -6,6 +6,7 @@ const message = require("../../utils/message");
 const statusCode = require("../../utils/http-status-code");
 const CustomError = require("../../utils/customeError");
 const clinetUserSchema = require("../../client/model/user");
+const ledgerSchema = require("../../client/model/ledger");
 
 
 const create = async (clientId, data) => {
@@ -112,11 +113,57 @@ const getAllActiveCustomer = async (clientId, filters = {}) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const User = clientConnection.model('clientUsers', clinetUserSchema);
-        const [customers, total] = await Promise.all([
-            User.find(filters).sort({ _id: -1 }),
-            User.countDocuments(filters),
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+
+        // const [customers, total] = await Promise.all([
+        //     User.find(filters).sort({ _id: -1 })
+        //         .populate({
+        //             path: "ledgerLinkedId",
+        //             model: Ledger
+        //         })
+        //     ,
+        //     User.countDocuments(filters),
+        // ]);
+        // return { count: total, customers };
+
+        // Default to active customers (real-world best practice for a function named getAllActiveCustomer)
+        const queryFilters = { isActive: true, ...filters };
+
+        const [rawCustomers, total] = await Promise.all([
+            User.find(queryFilters)
+                .sort({ _id: -1 })
+                .populate({
+                    path: "ledgerLinkedId",
+                    model: Ledger
+                }),
+            User.countDocuments(queryFilters),
         ]);
+
+        // Transform response exactly as requested:
+        // - ledgerLinkedId remains the original Mongoose ObjectId
+        // - ledgerData contains the full populated ledger document
+        const customers = rawCustomers.map((customer) => {
+            const doc = customer.toObject({ getters: true, versionKey: false });
+
+            if (doc.ledgerLinkedId && typeof doc.ledgerLinkedId === 'object' && doc.ledgerLinkedId._id) {
+                const ledger = doc.ledgerLinkedId;
+                doc.ledgerData = {
+                    _id: ledger._id,
+                    balance: ledger.balance ?? 0   // fallback to 0 if somehow missing
+                };
+                doc.ledgerLinkedId = ledger._id;   // Restore as plain ObjectId
+            } else {
+                doc.ledgerData = null;
+                // ledgerLinkedId remains null or ObjectId
+            }
+
+            return doc;
+        });
+
         return { count: total, customers };
+
+
+
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting customer: ${error.message}`);
     }
