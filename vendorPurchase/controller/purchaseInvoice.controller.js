@@ -74,8 +74,6 @@ exports.create = async (req, res, next) => {
             return res.status(statusCode.BadRequest).send({ message: message.lblRequiredFieldMissing });
         }
 
-        console.log("coming here");
-
 
         if (items?.length == 0) {
             return res.status(statusCode.BadRequest).send({ message: "Items is required" })
@@ -144,10 +142,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseOrder = await purchaseInvoice.create(clientId, dataObject, mainUser);
+        const newPurchaseInvoice = await purchaseInvoice.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
-            message: message.lblPurchaseOrderCreatedSuccess,
-            data: { holidayId: newPurchaseOrder._id },
+            message: "Purchase invoice created successfully.",
+            data: { invoiceId: newPurchaseInvoice._id },
         });
     } catch (error) {
         next(error);

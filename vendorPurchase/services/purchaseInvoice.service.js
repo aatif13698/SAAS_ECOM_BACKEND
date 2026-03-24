@@ -19,91 +19,161 @@ const stockLedgerSchema = require("../../client/model/stockLedger");
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 
 
+
 // const create = async (clientId, data, mainUser) => {
+//     const clientConnection = await getClientDatabaseConnection(clientId);
+
+//     const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+//     const Ledger = clientConnection.model("ledger", ledgerSchema);
+//     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
+//     const Voucher = clientConnection.model("voucher", voucherSchema);
+//     const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+
+//     const session = await clientConnection.startSession();
+
 //     try {
-//         const clientConnection = await getClientDatabaseConnection(clientId);
-//         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
-//         const Ledger = clientConnection.model("ledger", ledgerSchema);
-//         const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
-//         const Voucher = clientConnection.model("voucher", voucherSchema);
-//         const session = await clientConnection.startSession();
-//         session.startTransaction();
-//         if (data?.paidAmount > 0) {
-//             const supplierLedger = await Ledger.findById(data.supplierLedger);
+//         const result = await session.withTransaction(async (session) => {
+//             let pi;
 
-//             if (!supplierLedger) {
-//                 await session.abortTransaction();
-//                 session.endSession();
-//                 throw new CustomError(statusCode.BadRequest, 'Supplier ledger not found.')
-//             }
 
-//             const payedFromLedger = await Ledger.findById(data?.payedFrom);
-//             if (!payedFromLedger) {
-//                 await session.abortTransaction();
-//                 session.endSession();
-//                 throw new CustomError(statusCode.BadRequest, 'Payment ledger not found.')
-//             }
 
-//             console.log("payedFromLedger", payedFromLedger);
+//             // ── Payment part ───────────────────────────────────────
+//             if (data?.paidAmount > 0) {
 
-//             if (payedFromLedger.balance < data?.paidAmount) {
-//                 await session.abortTransaction();
-//                 session.endSession();
-//                 throw new CustomError(statusCode.BadRequest, 'Insufficient Amount in payment ledger.')
-//             }
-//             const voucherGroup = await VoucherGroup.findOne({
-//                 warehouse: data?.warehouse,
-//                 isWarehouseLevel: true,
-//                 name: "Payment"
-//             });
-//             if (!voucherGroup) {
-//                 await session.abortTransaction();
-//                 session.endSession();
-//                 throw new CustomError(statusCode.BadRequest, 'Voucher group not found.')
-//             }
-//             // create vouchers
-//             const entries = [
-//                 { ledger: data.supplierLedger, credit: data?.paidAmount, debit: 0, type: 'credit' }, // First row: Credit
-//                 { ledger: data.payedFrom, credit: 0, debit: data?.paidAmount, type: 'debit' },  // Second row: Debit
-//             ]
-//             const voucherLinkId = uuidv4();
-//             const dataObject = {
-//                 voucherGroup: voucherGroup._id,
-//                 narration: "Purchase invoice payment.",
-//                 entries: entries,
-//                 isSingleEntry: false,
-//                 createdBy: mainUser._id,
-//             }
-//             await session.withTransaction(async () => {
-//                 const voucherPromises = dataObject.entries.map(entry => {
-//                     const voucherData = {
-//                         ...dataObject,
+//                 const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
+//                 if (!supplierLedger) throw new CustomError(400, 'Supplier ledger not found.');
+
+//                 const payedFromLedger = await Ledger.findById(data?.payedFrom).session(session);
+//                 if (!payedFromLedger) throw new CustomError(400, 'Payment ledger not found.');
+
+//                 if (payedFromLedger.balance < data.paidAmount) {
+//                     await session.abortTransaction();
+//                     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
+//                 }
+
+//                 const voucherGroup = await VoucherGroup.findOne({
+//                     warehouse: data?.warehouse,
+//                     isWarehouseLevel: true,
+//                     name: "Payment"
+//                 }).session(session);
+
+//                 if (!voucherGroup) throw new CustomError(400, 'Voucher group not found.');
+
+//                 const voucherLinkId = uuidv4();
+
+//                 const voucherDocs = [
+//                     {
+//                         businessUnit: data?.businessUnit,
+//                         branch: data?.branch,
+//                         warehouse: data?.warehouse,
+//                         isWarehouseLevel: true,
+//                         voucherGroup: voucherGroup._id,
+//                         narration: "Purchase invoice payment.",
 //                         voucherLinkId,
-//                         ledger: entry.ledger,
-//                         debit: entry.debit || 0,
-//                         credit: entry.credit || 0,
-//                     };
-//                     return Voucher.create([voucherData], { session });
-//                 });
-//                 await Promise.all(voucherPromises);
-//             });
-//             payedFromLedger.balance = payedFromLedger.balance - data?.paidAmount;
-//             await payedFromLedger.save({ session });
-//             supplierLedger.balance = supplierLedger.balance + data?.paidAmount
-//             await supplierLedger.save({ session });
-//         }
+//                         ledger: data.supplierLedger,
+//                         debit: 0,
+//                         credit: data.paidAmount,
+//                         isSingleEntry: false,
+//                         createdBy: mainUser._id,
+//                     },
+//                     {
+//                         businessUnit: data?.businessUnit,
+//                         branch: data?.branch,
+//                         warehouse: data?.warehouse,
+//                         isWarehouseLevel: true,
+//                         voucherGroup: voucherGroup._id,
+//                         narration: "Purchase invoice payment.",
+//                         voucherLinkId,
+//                         ledger: data.payedFrom,
+//                         debit: data.paidAmount,
+//                         credit: 0,
+//                         isSingleEntry: false,
+//                         createdBy: mainUser._id,
+//                     }
+//                 ];
 
-//         const existingPi = await PurchaseInvoice.findOne({ piNumber: data?.piNumber }).lean();
-//         console.log("existingPi", existingPi);
-//         if (existingPi) {
-//             throw new CustomError(statusCode.BadRequest, 'Purchase invoice number already exists.')
-//         }
-//         const pi = await PurchaseInvoice.create([{ ...data }, { session }]);
-//         return pi
+//                 // Important: ordered: true when using session + multiple docs
+//                 await Voucher.create(voucherDocs, { session, ordered: true });
+
+//                 // Update ledgers
+
+//                 payedFromLedger.balance -= Number(data.paidAmount);
+//                 await payedFromLedger.save({ session });
+
+//                 if (Number(data.balance) > 0) {
+//                     supplierLedger.balance -= Number(data.balance);
+//                 }
+
+//                 await supplierLedger.save({ session });
+
+//                 // ── Duplicate check ────────────────────────────────────
+//                 const existingPi = await PurchaseInvoice.findOne({ piNumber: data?.piNumber })
+//                     .session(session)
+//                     .lean();
+
+//                 if (existingPi) {
+//                     throw new CustomError(400, 'Purchase invoice number already exists.');
+//                 }
+
+//                 console.log("Number(payedFromLedger.balance)", Number(payedFromLedger.balance));
+
+//                 // ── Create Purchase Invoice ────────────────────────────
+//                 [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom, paymentType: "Payment", amount: Number(data.paidAmount) }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
+//                     session,
+//                     ordered: true   // safe even for 1 document
+//                 });
+
+//                 if (pi) {
+//                     await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
+//                 }
+
+//                 return pi;
+
+//             } else {
+
+//                 console.log("data", data);
+
+//                 const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
+
+
+//                 if (Number(data.balance) > 0) {
+//                     supplierLedger.balance -= Number(data.balance);
+//                 }
+
+//                 await supplierLedger.save({ session });
+
+//                 // ── Duplicate check ────────────────────────────────────
+//                 const existingPi = await PurchaseInvoice.findOne({ piNumber: data?.piNumber })
+//                     .session(session)
+//                     .lean();
+//                 if (existingPi) {
+//                     throw new CustomError(400, 'Purchase invoice number already exists.');
+//                 }
+//                 // ── Create Purchase Invoice ────────────────────────────
+//                 [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [], paymentMethod: "", status: "full_due" }], {
+//                     session,
+//                     ordered: true   // safe even for 1 document
+//                 });
+
+//                 if (pi) {
+//                     await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
+//                 }
+
+//                 return pi;
+//             }
+//         });
+
+//         return result;
 //     } catch (error) {
-//         throw new CustomError(error.statusCode || 500, `Error creating: ${error.message}`);
+//         throw new CustomError(
+//             error.statusCode || 500,
+//             `Error creating purchase invoice: ${error.message}`
+//         );
+//     } finally {
+//         session.endSession();
 //     }
 // };
+
 
 const create = async (clientId, data, mainUser) => {
     const clientConnection = await getClientDatabaseConnection(clientId);
@@ -117,18 +187,38 @@ const create = async (clientId, data, mainUser) => {
     const session = await clientConnection.startSession();
 
     try {
-        const result = await session.withTransaction(async (session) => {
-            let pi;
+        return await session.withTransaction(async () => {
+            // ── 1. Basic input sanitization (real-world safeguard) ──
+            const paidAmount = Number(data.paidAmount || 0);
+            const balanceAmount = Number(data.balance || 0);
 
-            // ── Payment part ───────────────────────────────────────
-            if (data?.paidAmount > 0) {
-                const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
-                if (!supplierLedger) throw new CustomError(400, 'Supplier ledger not found.');
+            if (paidAmount < 0 || balanceAmount < 0) {
+                throw new CustomError(400, 'Amounts cannot be negative.');
+            }
 
-                const payedFromLedger = await Ledger.findById(data?.payedFrom).session(session);
-                if (!payedFromLedger) throw new CustomError(400, 'Payment ledger not found.');
+            // ── 2. EARLY Duplicate check (critical fix) ─────────────────────
+            // This runs before ANY ledger/voucher changes → no wasted work on rollback
+            const existingPi = await PurchaseInvoice.findOne({
+                piNumber: data.piNumber
+            }).session(session).lean();
 
-                if (payedFromLedger.balance < data.paidAmount) {
+            if (existingPi) {
+                throw new CustomError(400, 'Purchase invoice number already exists.');
+            }
+
+            // ── 3. Fetch supplier ledger once (used in both paths) ───────────
+            const supplierLedger = await Ledger.findById(data.supplierLedger).session(session);
+            if (!supplierLedger) throw new CustomError(400, 'Supplier ledger not found.');
+
+            let status = "full_due";
+            let payedFromArray = [];
+
+            // ── 4. Payment handling (vouchers + payment ledger) ─────────────
+            if (paidAmount > 0) {
+                const paymentLedger = await Ledger.findById(data.payedFrom).session(session);
+                if (!paymentLedger) throw new CustomError(400, 'Payment ledger not found.');
+
+                if (Number(paymentLedger.balance) < paidAmount) {
                     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
                 }
 
@@ -142,7 +232,7 @@ const create = async (clientId, data, mainUser) => {
 
                 const voucherLinkId = uuidv4();
 
-                const voucherDocs = [
+                await Voucher.insertMany([
                     {
                         businessUnit: data?.businessUnit,
                         branch: data?.branch,
@@ -153,7 +243,7 @@ const create = async (clientId, data, mainUser) => {
                         voucherLinkId,
                         ledger: data.supplierLedger,
                         debit: 0,
-                        credit: data.paidAmount,
+                        credit: paidAmount,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     },
@@ -166,133 +256,70 @@ const create = async (clientId, data, mainUser) => {
                         narration: "Purchase invoice payment.",
                         voucherLinkId,
                         ledger: data.payedFrom,
-                        debit: data.paidAmount,
+                        debit: paidAmount,
                         credit: 0,
                         isSingleEntry: false,
                         createdBy: mainUser._id,
                     }
-                ];
+                ], { session, ordered: true });
 
-                // Important: ordered: true when using session + multiple docs
-                await Voucher.create(voucherDocs, { session, ordered: true });
+                // Update payment source ledger
+                paymentLedger.balance = Number(paymentLedger.balance) - paidAmount;
+                await paymentLedger.save({ session });
 
-                // Update ledgers
-                payedFromLedger.balance -= Number(data.paidAmount);
-                await payedFromLedger.save({ session });
-
-                supplierLedger.balance += Number(data.paidAmount);
-                await supplierLedger.save({ session });
-
-
-                // ── Duplicate check ────────────────────────────────────
-                const existingPi = await PurchaseInvoice.findOne({ piNumber: data?.piNumber })
-                    .session(session)
-                    .lean();
-
-                if (existingPi) {
-                    throw new CustomError(400, 'Purchase invoice number already exists.');
-                }
-
-                console.log("Number(payedFromLedger.balance)", Number(payedFromLedger.balance));
-                console.log("");
-
-
-
-                // ── Create Purchase Invoice ────────────────────────────
-                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [{ id: data.payedFrom, paymentType: "Payment", amount: Number(data.paidAmount) }], status: Number(data.balance) == 0 ? "paid" : "partially_paid" }], {
-                    session,
-                    ordered: true   // safe even for 1 document
-                });
-
-                if (pi) {
-                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
-                }
-
-                return pi;
-
-            } else {
-                console.log("coming here");
-
-                // ── Duplicate check ────────────────────────────────────
-                const existingPi = await PurchaseInvoice.findOne({ piNumber: data?.piNumber })
-                    .session(session)
-                    .lean();
-                if (existingPi) {
-                    throw new CustomError(400, 'Purchase invoice number already exists.');
-                }
-                // ── Create Purchase Invoice ────────────────────────────
-                [pi] = await PurchaseInvoice.create([{ ...data, payedFrom: [], paymentMethod: "", status: "full_due" }], {
-                    session,
-                    ordered: true   // safe even for 1 document
-                });
-
-                if (pi) {
-                    await SerialNumber.findOneAndUpdate({ collectionName: "purchase_invoice" }, { $inc: { nextNum: 1 } })
-                }
-
-                return pi;
+                // Set paid status & reference
+                status = balanceAmount === 0 ? "paid" : "partially_paid";
+                payedFromArray = [{
+                    id: data.payedFrom,
+                    paymentType: "Payment",
+                    amount: paidAmount
+                }];
             }
-        });
 
-        return result;
+            // ── 5. Update supplier ledger (common logic – outstanding balance) ──
+            // This matches your original business rule exactly:
+            //   • Paid path   → voucher already credited paidAmount + manual remaining
+            //   • No-paid path → manual full amount
+            if (balanceAmount > 0) {
+                supplierLedger.balance -= balanceAmount;
+                await supplierLedger.save({ session });
+            }
+
+            // ── 6. Create Purchase Invoice ───────────────────────────────────
+            const invoicePayload = {
+                ...data,
+                payedFrom: payedFromArray,
+                status,
+                paymentMethod: paidAmount > 0 ? (data.paymentMethod || "") : ""
+            };
+
+            const [createdPi] = await PurchaseInvoice.create([invoicePayload], {
+                session,
+                ordered: true
+            });
+
+            // ── 7. Increment serial number (only on success) ─────────────────
+            await SerialNumber.findOneAndUpdate(
+                { collectionName: "purchase_invoice" },
+                { $inc: { nextNum: 1 } },
+                { session }
+            );
+
+            return createdPi;
+        });
     } catch (error) {
         throw new CustomError(
             error.statusCode || 500,
             `Error creating purchase invoice: ${error.message}`
         );
     } finally {
-        session.endSession();
+        await session.endSession();
     }
 };
 
-// const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
-//     try {
-//         const clientConnection = await getClientDatabaseConnection(clientId);
-//         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
-//         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
-
-//         const purchaseInvoice = await PurchaseInvoice.findOne({ _id: purchaseInvoiceId, auditStatus: "pending" }).lean();
-//         if (!purchaseInvoice) {
-//             throw new CustomError(statusCode.NotFound, message.lblPurchaseInvoiceNotFound);
-//         }
-
-//         if (purchaseInvoice.items.length == 0) {
-//             throw new CustomError(statusCode.BadRequest, "No item found in invoice");
-//         }
-
-//         const mainStockArray = [];
-//         purchaseInvoice.items.map((item) => {
-//             mainStockArray.push(item.itemName.productMainStock)
-//         });
-//         const itemStock = await MainStock.find({ _id: { $in: mainStockArray } }).lean();
-
-//         const mapedItems = purchaseInvoice.items.map((item) => {
-//             let oldItemStock = 0;
-//             for (let index = 0; index < itemStock.length; index++) {
-//                 const element = itemStock[index];
-//                 console.log("element._id", element);
-//                 console.log("item.itemName.productMainStock", item.itemName.productMainStock);
-//                 if(element._id == item.itemName.productMainStock ){
-//                     oldItemStock = element.totalStock
-//                 }
-//             }
-
-//             console.log("oldItemStock", oldItemStock);
-
-//             return {
-//                 ...item,
-//                 oldItemStock: oldItemStock
-//             }
-//         });
-
-//         console.log("mapedItems", mapedItems);
 
 
-//         return purchaseInvoice;
-//     } catch (error) {
-//         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
-//     }
-// };
+
 
 const getAuditPurchaseInvoice = async (clientId, purchaseInvoiceId) => {
     try {
