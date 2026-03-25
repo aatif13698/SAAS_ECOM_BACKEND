@@ -25,6 +25,7 @@ const transactionSerialNumebrSchema = require("../../client/model/transactionSer
 const purchaseReturnSchema = require("../../client/model/purchaseReturn");
 const debitNoteSchema = require("../../client/model/debitNote");
 const purchaseReturnAndPaymentConnectionSchema = require("../../client/model/purchaseReturnAndPaymentConnection");
+const debitNoteAndPaymentConnectionSchema = require("../../client/model/debitNoteAndPaymentConnection");
 
 
 
@@ -380,6 +381,7 @@ const createReceivedPaymentDn = async (clientId, data, mainUser) => {
     const Voucher = clientConnection.model("voucher", voucherSchema);
     const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
     const SaleInvoiceAndPaymentConnection = clientConnection.model("saleInvoiceAndPaymentConnection", saleInvoiceAndPaymentConnectionSchema);
+    const DebitNoteAndPaymentConnection = clientConnection.model("debitNoteAndPaymentConnection", debitNoteAndPaymentConnectionSchema);
     const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
 
     const session = await clientConnection.startSession();
@@ -442,7 +444,7 @@ const createReceivedPaymentDn = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                supplierLedger.balance -= Number(data.paidAmount);
+                supplierLedger.balance += Number(data.paidAmount);
                 await supplierLedger.save({ session });
 
 
@@ -456,19 +458,19 @@ const createReceivedPaymentDn = async (clientId, data, mainUser) => {
                 }
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentIn.create([{ ...data, customer: data?.supplier, customerLedger: data.supplierLedger, receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
+                [po] = await PaymentIn.create([{ ...data, type: "debit_note", fromLedger: data.supplierLedger, receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
 
-                // payment out and invoices connection
-                // await SaleInvoiceAndPaymentConnection.create(
-                //     [{
-                //         paymentIn: po._id,
-                //         invoices: settledInvoices
-                //     }],
-                //     { session }
-                // );
+                // payment in and debit connection
+                await DebitNoteAndPaymentConnection.create(
+                    [{
+                        paymentIn: po._id,
+                        invoices: settledInvoices
+                    }],
+                    { session }
+                );
 
                 // voucher creation
                 const voucherGroup = await VoucherGroup.findOne({
@@ -580,6 +582,8 @@ const getById = async (clientId, id) => {
         const PurchaseReturnAndPaymentConnection = clientConnection.model("purchaseReturnAndPaymentConnection", purchaseReturnAndPaymentConnectionSchema)
         const Supplier = clientConnection.model('supplier', supplierSchema)
         const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
+        const DebitNoteAndPaymentConnection = clientConnection.model("debitNoteAndPaymentConnection", debitNoteAndPaymentConnectionSchema);
+        const DebitNote = clientConnection.model('debitNote', debitNoteSchema);
 
         const paymentIn = await PaymentIn.findById(id)
             // .populate({ path: "customer", model: User, select: "-items" })
@@ -624,7 +628,26 @@ const getById = async (clientId, id) => {
             const supplier = await Supplier.findOne({ ledgerLinkedId: paymentIn.fromLedger._id }).select("-items");
             user = supplier;
 
+        } else if (paymentIn.type == "debit_note") {
+
+            const connection = await DebitNoteAndPaymentConnection.findOne({
+                paymentIn: paymentIn._id
+            }).populate({
+                path: "invoices.id",
+                model: DebitNote,
+                select: "-shippingAddress -bankDetails"
+            });
+            if (!connection) {
+                throw new CustomError(statusCode.NotFound, "Connection out not found.");
+            }
+            invoices = connection.invoices;
+            const supplier = await Supplier.findOne({ ledgerLinkedId: paymentIn.fromLedger._id }).select("-items");
+            user = supplier;
+
         }
+
+
+
         return { ...paymentIn, invoices: invoices, customer: user };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting business unit: ${error.message}`);

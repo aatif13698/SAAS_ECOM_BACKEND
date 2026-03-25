@@ -128,7 +128,7 @@ const create = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                supplierLedger.balance -= Number(data.paidAmount);
+                supplierLedger.balance += Number(data.paidAmount);
                 await supplierLedger.save({ session });
 
 

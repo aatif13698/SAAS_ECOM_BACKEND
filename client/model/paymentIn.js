@@ -28,7 +28,7 @@ const paymentInSchema = new Schema(
         notes: { type: String },
 
         linkedId: { type: String, default: null },
-        type: {type: String, enum: ['sale_invoice', 'purchase_return', 'credit_note']},
+        type: {type: String, enum: ['sale_invoice', 'purchase_return', 'debit_note']},
 
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         updatedBy: { type: ObjectId, ref: 'clientUsers' },
