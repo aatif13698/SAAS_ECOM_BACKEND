@@ -18,8 +18,8 @@ const paymentOutSchema = new Schema(
 
         paymentOutNumber: { type: String, trim: true, required: true, unique: true, index: true },
 
-        supplier: { type: ObjectId, ref: "supplier", required: true, index: true },
-        supplierLedger: { type: ObjectId, ref: 'ledger', required: true },
+        // supplier: { type: ObjectId, ref: "supplier", required: true, index: true },
+        toLedger: { type: ObjectId, ref: 'ledger', required: true },
 
         paymentOutDate: { type: Date, default: Date.now, required: true },
         paymentMethod: { type: String, enum: ["", 'cash', 'cheque', 'bank_transfer', 'online', 'credit'], default: "" }, // Enum for validation
@@ -28,6 +28,7 @@ const paymentOutSchema = new Schema(
         notes: { type: String },
 
         linkedId: { type: String, default: null },
+        type: {type: String, enum: ['purchase_invoice', 'sale_return', 'debit_note']},
 
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         updatedBy: { type: ObjectId, ref: 'clientUsers' },

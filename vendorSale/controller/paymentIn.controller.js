@@ -115,10 +115,10 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPaymentOut = await paymentInService.create(clientId, dataObject, mainUser);
+        const newPaymentIn = await paymentInService.create(clientId, dataObject, mainUser);
         return res.status(statusCode.OK).send({
-            message: "Payment out created successfully.",
-            data: { holidayId: newPaymentOut._id },
+            message: "Payment in created successfully.",
+            data: { id: newPaymentIn._id },
         });
     } catch (error) {
         next(error);
@@ -418,7 +418,7 @@ exports.list = async (req, res, next) => {
 };
 
 
-exports.getParticularPaymentOut = async (req, res, next) => {
+exports.getParticularPaymentIn = async (req, res, next) => {
     try {
         const { clientId, id } = req.params;
         if (!clientId || !id) {

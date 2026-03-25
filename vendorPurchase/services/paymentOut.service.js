@@ -106,7 +106,7 @@ const create = async (clientId, data, mainUser) => {
                 }
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentOut.create([{ ...data, payedFrom: [{ id: data.payedFrom }], linkedId: linkedId }], {
+                [po] = await PaymentOut.create([{ ...data, type: "purchase_invoice", toLedger: data.supplierLedger, payedFrom: [{ id: data.payedFrom }], linkedId: linkedId }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
@@ -360,6 +360,8 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const clientConnection = await getClientDatabaseConnection(clientId);
         const Supplier = clientConnection.model('supplier', supplierSchema);
         const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
+                const Ledger = clientConnection.model("ledger", ledgerSchema);
+
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
         const [paymentOut, total] = await Promise.all([
@@ -367,11 +369,14 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(Number(limit))
-                .populate({
-                    path: "supplier",
-                    model: Supplier,
-                    select: "-items"
-                }),
+                            .populate({ path: "toLedger", model: Ledger })
+
+                // .populate({
+                //     path: "supplier",
+                //     model: Supplier,
+                //     select: "-items"
+                // })
+                ,
             PaymentOut.countDocuments(filters),
         ]);
         return { count: total, paymentOut };
@@ -389,10 +394,12 @@ const getById = async (clientId, id) => {
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
-
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema)
 
         const paymentOut = await PaymentOut.findById(id)
-            .populate({ path: "supplier", select: "-items" })
+            // .populate({ path: "supplier", select: "-items" })
+            .populate({ path: "toLedger", model: Ledger })
             .populate({ path: "businessUnit", model: BusinessUnit, select: "name" })
             .populate({ path: "branch", model: Branch, select: "name" })
             .populate({ path: "warehouse", model: Warehouse, select: "name" })
@@ -401,20 +408,24 @@ const getById = async (clientId, id) => {
             throw new CustomError(statusCode.NotFound, "Payment out not found.");
         }
 
-        const connection = await PurchaseInvoiceAndPaymentConnection.findOne({
-            paymentOut: paymentOut._id
-        }).populate({
-            path: "invoices.id",
-            select: "-shippingAddress -bankDetails"
-        });
-
-        if (!connection) {
-            throw new CustomError(statusCode.NotFound, "Connection out not found.");
+        let invoices = [];
+        let user = null;
+        if (paymentOut.type == "purchase_invoice") {
+            const connection = await PurchaseInvoiceAndPaymentConnection.findOne({
+                paymentOut: paymentOut._id
+            }).populate({
+                path: "invoices.id",
+                select: "-shippingAddress -bankDetails"
+            });
+            if (!connection) {
+                throw new CustomError(statusCode.NotFound, "Connection out not found.");
+            }
+            invoices = connection.invoices
+            const supplier = await Supplier.findOne({ledgerLinkedId: paymentOut.toLedger._id}).select("-items");
+            user = supplier;
         }
 
-        console.log("connnection", connection);
-
-        return { ...paymentOut, invoices: connection.invoices };
+        return { ...paymentOut, invoices: invoices, supplier: user };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting business unit: ${error.message}`);
     }

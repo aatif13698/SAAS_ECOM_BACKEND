@@ -15,7 +15,7 @@ router.post('/create/received-payment-dn', entityAuth.authorizeEntity("Purchases
 
 router.get('/list/payment/in', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentInController.list);
 
-router.get('/get/payment/in/:id/:clientId', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentInController.getParticularPaymentOut);
+router.get('/get/payment/in/:id/:clientId', entityAuth.authorizeEntity("Purchases", "Payment Out", "view"), paymentInController.getParticularPaymentIn);
 
 
 exports.router = router; 

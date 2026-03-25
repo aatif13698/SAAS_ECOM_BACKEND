@@ -24,6 +24,7 @@ const clinetUserSchema = require("../../client/model/user");
 const transactionSerialNumebrSchema = require("../../client/model/transactionSeries");
 const purchaseReturnSchema = require("../../client/model/purchaseReturn");
 const debitNoteSchema = require("../../client/model/debitNote");
+const purchaseReturnAndPaymentConnectionSchema = require("../../client/model/purchaseReturnAndPaymentConnection");
 
 
 
@@ -101,7 +102,7 @@ const create = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                customerLedger.balance -= Number(data.paidAmount);
+                customerLedger.balance += Number(data.paidAmount);
                 await customerLedger.save({ session });
 
 
@@ -115,7 +116,7 @@ const create = async (clientId, data, mainUser) => {
                 }
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentIn.create([{ ...data, receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
+                [po] = await PaymentIn.create([{ ...data, fromLedger: data.customerLedger, type: "sale_invoice", receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
@@ -208,6 +209,7 @@ const createReceivedPayment = async (clientId, data, mainUser) => {
     const Voucher = clientConnection.model("voucher", voucherSchema);
     const PurchaseInvoiceAndPaymentConnection = clientConnection.model("purchaseInvoiceAndPaymentConnection", purchaseInvoiceAndPaymentConnectionSchema)
     const SaleInvoiceAndPaymentConnection = clientConnection.model("saleInvoiceAndPaymentConnection", saleInvoiceAndPaymentConnectionSchema);
+    const PurchaseReturnAndPaymentConnection = clientConnection.model("purchaseReturnAndPaymentConnection", purchaseReturnAndPaymentConnectionSchema)
     const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
 
     const session = await clientConnection.startSession();
@@ -270,7 +272,7 @@ const createReceivedPayment = async (clientId, data, mainUser) => {
                 receivedInLedger.balance += Number(data.paidAmount);
                 await receivedInLedger.save({ session });
 
-                supplierLedger.balance -= Number(data.paidAmount);
+                supplierLedger.balance += Number(data.paidAmount);
                 await supplierLedger.save({ session });
 
 
@@ -284,19 +286,19 @@ const createReceivedPayment = async (clientId, data, mainUser) => {
                 }
 
                 // ── Create Purchase Invoice ────────────────────────────
-                [po] = await PaymentIn.create([{ ...data, customer: data?.supplier, customerLedger: data.supplierLedger, receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
+                [po] = await PaymentIn.create([{ ...data, type: "purchase_return", fromLedger: data.supplierLedger, receivedIn: [{ id: data.receivedIn }], linkedId: linkedId }], {
                     session,
                     ordered: true   // safe even for 1 document
                 });
 
-                // payment out and invoices connection
-                // await SaleInvoiceAndPaymentConnection.create(
-                //     [{
-                //         paymentIn: po._id,
-                //         invoices: settledInvoices
-                //     }],
-                //     { session }
-                // );
+                // payment in and return connection
+                await PurchaseReturnAndPaymentConnection.create(
+                    [{
+                        paymentIn: po._id,
+                        invoices: settledInvoices
+                    }],
+                    { session }
+                );
 
                 // voucher creation
                 const voucherGroup = await VoucherGroup.findOne({
@@ -366,7 +368,7 @@ const createReceivedPaymentDn = async (clientId, data, mainUser) => {
     const SaleInvoice = clientConnection.model('SaleInvoice', saleInvoiceSchema);
     const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
     const DebitNote = clientConnection.model('debitNote', debitNoteSchema);
-    
+
 
     // supplier,
     // supplierLedger,
@@ -537,6 +539,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const PaymentOut = clientConnection.model('payementOut', paymentOutSchema);
         const PaymentIn = clientConnection.model('payementIn', paymentInSchema);
         const User = clientConnection.model("clientUsers", clinetUserSchema)
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
 
         const { page, limit } = options;
         const skip = (Number(page) - 1) * Number(limit);
@@ -545,11 +548,13 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
                 .skip(skip)
                 .sort({ createdAt: -1 })
                 .limit(Number(limit))
-                .populate({
-                    path: "customer",
-                    model: User,
-                    select: "-items"
-                }),
+                // .populate({
+                //     path: "customer",
+                //     model: User,
+                //     select: "-items"
+                // })
+                .populate({ path: "fromLedger", model: Ledger })
+            ,
             PaymentIn.countDocuments(filters),
         ]);
         return { count: total, paymentIn };
@@ -571,9 +576,14 @@ const getById = async (clientId, id) => {
         const BusinessUnit = clientConnection.model('businessUnit', clinetBusinessUnitSchema);
         const User = clientConnection.model("clientUsers", clinetUserSchema);
         const SaleInvoice = clientConnection.model('SaleInvoice', saleInvoiceSchema);
+        const Ledger = clientConnection.model("ledger", ledgerSchema);
+        const PurchaseReturnAndPaymentConnection = clientConnection.model("purchaseReturnAndPaymentConnection", purchaseReturnAndPaymentConnectionSchema)
+        const Supplier = clientConnection.model('supplier', supplierSchema)
+        const PurchaseReturn = clientConnection.model('purchaseReturn', purchaseReturnSchema);
 
         const paymentIn = await PaymentIn.findById(id)
-            .populate({ path: "customer", model: User, select: "-items" })
+            // .populate({ path: "customer", model: User, select: "-items" })
+            .populate({ path: "fromLedger", model: Ledger })
             .populate({ path: "businessUnit", model: BusinessUnit, select: "name" })
             .populate({ path: "branch", model: Branch, select: "name" })
             .populate({ path: "warehouse", model: Warehouse, select: "name" })
@@ -582,19 +592,40 @@ const getById = async (clientId, id) => {
             throw new CustomError(statusCode.NotFound, "Payment in not found.");
         }
 
-        const connection = await SaleInvoiceAndPaymentConnection.findOne({
-            paymentIn: paymentIn._id
-        }).populate({
-            path: "invoices.id",
-            model: SaleInvoice,
-            select: "-shippingAddress -bankDetails"
-        });
+        let invoices = [];
+        let user = null;
 
-        if (!connection) {
-            throw new CustomError(statusCode.NotFound, "Connection out not found.");
+        if (paymentIn.type == "sale_invoice") {
+            const connection = await SaleInvoiceAndPaymentConnection.findOne({
+                paymentIn: paymentIn._id
+            }).populate({
+                path: "invoices.id",
+                model: SaleInvoice,
+                select: "-shippingAddress -bankDetails"
+            });
+            if (!connection) {
+                throw new CustomError(statusCode.NotFound, "Connection out not found.");
+            }
+            invoices = connection.invoices;
+            const customer = await User.findOne({ ledgerLinkedId: paymentIn.fromLedger._id }).select("-items");
+            user = customer;
+        } else if (paymentIn.type == "purchase_return") {
+            const connection = await PurchaseReturnAndPaymentConnection.findOne({
+                paymentIn: paymentIn._id
+            }).populate({
+                path: "invoices.id",
+                model: PurchaseReturn,
+                select: "-shippingAddress -bankDetails"
+            });
+            if (!connection) {
+                throw new CustomError(statusCode.NotFound, "Connection out not found.");
+            }
+            invoices = connection.invoices;
+            const supplier = await Supplier.findOne({ ledgerLinkedId: paymentIn.fromLedger._id }).select("-items");
+            user = supplier;
+
         }
-
-        return { ...paymentIn, invoices: connection.invoices };
+        return { ...paymentIn, invoices: invoices, customer: user };
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting business unit: ${error.message}`);
     }
