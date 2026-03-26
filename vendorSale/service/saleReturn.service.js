@@ -24,6 +24,7 @@ const clinetWarehouseSchema = require("../../client/model/warehouse");
 const stockLedgerSchema = require("../../client/model/stockLedger");
 const saleReturnSchema = require("../../client/model/saleReturn");
 const clinetUserSchema = require("../../client/model/user");
+const saleInvoiceSchema = require("../../client/model/saleInvoice");
 
 
 // const create = async (clientId, data) => {
@@ -55,6 +56,7 @@ const create = async (clientId, data, mainUser) => {
     const VoucherGroup = clientConnection.model("voucherGroup", voucherGroupSchema);
     const Voucher = clientConnection.model("voucher", voucherSchema);
     const SerialNumber = clientConnection.model('transactionSerialNumebr', transactionSerialNumebrSchema);
+    const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema);
 
     const session = await clientConnection.startSession();
 
@@ -67,8 +69,11 @@ const create = async (clientId, data, mainUser) => {
 
             // ── Payment part ───────────────────────────────────────
             if (data?.paidAmount > 0) {
+                
                 const customerLedger = await Ledger.findById(data.customerLedger).session(session);
                 if (!customerLedger) throw new CustomError(400, 'Customer ledger not found.');
+
+
 
                 const receivedInLedger = await Ledger.findById(data?.receivedIn).session(session);
                 if (!receivedInLedger) throw new CustomError(400, 'Received ledger not found.');
@@ -76,6 +81,8 @@ const create = async (clientId, data, mainUser) => {
                 // if (receivedInLedger.balance < data.paidAmount) {
                 //     throw new CustomError(400, 'Insufficient Amount in payment ledger.');
                 // }
+
+                
 
                 const voucherGroup = await VoucherGroup.findOne({
                     warehouse: data?.warehouse,
@@ -151,6 +158,15 @@ const create = async (clientId, data, mainUser) => {
                     ordered: true   // safe even for 1 document
                 });
 
+                const saleInvoice = await SaleInvoice.findById(data?.purchaseInvId)
+                    .session(session);
+
+                if (!saleInvoice) {
+                    throw new CustomError(400, 'Sale invoice not found.');
+                }
+                saleInvoice.isReturnCreated = true;
+                await saleInvoice.save({ session });
+
                 if (pi) {
                     await SerialNumber.findOneAndUpdate({ collectionName: "sale_return" }, { $inc: { nextNum: 1 } })
                 }
@@ -177,6 +193,16 @@ const create = async (clientId, data, mainUser) => {
                     session,
                     ordered: true   // safe even for 1 document
                 });
+
+                const saleInvoice = await SaleInvoice.findById(data?.purchaseInvId)
+                    .session(session);
+
+                if (!saleInvoice) {
+                    throw new CustomError(400, 'Sale invoice not found.');
+                }
+                saleInvoice.isReturnCreated = true;
+                await saleInvoice.save({ session });
+
 
                 if (pi) {
                     await SerialNumber.findOneAndUpdate({ collectionName: "sale_return" }, { $inc: { nextNum: 1 } })

@@ -15,7 +15,7 @@ router.post('/issue/creditNote/mail', entityAuth.authorizeEntity("Administration
 
 router.put('/update/creditNote', entityAuth.authorizeEntity("Administration", "Employee", "update"), creditNoteController.update);
 
-router.get('/get/:clientId/:saleReturnId', entityAuth.authorizeEntity("Administration", "Employee", "create"), creditNoteController.getParticular);
+router.get('/get/:clientId/:creditNoteId', entityAuth.authorizeEntity("Administration", "Employee", "create"), creditNoteController.getParticular);
 
 router.get('/list/creditNote', entityAuth.authorizeEntity("Administration", "Employee", "create"), creditNoteController.list);
 

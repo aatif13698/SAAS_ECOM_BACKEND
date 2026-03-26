@@ -202,22 +202,23 @@ const update = async (clientId, saleReturnId, updateData) => {
 };
 
 
-const getById = async (clientId, saleReturnId) => {
+const getById = async (clientId, creditNoteId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SaleReturn = clientConnection.model('saleReturn', saleReturnSchema)
         const Client = clientConnection.model('clientUsers', clinetUserSchema);
+        const CreditNote = clientConnection.model('creditNote', creditNoteSchema);
 
-        const saleReturn = await SaleReturn.findById(saleReturnId)
+        const creditNote = await CreditNote.findById(creditNoteId)
             .populate({
                 path: "customer",
                 model: Client,
                 select: "-items"
             });
-        if (!saleReturn) {
-            throw new CustomError(statusCode.NotFound, "Sale return not found.");
+        if (!creditNote) {
+            throw new CustomError(statusCode.NotFound, "Credit note not found.");
         }
-        return saleReturn;
+        return creditNote;
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
     }
@@ -232,7 +233,7 @@ const list = async (clientId, filters = {}, options = { page: 1, limit: 10 }) =>
         const Branch = clientConnection.model('branch', clinetBranchSchema);
         const Warehouse = clientConnection.model('warehouse', clinetWarehouseSchema);
         const Client = clientConnection.model('clientUsers', clinetUserSchema);
-         const CreditNote = clientConnection.model('creditNote', creditNoteSchema);
+        const CreditNote = clientConnection.model('creditNote', creditNoteSchema);
 
 
         const { page, limit } = options;

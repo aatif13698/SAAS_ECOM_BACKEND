@@ -286,15 +286,15 @@ exports.issueMail = async (req, res, next) => {
 // get particular  
 exports.getParticular = async (req, res, next) => {
     try {
-        const { clientId, saleReturnId } = req.params;
-        if (!clientId || !saleReturnId) {
+        const { clientId, creditNoteId } = req.params;
+        if (!clientId || !creditNoteId) {
             return res.status(400).send({
                 message: message.lblPurchaseReturnIdAndClientIdRequired,
             });
         }
-        const sr = await creditNoteService.getById(clientId, saleReturnId);
+        const sr = await creditNoteService.getById(clientId, creditNoteId);
         return res.status(200).send({
-            message: "Sale return found successfully.",
+            message: "Credit note found successfully.",
             data: sr,
         });
     } catch (error) {

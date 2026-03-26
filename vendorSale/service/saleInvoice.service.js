@@ -462,7 +462,7 @@ const allByCustomer = async (clientId, filters = {}) => {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SaleInvoice = clientConnection.model('SaleInvoice', SaleInvoiceSchema);
         const [saleInvoices] = await Promise.all([
-            SaleInvoice.find(filters)
+            SaleInvoice.find({...filters, isReturnCreated: { $ne: true }})
                 .sort({ createdAt: -1 }),  // Sort by creation date descending (latest first)
         ]);
         return { saleInvoices };
