@@ -553,6 +553,8 @@ const getById = async (clientId, id) => {
         const SaleReturnAndPaymentConnection = clientConnection.model("saleReturnAndPaymentConnection", saleReturnAndPaymentConnectionSchema)
         const User = clientConnection.model("clientUsers", clinetUserSchema);
         const SaleReturn = clientConnection.model('saleReturn', saleReturnSchema);
+        const CreditNote = clientConnection.model('creditNote', creditNoteSchema);
+        const CreditNoteAndPaymentConnection = clientConnection.model("creditNoteAndPaymentConnection", creditNoteAndPaymentConnectionSchema)
 
         const paymentOut = await PaymentOut.findById(id)
             // .populate({ path: "supplier", select: "-items" })
@@ -587,6 +589,22 @@ const getById = async (clientId, id) => {
             }).populate({
                 path: "invoices.id",
                 model: SaleReturn,
+                select: "-shippingAddress -bankDetails"
+            });
+            if (!connection) {
+                throw new CustomError(statusCode.NotFound, "Connection out not found.");
+            }
+            invoices = connection.invoices
+            const supplier = await User.findOne({ ledgerLinkedId: paymentOut.toLedger._id }).select("-items");
+            user = supplier;
+
+        } else if (paymentOut.type == "credit_note") {
+
+            const connection = await CreditNoteAndPaymentConnection.findOne({
+                paymentOut: paymentOut._id
+            }).populate({
+                path: "invoices.id",
+                model: CreditNote,
                 select: "-shippingAddress -bankDetails"
             });
             if (!connection) {
