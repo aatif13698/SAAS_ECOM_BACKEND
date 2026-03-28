@@ -11,6 +11,8 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 router.post('/create/creditNote', entityAuth.authorizeEntity("Administration", "Employee", "create"), creditNoteController.create);
 
+router.post('/apply/credit/to/invoice', entityAuth.authorizeEntity("Purchases", "Payment Out", "create"), creditNoteController.applyCrditToInvoice);
+
 router.post('/issue/creditNote/mail', entityAuth.authorizeEntity("Administration", "Employee", "create"), creditNoteController.issueMail);
 
 router.put('/update/creditNote', entityAuth.authorizeEntity("Administration", "Employee", "update"), creditNoteController.update);
