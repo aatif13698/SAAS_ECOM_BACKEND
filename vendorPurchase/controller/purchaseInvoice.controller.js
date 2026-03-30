@@ -10,7 +10,7 @@ const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 const purchaseInvoice = require("../services/purchaseInvoice.service")
 const bcrypt = require("bcrypt")
-
+const { getAgenda } = require('../../queues/auditAgenda.js');
 
 // create 
 exports.create = async (req, res, next) => {
@@ -143,6 +143,15 @@ exports.create = async (req, res, next) => {
         }
 
         const newPurchaseInvoice = await purchaseInvoice.create(clientId, dataObject, mainUser);
+
+        // === QUEUE THE AUDIT JOB (non-blocking) ===
+        const agenda = await getAgenda();
+        await agenda.now('audit-purchase-invoice', {
+            clientId,
+            invoiceId: newPurchaseInvoice._id.toString(),
+            createdBy: mainUser._id.toString()
+        });
+
         return res.status(statusCode.OK).send({
             message: "Purchase invoice created successfully.",
             data: { invoiceId: newPurchaseInvoice._id },

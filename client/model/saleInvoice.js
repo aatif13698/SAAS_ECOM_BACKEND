@@ -99,7 +99,7 @@ const saleInvoiceSchema = new Schema(
 
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
 
-        auditStatus: { type: String, enum: ['completed', 'pending'], default: "pending" },
+        auditStatus: { type: String, enum: ['pending', 'in-progress', 'completed', 'failed'], default: "pending" },
 
         workOrderNumber: { type: String, trim: true, default: null },
         workOrderDate: { type: Date },
