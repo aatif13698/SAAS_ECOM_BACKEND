@@ -6,7 +6,7 @@ services:
     dockerfile_path: Dockerfile
     github:
       branch: main              # change to your branch
-      repo: yourusername/your-repo-name   # ← CHANGE THIS
+      repo: aatif13698/SAAS_ECOM_BACKEND  # ← CHANGE THIS
     envs:
       - key: NODE_ENV
         value: production
@@ -22,7 +22,7 @@ workers:
     dockerfile_path: Dockerfile
     github:
       branch: main
-      repo: yourusername/your-repo-name   # ← CHANGE THIS
+      repo: aatif13698/SAAS_ECOM_BACKEND   # ← CHANGE THIS
     command: npm run start:worker:prod     # This starts the Agenda worker
     envs:
       - key: NODE_ENV
