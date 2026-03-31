@@ -5,6 +5,7 @@ const { mailSender } = require("../../email/emailSend");
 const { generatePurchaseOrderPDF } = require("../../helper/pdftGenerator");
 const roleModel = require("../../model/role");
 const userModel = require("../../model/user");
+const { getAgenda } = require("../../queues/auditAgenda");
 const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
@@ -152,10 +153,19 @@ exports.create = async (req, res, next) => {
             dataObject.warehouse = warehouse;
         }
 
-        const newPurchaseReturn = await saleReturnService.create(clientId, dataObject, mainUser);
+        const newInvoice = await saleReturnService.create(clientId, dataObject, mainUser);
+
+        // === QUEUE THE AUDIT JOB (non-blocking) ===
+        const agenda = await getAgenda();
+        await agenda.now('audit-sale-return', {
+            clientId,
+            invoiceId: newInvoice._id.toString(),
+            createdBy: mainUser._id.toString()
+        });
+
         return res.status(statusCode.OK).send({
-            message: message.lblPurchaseReturnCreatedSuccess,
-            data: { newPurchaseReturn: newPurchaseReturn },
+            message: "Sale return created successfully",
+            data: { newInvoice: newInvoice },
         });
     } catch (error) {
         next(error);

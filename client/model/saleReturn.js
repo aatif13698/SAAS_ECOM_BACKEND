@@ -99,6 +99,8 @@ const saleReturnSchema = new Schema(
         ],
 
         status: { type: String, enum: ['full_due', 'received', 'verified', 'approved', 'paid', 'partially_paid', 'overdue', 'disputed', 'canceled', 'closed'], default: "draft" },
+        auditStatus: { type: String, enum: ['pending', 'in-progress', 'completed', 'failed'], default: "pending" },
+
         // Audit fields
         createdBy: { type: ObjectId, ref: "ClientUser", required: true, index: true }, // Capitalized for consistency
         deletedAt: { type: Date, default: null, index: true } // For soft deletes
