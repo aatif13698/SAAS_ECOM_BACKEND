@@ -46,4 +46,4 @@ COPY . .
 EXPOSE 3000
 
 # Default command (will be overridden by App Spec)
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:prod", "start:worker:prod"]
