@@ -1,31 +1,29 @@
 name: saas-ecom-backend
-region: fra1   # or your preferred region (nyc3, sfo3, etc.)
+region: fra1                    # change to your region (nyc3, sfo3, etc.)
 
 services:
   - name: api
-    type: web
     dockerfile_path: Dockerfile
     github:
-      branch: main          # change to your branch
-      repo: yourusername/your-repo   # change to your repo
+      branch: main              # change to your branch
+      repo: yourusername/your-repo-name   # ← CHANGE THIS
     envs:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${DATABASE_URL}     # link from your DO Database or env var
+        value: ${DATABASE_URL}
     http_port: 8088
     health_check:
-      http_path: /health        # optional: create a simple /health route
+      http_path: /health
 
 workers:
   - name: audit-worker
-    type: worker
     dockerfile_path: Dockerfile
     github:
       branch: main
-      repo: yourusername/your-repo
-    command: npm run start:worker:prod     # ← This runs the Agenda worker
+      repo: yourusername/your-repo-name   # ← CHANGE THIS
+    command: npm run start:worker:prod     # This starts the Agenda worker
     envs:
       - key: NODE_ENV
         value: production
