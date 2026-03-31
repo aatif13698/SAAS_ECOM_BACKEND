@@ -484,7 +484,7 @@ server.listen(port, async () => {
 
     await ConnectDb(DATABASE_URL);
 
-    await insertRole()
+    // await insertRole()
 
     console.log(`APP STARTED SUCCESSFULLY on port ${port}....`)
 });

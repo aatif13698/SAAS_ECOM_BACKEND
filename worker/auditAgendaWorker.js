@@ -86,8 +86,9 @@ const { getClientDatabaseConnection } = require('../db/connection');
 
 // Now import everything else
 const { getAgenda } = require('../queues/auditAgenda');
-const { auditItem } = require('../helper/inventoryHelper');
+const { auditItem, auditItemForSale } = require('../helper/inventoryHelper');
 const purchaseInvoiceSchema = require('../client/model/purchaseInvoice');
+const saleInvoiceSchema = require('../client/model/saleInvoice');
 
 // Define the job
 (async () => {
@@ -118,6 +119,47 @@ const purchaseInvoiceSchema = require('../client/model/purchaseInvoice');
                 const productMainStockId = item.itemName.productMainStock;
 
                 await auditItem(clientId, invoiceId, productMainStockId, { _id: createdBy });
+
+                const progress = Math.round(((i + 1) / nonAuditedItems.length) * 100);
+                await job.touch(progress);                    // ← Progress reporting for Agenda v6
+
+                console.log(`   ✅ Audited item ${i + 1}/${nonAuditedItems.length} for invoice ${invoiceId}`);
+            }
+
+            console.log(`🎉 Audit completed for invoice ${invoiceId} in ${Date.now() - startTime}ms`);
+        } catch (error) {
+            console.error(`❌ Audit failed for invoice ${invoiceId}:`, error);
+            throw error; // Agenda will retry automatically
+        }
+    });
+
+    // sale invoice
+     agenda.define('audit-sale-invoice', async (job) => {
+        const { clientId, invoiceId, createdBy } = job.attrs.data;
+        const startTime = Date.now();
+
+        try {
+            console.log(`🚀 Starting audit for invoice ${invoiceId} (client: ${clientId})`);
+
+            const clientConnection = await getClientDatabaseConnection(clientId);
+            const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema);
+            
+
+            const invoice = await SaleInvoice.findById(invoiceId);
+            if (!invoice) throw new Error('Invoice not found');
+
+            if (invoice.auditStatus === 'pending') {
+                invoice.auditStatus = 'in-progress';
+                await invoice.save();
+            }
+
+            const nonAuditedItems = invoice.items.filter(item => !item.audited);
+
+            for (let i = 0; i < nonAuditedItems.length; i++) {
+                const item = nonAuditedItems[i];
+                const productMainStockId = item.itemName.productMainStock;
+
+                await auditItemForSale(clientId, invoiceId, productMainStockId, { _id: createdBy });
 
                 const progress = Math.round(((i + 1) / nonAuditedItems.length) * 100);
                 await job.touch(progress);                    // ← Progress reporting for Agenda v6

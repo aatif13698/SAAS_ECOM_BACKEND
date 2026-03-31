@@ -5,6 +5,7 @@ const { mailSender } = require("../../email/emailSend");
 const { generatePurchaseOrderPDF } = require("../../helper/pdftGenerator");
 const roleModel = require("../../model/role");
 const userModel = require("../../model/user");
+const { getAgenda } = require("../../queues/auditAgenda");
 const CustomError = require("../../utils/customeError");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
@@ -145,6 +146,15 @@ exports.create = async (req, res, next) => {
         }
 
         const newInvoice = await saleInvoiceService.create(clientId, dataObject, mainUser);
+
+         // === QUEUE THE AUDIT JOB (non-blocking) ===
+        const agenda = await getAgenda();
+        await agenda.now('audit-sale-invoice', {
+            clientId,
+            invoiceId: newInvoice._id.toString(),
+            createdBy: mainUser._id.toString()
+        });
+
         return res.status(statusCode.OK).send({
             message: "Invoice created successfully.",
             data: { invoiceId: newInvoice._id },
