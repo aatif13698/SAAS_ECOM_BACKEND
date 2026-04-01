@@ -478,11 +478,11 @@ const auditItemForPurchaseReturn = async (clientId, invoiceId, productMainStock,
 
             productMainStock: productMainStock,
             pricePerUnit,
-            in: quantityChange,
+            out: quantityChange,
             purchaseReturnId: invoice._id,
             totalStock: newTotalStock,
             date: invoice.piDate || new Date(),
-            type: "purchase",
+            type: "purchase_return",
             createdBy: mainUser._id,
         });
 
