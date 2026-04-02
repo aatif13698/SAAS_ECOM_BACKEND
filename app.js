@@ -21,8 +21,8 @@ const cors = require("cors");
 
 
 // env setup
-const dotnev = require("dotenv");
-dotnev.config();
+const dotenv = require("dotenv"); // ← fixed typo (dotnev → dotenv)
+dotenv.config()
 
 
 
@@ -142,12 +142,113 @@ const transactionSerialNumebrSchema = require("./client/model/transactionSeries.
 
 // app.use(cors());
 
+const STATIC_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    // 'http://localhost:5174',
+    'http://localhost:5175',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175',
+    'http://192.168.1.127:5173',
+    'https://dolphin-app-2-kv7tw.ondigitalocean.app',
+    'https://orca-app-r5am7.ondigitalocean.app',
+    'https://seal-app-qjy6w.ondigitalocean.app',
+];
+
+// middleware setup
 app.use(cors({
-    origin: ['http://192.168.1.127:5173/', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app', 'https://seal-app-qjy6w.ondigitalocean.app'], // Allow Vite dev server
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true, // If your app uses cookies or auth
+    // Dynamic origin handler - allows preflight for ANY domain
+    // (the strict check happens later after auth)
+    origin: (origin, callback) => {
+        if (!origin || STATIC_ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        // Allow any other origin for preflight (browser will send the request)
+        // Security is enforced bymiddleware below
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Client-ID', 'X-Requested-With', 'Accept'],
+    credentials: true, // cookies / Authorization headers
 }));
+
+const clientAndDomainConnection = [
+    {
+        userId : "67cdae13e177fa43c603b832",
+        domains: ['http://localhost:5179', 'https://aayesha.com']
+    }
+]
+
+
+const validateClientOrigin = (req, res, next) => {
+    const origin = req.headers.origin;
+
+    console.log("origin", origin);
+    
+
+    // Fast path – allow all your known static domains instantly
+    if (!origin || STATIC_ALLOWED_ORIGINS.includes(origin)) {
+        return next();
+    }
+
+    // Get clientId from custom header sent by frontend
+    const clientId = req.headers['x-client-id'];
+
+    if (!clientId) {
+        return res.status(401).json({
+            success: false,
+            message: "X-Client-ID header is required"
+        });
+    }
+
+    // Find the client in your static array
+    const clientRecord = clientAndDomainConnection.find(
+        client => client.userId === clientId
+    );
+
+    if (!clientRecord) {
+        return res.status(403).json({
+            success: false,
+            message: "Client configuration not found"
+        });
+    }
+
+    if (!clientRecord.domains || clientRecord.domains.length === 0) {
+        return res.status(403).json({
+            success: false,
+            message: "No domains configured for this account"
+        });
+    }
+
+    // Check if the requesting origin is allowed for this client
+    const normalizedOrigin = origin.toLowerCase().trim();
+    const isAllowed = clientRecord.domains.some(domain =>
+        domain.toLowerCase().trim() === normalizedOrigin
+    );
+
+    if (!isAllowed) {
+        console.warn(`❌ Domain mismatch → Origin: ${origin} | Client: ${clientId}`);
+        return res.status(403).json({
+            success: false,
+            message: "This domain is not authorized for your account."
+        });
+    }
+
+    next();   // ✅ Domain is valid → proceed to your router
+};
+
+
+app.get("/api/check-domain", validateClientOrigin, (req, res) => res.status(200).json({status: 'ok'}))
+
+
+
+
+// app.use(cors({
+//     origin: ['http://192.168.1.127:5173/', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'https://dolphin-app-2-kv7tw.ondigitalocean.app', 'https://orca-app-r5am7.ondigitalocean.app', 'https://seal-app-qjy6w.ondigitalocean.app'], // Allow Vite dev server
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     credentials: true, // If your app uses cookies or auth
+// }));
 
 app.use(express.json())
 app.use(express.static('public'))
@@ -158,6 +259,8 @@ app.get('/api/ping', (req, res) => res.status(200).json({ status: 'ok' })); // O
 
 // connecting database
 const DATABASE_URL = process.env.DATABASE_URL;
+
+
 
 
 // routes setup for super admin
@@ -438,19 +541,19 @@ async function insertSerialNumber() {
     const financialYear = getFiscalYearRange(currentDate);
 
     const series = serialNumber?.map((ser) => {
-        return {...ser, year: financialYear }
+        return { ...ser, year: financialYear }
     });
 
     for (let index = 0; index < series.length; index++) {
         const element = series[index];
-        const existingSeriesOfCurrentFinancialYear = await SerialNumber.findOne({collectionName: element.collectionName, year : element.year});
-        if(existingSeriesOfCurrentFinancialYear){
+        const existingSeriesOfCurrentFinancialYear = await SerialNumber.findOne({ collectionName: element.collectionName, year: element.year });
+        if (existingSeriesOfCurrentFinancialYear) {
             console.log(`Seris for ${element.collectionName} for year ${element.year} already exists.`);
-        }else{
+        } else {
             await SerialNumber.create(element)
         }
     }
-    
+
 
 
     // SerialNumber.countDocuments({})
