@@ -151,7 +151,7 @@ const STATIC_ALLOWED_ORIGINS = [
     'http://127.0.0.1:5175',
     'http://192.168.1.127:5173',
     'https://dolphin-app-2-kv7tw.ondigitalocean.app',
-    // 'https://orca-app-r5am7.ondigitalocean.app',
+    'https://orca-app-r5am7.ondigitalocean.app',
     'https://seal-app-qjy6w.ondigitalocean.app',
 ];
 
