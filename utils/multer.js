@@ -183,6 +183,23 @@ const uploadDocuments = multer({
 });
 
 
+
+const uploadOrg = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 1024 * 1024 * 2 }, // 2MB (increased slightly for logos)
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpg|jpeg|png|gif|webp/i;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are allowed'));
+    }
+});
+
+
 const imagesStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, './public/images');
@@ -600,3 +617,4 @@ exports.uploadProfileToS3 = uploadProfileToS3;
 exports.uploadCustomFormWithS3 = uploadCustomFormWithS3;
 exports.uploadCustomizationFileToS3 = uploadCustomizationFileToS3;
 exports.uploadDocuments = uploadDocuments;
+exports.uploadOrg = uploadOrg;

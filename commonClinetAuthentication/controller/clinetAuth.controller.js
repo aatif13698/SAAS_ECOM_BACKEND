@@ -13,8 +13,54 @@ const { mailSender } = require("../../email/emailSend");
 const statusCode = require("../../utils/http-status-code");
 const message = require("../../utils/message");
 
-const {commonCheckForClient} = require("../util/commonCheck"); 
-const {clientInfo} = require("../util/clientInfo")
+const { commonCheckForClient } = require("../util/commonCheck");
+const { clientInfo } = require("../util/clientInfo");
+
+
+
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const AWS = require('aws-sdk');
+const companyConfigureSchema = require("../../client/model/companyConfigure");
+const { getClientDatabaseConnection } = require("../../db/connection");
+
+// DigitalOcean Spaces setup
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+    endpoint: spacesEndpoint,
+    accessKeyId: process.env.DO_SPACES_KEY,
+    secretAccessKey: process.env.DO_SPACES_SECRET,
+    s3ForcePathStyle: true,
+    maxRetries: 5,
+    retryDelayOptions: { base: 500 },
+    httpOptions: { timeout: 60000 },
+});
+
+// Helper function to upload file to DigitalOcean Spaces
+const uploadToS3 = async (file, clientId, type) => {
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const fileName = `saasEcommerce/${clientId}/org/${type}/${uuidv4()}${fileExtension}`;
+
+    const params = {
+        Bucket: process.env.DO_SPACES_BUCKET,
+        Key: fileName,
+        Body: file.buffer,
+        ACL: 'public-read',
+        ContentType: file.mimetype,
+        Metadata: {
+            'original-filename': file.originalname,
+        },
+    };
+
+    const { Location } = await s3.upload(params).promise();
+
+    return {
+        url: Location,
+        key: fileName,
+    };
+};
+
+
 
 
 // env 
@@ -53,8 +99,8 @@ exports.signIn = async (req, res, next) => {
 
         // Check if user exists
         const user = await User.findOne(query).populate('role');
-        
-        await  commonCheckForClient(user);
+
+        await commonCheckForClient(user);
 
         // Validate password
         const isPasswordValid = await user.isPasswordCorrect(password);
@@ -127,9 +173,9 @@ exports.signInByOtp = async (req, res, next) => {
         const query = isEmail ? { email: identifier } : { phone: identifier };
 
         // Find user and check if exists
-        const user = await User.findOne(query).select('-password  -createdBy -isCreatedBySuperAdmin -deletedAt -createdAt -updatedAt -otpGeneratedAt ').populate('role','-isActive -createdAt -updatedAt');
+        const user = await User.findOne(query).select('-password  -createdBy -isCreatedBySuperAdmin -deletedAt -createdAt -updatedAt -otpGeneratedAt ').populate('role', '-isActive -createdAt -updatedAt');
 
-        await  commonCheckForClient(user);
+        await commonCheckForClient(user);
 
         // Validate OTP
         if (otp !== user.verificationOtp) {
@@ -140,7 +186,7 @@ exports.signInByOtp = async (req, res, next) => {
 
         // Set token expiration time
         const expiresIn = rememberMe ? '7d' : '1d';
-        const token = jwt.sign({ id: user._id, email :  user.email }, process.env.PRIVATEKEY, { expiresIn });
+        const token = jwt.sign({ id: user._id, email: user.email }, process.env.PRIVATEKEY, { expiresIn });
 
         // Calculate expiry timestamp for frontend use
         const expiryTime = new Date().getTime() + (rememberMe ? 7 : 1) * 24 * 60 * 60 * 1000;
@@ -156,7 +202,7 @@ exports.signInByOtp = async (req, res, next) => {
         });
 
     } catch (error) {
-       next(error)
+        next(error)
     }
 };
 
@@ -189,7 +235,7 @@ exports.resendSignInOtp = async (req, res, next) => {
         // Check if user exists
         const user = await User.findOne(query);
 
-        await  commonCheckForClient(user);
+        await commonCheckForClient(user);
 
         // Generate OTP
         const otp = generateOtp();
@@ -226,7 +272,7 @@ exports.resendSignInOtp = async (req, res, next) => {
 
 
     } catch (error) {
-       next(error)
+        next(error)
     }
 };
 
@@ -260,7 +306,7 @@ exports.forgetPassword = async (req, res, next) => {
         // Check if user exists
         const user = await User.findOne(query);
 
-        await  commonCheckForClient(user);
+        await commonCheckForClient(user);
 
         // Generate OTP
         const otp = generateOtp();
@@ -296,7 +342,7 @@ exports.forgetPassword = async (req, res, next) => {
         });
 
     } catch (error) {
-       next(error)
+        next(error)
     }
 };
 
@@ -330,7 +376,7 @@ exports.resetPassword = async (req, res, next) => {
         // Check if user exists
         const user = await User.findOne(query);
 
-        await  commonCheckForClient(user);
+        await commonCheckForClient(user);
 
         // Check if OTP exists (user must have requested a password reset)
         if (!user.OTP) {
@@ -526,3 +572,197 @@ exports.getProfile = async (req, res) => {
 };
 
 
+// ✅ createOrganization
+exports.createOrganization = async (req, res, next) => {
+    try {
+        const {
+            clientId,
+            name,
+            description,
+            fullAddress,
+            phone,
+            email,
+            instaLink,
+            showInsta,
+            facebookLink,
+            showFacebook,
+            linkedinLink,
+            showLinkedin,
+            telegramLink,
+            showTelegram,
+        } = req.body;
+
+        console.log("req.body", req.body);
+
+
+        const mainUser = req.user;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        // Basic validation
+        if (!name || !description || !fullAddress || !phone || !email) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, description, full address, phone and email are required fields.",
+            });
+        }
+
+        // Check file uploads
+        if (!req.files?.longLogo?.[0] || !req.files?.shortLogo?.[0]) {
+            return res.status(400).json({
+                success: false,
+                message: "Both longLogo and shortLogo are required.",
+            });
+        }
+
+        // Upload to S3
+        const longLogoUpload = await uploadToS3(
+            req.files.longLogo[0],
+            mainUser.clientId || mainUser._id, // adjust as per your auth
+            'longLogo'
+        );
+
+        const shortLogoUpload = await uploadToS3(
+            req.files.shortLogo[0],
+            mainUser.clientId || mainUser._id,
+            'shortLogo'
+        );
+
+        const organizationData = {
+            name: name.trim(),
+            description: description.trim(),
+            longLogo: longLogoUpload.url,
+            longLogoKey: longLogoUpload.key,
+            shortLogo: shortLogoUpload.url,
+            shortLogoKey: shortLogoUpload.key,
+            fullAddress: fullAddress.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            instaLink: instaLink || null,
+            showInsta: showInsta === 'true' || showInsta === true,
+            facebookLink: facebookLink || null,
+            showFacebook: showFacebook === 'true' || showFacebook === true,
+            linkedinLink: linkedinLink || null,
+            showLinkedin: showLinkedin === 'true' || showLinkedin === true,
+            telegramLink: telegramLink || null,
+            showTelegram: showTelegram === 'true' || showTelegram === true,
+            createdBy: mainUser._id,
+        };
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CompanyConfigure = clientConnection.model('companyConfigure', companyConfigureSchema);
+
+        // Save to DB (using the schema you showed)
+        const newOrg = await CompanyConfigure.create(organizationData); // ← Your model name
+
+        return res.status(201).json({
+            success: true,
+            message: "Organization created successfully.",
+            data: newOrg,
+        });
+    } catch (error) {
+        console.error("Create Organization Error:", error);
+        next(error);
+    }
+};
+
+// ✅ updateOrganization
+exports.updateOrganization = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const mainUser = req.user;
+
+        const clientId = req.body.clientId;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CompanyConfigure = clientConnection.model('companyConfigure', companyConfigureSchema);
+
+        const org = await CompanyConfigure.findById(id);
+        if (!org) {
+            return res.status(404).json({ success: false, message: "Organization not found." });
+        }
+
+        // Allow partial updates
+        const updateData = {
+            name: req.body.name?.trim(),
+            description: req.body.description?.trim(),
+            fullAddress: req.body.fullAddress?.trim(),
+            phone: req.body.phone?.trim(),
+            email: req.body.email?.trim(),
+            instaLink: req.body.instaLink || null,
+            showInsta: req.body.showInsta === 'true' || req.body.showInsta === true,
+            facebookLink: req.body.facebookLink || null,
+            showFacebook: req.body.showFacebook === 'true' || req.body.showFacebook === true,
+            linkedinLink: req.body.linkedinLink || null,
+            showLinkedin: req.body.showLinkedin === 'true' || req.body.showLinkedin === true,
+            telegramLink: req.body.telegramLink || null,
+            showTelegram: req.body.showTelegram === 'true' || req.body.showTelegram === true,
+        };
+
+        // Handle logo re-upload if new file is sent
+        if (req.files?.longLogo?.[0]) {
+            const upload = await uploadToS3(req.files.longLogo[0], mainUser.clientId || mainUser._id, 'longLogo');
+            updateData.longLogo = upload.url;
+            updateData.longLogoKey = upload.key;
+        }
+
+        if (req.files?.shortLogo?.[0]) {
+            const upload = await uploadToS3(req.files.shortLogo[0], mainUser.clientId || mainUser._id, 'shortLogo');
+            updateData.shortLogo = upload.url;
+            updateData.shortLogoKey = upload.key;
+        }
+
+
+
+        const updatedOrg = await CompanyConfigure.findByIdAndUpdate(
+            id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Organization updated successfully.",
+            data: updatedOrg,
+        });
+    } catch (error) {
+        console.error("Update Organization Error:", error);
+        next(error);
+    }
+};
+
+
+exports.getOrganization = async (req, res, next) => {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const CompanyConfigure = clientConnection.model('companyConfigure', companyConfigureSchema);
+
+
+        const org = await CompanyConfigure.findOne({ createdBy: req.user._id, deletedAt: null })
+            .sort({ createdAt: -1 });
+
+        if (!org) {
+            return res.status(200).json({ success: true, data: null }); // No data = create mode
+        }
+
+        res.status(200).json({ success: true, data: org });
+    } catch (error) {
+        next(error);
+    }
+};
