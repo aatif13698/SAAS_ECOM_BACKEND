@@ -136,6 +136,7 @@ const clientRoleSchema = require("./client/model/role.js");
 const { defaultPersmissionsList, serialNumber } = require("./utils/constant.js");
 const { vendorPersmissionsList } = require("./utils/constant.js");
 const transactionSerialNumebrSchema = require("./client/model/transactionSeries.js");
+const companyConfigureSchema = require("./client/model/companyConfigure.js");
 
 
 // middleware setup
@@ -174,12 +175,12 @@ app.use(cors({
 
 const clientAndDomainConnection = [
     {
-        userId : "67cdae13e177fa43c603b832",
+        userId: "67cdae13e177fa43c603b832",
         domains: ['http://localhost:5174', 'https://aayesha.com']
     },
     {
         userId: "6997f3fba3547262dfee99c3",
-        domains: ['http://localhost:5174', ]
+        domains: ['http://localhost:5174',]
     }
 ]
 
@@ -188,7 +189,7 @@ const validateClientOrigin = (req, res, next) => {
     const origin = req.headers.origin;
 
     console.log("origin", origin);
-    
+
 
     // Fast path – allow all your known static domains instantly
     if (!origin || STATIC_ALLOWED_ORIGINS.includes(origin)) {
@@ -242,7 +243,46 @@ const validateClientOrigin = (req, res, next) => {
 };
 
 
-app.get("/api/check-domain", validateClientOrigin, (req, res) => res.status(200).json({status: 'ok'}))
+app.get("/api/check-domain", validateClientOrigin, (req, res) => res.status(200).json({ status: 'ok' }))
+app.get("/api/get/company-config/:id", validateClientOrigin, async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+        const clientConnection = await getClientDatabaseConnection(id);
+        const CompanyConfigure = clientConnection.model('companyConfigure', companyConfigureSchema);
+        const org = await CompanyConfigure.findOne({ deletedAt: null })
+            .sort({ createdAt: -1 });
+        if (!org) {
+            return res.status(404).send({
+                success: false,
+                message: "Company config not found."
+            })
+        }
+
+        return res.status(200).send({
+            success: true,
+            message: "Company config found success.",
+            data: org
+        })
+
+    } catch (error) {
+
+        return res.status(500).send({
+            message: "Intenal server error"
+        });
+
+    }
+
+
+
+
+
+
+
+
+
+})
 
 
 
