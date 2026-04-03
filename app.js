@@ -176,7 +176,7 @@ app.use(cors({
 const clientAndDomainConnection = [
     {
         userId: "67cdae13e177fa43c603b832",
-        domains: ['http://localhost:5174', 'https://aayesha.com', 'aayesha.com', 'www.aayesha.com']
+        domains: ['http://localhost:5174', 'https://aayesha.com', 'aayesha.com', 'https://www.aayesha.com']
     },
     {
         userId: "6997f3fba3547262dfee99c3",
