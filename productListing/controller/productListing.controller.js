@@ -209,12 +209,48 @@ exports.getQuestionsByProduct = async (req, res) => {
     console.log("productMainStockId", productMainStockId);
     
 
-    const qa = await QuestionAndAnswerProduct.find({ productMainStockId, isVerified: true, hasAnswered: true })
+    const qa = await QuestionAndAnswerProduct.find({ productMainStockId, isPredefined: false, isVerified: true, hasAnswered: true })
       .sort(sort)
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    const total = await QuestionAndAnswerProduct.countDocuments({ productMainStockId, isVerified: true, hasAnswered: true });
+    const total = await QuestionAndAnswerProduct.countDocuments({ productMainStockId, isPredefined: false, isVerified: true, hasAnswered: true });
+
+    res.status(200).json({
+      qa,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getFaqsByProduct = async (req, res) => {
+  try {
+    const { clientId, productMainStockId } = req.params;
+    const { page = 1, limit = 10, sort = '-createdAt' } = req.query; // Pagination and sorting
+
+    const clientConnection = await getClientDatabaseConnection(clientId);
+    const ProductMainStock = clientConnection.model('productMainStock', productMainStockSchema);
+    const QuestionAndAnswerProduct = clientConnection.model('productqas', questionAndAnswerProductSchema);
+
+    // Validate product exists
+    const product = await ProductMainStock.findById(productMainStockId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    console.log("productMainStockId", productMainStockId);
+    
+
+    const qa = await QuestionAndAnswerProduct.find({ productMainStockId, isPredefined: true, isVerified: true, hasAnswered: true })
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await QuestionAndAnswerProduct.countDocuments({ productMainStockId, isPredefined: true, isVerified: true, hasAnswered: true });
 
     res.status(200).json({
       qa,

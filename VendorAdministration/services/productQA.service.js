@@ -40,7 +40,7 @@ const getByProductMainSockId = async (clientId, productMainStockId) => {
     try {  
         const clientConnection = await getClientDatabaseConnection(clientId);  
         const ProductQA = clientConnection.model('productqas', questionAndAnswerProductSchema)  
-        const qa = await ProductQA.find({ productMainStockId: productMainStockId, isPredefined: false }).select("question answer");  
+        const qa = await ProductQA.find({ productMainStockId: productMainStockId, isPredefined: true }).select("question answer");  
         if (!qa) {  
             throw new CustomError(statusCode.NotFound, message.lblProductQANotFound);  
         }  

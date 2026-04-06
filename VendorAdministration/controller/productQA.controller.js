@@ -38,10 +38,10 @@ exports.create = async (req, res, next) => {
         if (!productt) { 
             return res.status(statusCode.NotFound).json({ message: 'Product not found' }); 
         } 
-        const existingQuestion = await QuestionAndAnswerProduct.findOne({ userId: mainUser._id, warehouse, productMainStockId, question }); 
-        if (existingQuestion) { 
-            return res.status(statusCode.BadRequest).json({ message: 'You have already raised this question for this product.' }); 
-        } 
+        // const existingQuestion = await QuestionAndAnswerProduct.findOne({ userId: mainUser._id, warehouse, productMainStockId, question }); 
+        // if (existingQuestion) { 
+        //     return res.status(statusCode.BadRequest).json({ message: 'You have already raised this question for this product.' }); 
+        // } 
         // Validate required fields 
         if (!clientId) { 
             return res.status(statusCode.BadRequest).send({ message: message.lblClinetIdIsRequired }); 
