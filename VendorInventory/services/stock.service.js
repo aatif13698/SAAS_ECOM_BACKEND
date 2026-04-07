@@ -178,22 +178,110 @@ const update = async (clientId, stockId, updateData) => {
     }
 };
 
+// const getById = async (clientId, stockId) => {
+//     try {
+//         const clientConnection = await getClientDatabaseConnection(clientId);
+//         const Stock = clientConnection.model('productStock', productStockSchema);
+//         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+
+//         const stock = await Stock.findById(stockId).populate({
+//             path: 'normalSaleStock',
+//             model: MainStock,
+//         });
+//         if (!stock) {
+//             throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
+//         }
+//         return stock;
+//     } catch (error) {
+//         throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+//     }
+// };
+
 const getById = async (clientId, stockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
+        
         const Stock = clientConnection.model('productStock', productStockSchema);
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
+        const StockLedger = clientConnection.model('stockLedger', stockLedgerSchema);
 
-        const stock = await Stock.findById(stockId).populate({
-            path: 'normalSaleStock',
-            model: MainStock,
-        });
+        // Fetch the productStock with populated normalSaleStock (real-world standard: use lean() for performance when we don't need full Mongoose documents)
+        let stock = await Stock.findById(stockId)
+            .populate({
+                path: 'normalSaleStock',
+                model: MainStock,
+            })
+            .lean(); // Returns plain JS objects → better performance & easier to enrich
+
         if (!stock) {
             throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
         }
-        return stock;
+
+        // Collect normalSaleStock IDs for batch processing (avoids N+1 queries)
+        const normalSaleStockIds = stock.normalSaleStock
+            .map(item => item?._id)
+            .filter(Boolean);
+
+        let finalStocks = [];
+
+        if (normalSaleStockIds.length > 0) {
+            // Single aggregation to get the LATEST ledger per productMainStock (real-world standard)
+            // We sort by createdAt descending and use $group + $first → guarantees the most recent entry
+            const latestLedgers = await StockLedger.aggregate([
+                {
+                    $match: {
+                        productMainStock: { $in: normalSaleStockIds }
+                    }
+                },
+                {
+                    $sort: { _id: -1 } // timestamps: true → createdAt is reliable and indexed by default
+                },
+                {
+                    $group: {
+                        _id: "$productMainStock",
+                        finalStock: { $first: "$totalStock" } // latest totalStock becomes finalStock
+                    }
+                }
+            ]);
+
+            console.log("latestLedgers", latestLedgers);
+            
+
+            // O(1) lookup map (fastest way in JS)
+            const stockMap = new Map(
+                latestLedgers.map(ledger => [
+                    ledger._id.toString(),
+                    ledger.finalStock
+                ])
+            );
+
+            // Enrich each normalSaleStock item with finalStock
+            // Also build the finalStocks array as requested (parallel to normalSaleStock order)
+            stock.normalSaleStock = stock.normalSaleStock.map(item => {
+                if (!item) return item;
+
+                const finalStockValue = stockMap.get(item._id.toString()) ?? 0;
+                
+                // Attach directly to the item (most convenient for consumers)
+                item.finalStock = finalStockValue;
+
+                // Also collect into finalStocks array (exactly as you asked)
+                finalStocks.push(finalStockValue);
+
+                return item;
+            });
+        }
+
+        // Return enriched stock + finalStocks variable (both for maximum flexibility)
+        return {
+            ...stock,
+            finalStocks // array of latest totalStock values, in the same order as normalSaleStock
+        };
     } catch (error) {
-        throw new CustomError(error.statusCode || 500, `Error getting: ${error.message}`);
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error getting stock: ${error.message}`
+        );
     }
 };
 
