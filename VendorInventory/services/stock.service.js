@@ -80,6 +80,7 @@ const create = async (clientId, data, mainUser) => {
         if (data?.openingStock && data?.openingStock > 0) {
 
             const lastLedger = await StockLedger.findOne({
+                productMainStock: mainStock._id,
                 businessUnit: data.businessUnit,
                 branch: data.branch,
                 warehouse: data.warehouse,
@@ -88,7 +89,7 @@ const create = async (clientId, data, mainUser) => {
                 isBranchLevel: false,
                 isWarehouseLevel: true,
             })
-                .sort({ date: -1, createdAt: -1 })   // most recent first
+                .sort({ _id: -1 })   // most recent first
                 .select('totalStock')
                 .lean();
 
@@ -119,10 +120,77 @@ const create = async (clientId, data, mainUser) => {
             await newEntry.save();
         }
 
-        const stock = await Stock.findOne({ product: data.product }).populate({
-            path: 'normalSaleStock',
-            model: MainStock,
-        });
+        // const stock = await Stock.findOne({ product: data.product }).populate({
+        //     path: 'normalSaleStock',
+        //     model: MainStock,
+        // });
+
+        // new
+        let stock = await Stock.findById(newStock._id)
+            .populate({
+                path: 'normalSaleStock',
+                model: MainStock,
+            })
+            .lean(); // Returns plain JS objects → better performance & easier to enrich
+
+        if (!stock) {
+            throw new CustomError(statusCode.NotFound, message.lblStockNotFound);
+        }
+
+        // Collect normalSaleStock IDs for batch processing (avoids N+1 queries)
+        const normalSaleStockIds = stock.normalSaleStock
+            .map(item => item?._id)
+            .filter(Boolean);
+
+        let finalStocks = [];
+
+        if (normalSaleStockIds.length > 0) {
+            // Single aggregation to get the LATEST ledger per productMainStock (real-world standard)
+            // We sort by createdAt descending and use $group + $first → guarantees the most recent entry
+            const latestLedgers = await StockLedger.aggregate([
+                {
+                    $match: {
+                        productMainStock: { $in: normalSaleStockIds }
+                    }
+                },
+                {
+                    $sort: { _id: -1 } // timestamps: true → createdAt is reliable and indexed by default
+                },
+                {
+                    $group: {
+                        _id: "$productMainStock",
+                        finalStock: { $first: "$totalStock" } // latest totalStock becomes finalStock
+                    }
+                }
+            ]);
+
+            console.log("latestLedgers", latestLedgers);
+
+
+            // O(1) lookup map (fastest way in JS)
+            const stockMap = new Map(
+                latestLedgers.map(ledger => [
+                    ledger._id.toString(),
+                    ledger.finalStock
+                ])
+            );
+
+            // Enrich each normalSaleStock item with finalStock
+            // Also build the finalStocks array as requested (parallel to normalSaleStock order)
+            stock.normalSaleStock = stock.normalSaleStock.map(item => {
+                if (!item) return item;
+
+                const finalStockValue = stockMap.get(item._id.toString()) ?? 0;
+
+                // Attach directly to the item (most convenient for consumers)
+                item.finalStock = finalStockValue;
+
+                // Also collect into finalStocks array (exactly as you asked)
+                finalStocks.push(finalStockValue);
+
+                return item;
+            });
+        }
 
 
         return stock
@@ -200,7 +268,7 @@ const update = async (clientId, stockId, updateData) => {
 const getById = async (clientId, stockId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
-        
+
         const Stock = clientConnection.model('productStock', productStockSchema);
         const MainStock = clientConnection.model('productMainStock', productMainStockSchema);
         const StockLedger = clientConnection.model('stockLedger', stockLedgerSchema);
@@ -245,7 +313,7 @@ const getById = async (clientId, stockId) => {
             ]);
 
             console.log("latestLedgers", latestLedgers);
-            
+
 
             // O(1) lookup map (fastest way in JS)
             const stockMap = new Map(
@@ -261,7 +329,7 @@ const getById = async (clientId, stockId) => {
                 if (!item) return item;
 
                 const finalStockValue = stockMap.get(item._id.toString()) ?? 0;
-                
+
                 // Attach directly to the item (most convenient for consumers)
                 item.finalStock = finalStockValue;
 
@@ -857,7 +925,7 @@ const getListStockOfSupplierByPurchaseInv = async (
 
         console.log("productStockIds", productStockIds);
         console.log("productMainStockIds", productMainStockIds);
-        
+
 
 
 
@@ -1120,7 +1188,7 @@ const getListStockOfCustomerBySaleInv = async (
 
         console.log("productStockIds", productStockIds);
         console.log("productMainStockIds", productMainStockIds);
-        
+
 
 
 
