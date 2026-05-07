@@ -45,6 +45,10 @@ const superAdminBuRouter = require("./superAdminVendorManagement/routes/superAdm
 const superAdminRequestRoute = require("./superAdminVendorManagement/routes/request.routes.js");
 const superAdminQueryRoute = require("./superAdminVendorManagement/routes/query.routes.js");
 
+
+// routes import for dashboard
+const vendorDashboard = require("./vendorDashboard/routes/dashboard.route.js");
+
 // routes import for vendor
 
 const vendorAuthRouter = require("./commonClinetAuthentication/routes/clientAuth.routes.js");
@@ -315,6 +319,10 @@ app.use("/api/superAdmin/subCategory", superAdminSubCategoryRouter.router);
 app.use("/api/superAdmin/vendor/", superAdminBuRouter.router);
 app.use("/api/superAdmin/request/", superAdminRequestRoute.router);
 app.use("/api/superAdmin/query/", superAdminQueryRoute.router);
+
+
+// routes setup for dashboard
+app.use("/api/vendor/dashboard", vendorDashboard.router)
 
 
 
