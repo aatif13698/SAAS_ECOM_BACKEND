@@ -95,6 +95,7 @@ const purchaseInvoiceSchema = new Schema(
             }
         ],
         balance: { type: Number, default: 0, min: 0 },
+        grandTotal: { type: Number, default: 0, min: 0 },
 
         isReturnCreated: {type: Boolean, default: false},
 

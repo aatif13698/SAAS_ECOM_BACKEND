@@ -39,8 +39,8 @@ exports.create = async (req, res, next) => {
             paymentMethod,
             payedFrom,
             paidAmount,
-            balance
-
+            balance,
+            grandTotal
 
 
         } = req.body;
@@ -95,6 +95,7 @@ exports.create = async (req, res, next) => {
             payedFrom,
             paidAmount,
             balance,
+            grandTotal,
             createdBy: mainUser._id,
         };
 
