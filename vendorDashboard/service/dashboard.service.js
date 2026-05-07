@@ -9,31 +9,8 @@ const supplierSchema = require("../../client/model/supplier");
 const purchaseInvoiceSchema = require("../../client/model/purchaseInvoice");
 const saleInvoiceSchema = require("../../client/model/saleInvoice");
 const productBlueprintSchema = require("../../client/model/productBlueprint");
+const orderSchema = require("../../client/model/order");
 
-
-
-// const getCounts = async (clientId) => {
-//     try {
-//         const clientConnection = await getClientDatabaseConnection(clientId);
-
-//         const clientUser = clientConnection.model('clientUsers', clinetUserSchema);
-//         const Supplier = clientConnection.model('supplier', supplierSchema)
-//         const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
-//         const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema);
-//         const ProductBluePrint = clientConnection.model('productBlueprint', productBlueprintSchema);
-
-//         const [customers, suppliers] = Promise.all([
-//             clientUser.find({ roleId: 0 }),
-//             Supplier.find({}),
-//             ProductBluePrint.find({})
-//         ]);
-
-
-//         return true;
-//     } catch (error) {
-//         throw new CustomError(error.statusCode || 500, `Error getting holiday: ${error.message}`);
-//     }
-// };
 
 
 const getCounts = async (clientId) => {
@@ -52,7 +29,8 @@ const getCounts = async (clientId) => {
             purchaseStats,
             customerCount,
             supplierCount,
-            productCount
+            productCount,
+            employeeCount
         ] = await Promise.all([
             // 1. Sales Stats - Single aggregation (very fast)
             SaleInvoice.aggregate([
@@ -90,11 +68,17 @@ const getCounts = async (clientId) => {
             Supplier.countDocuments({}),
 
             // 5. Products
-            ProductBluePrint.countDocuments({})
+            ProductBluePrint.countDocuments({}),
+
+            // 6 employees
+            ClientUser.countDocuments({
+                roleId: { $gt: 1 },
+                // deletedAt: { $exists: false }   // or null if you set deletedAt: null
+            }),
         ]);
 
         console.log("purchaseStats", purchaseStats);
-        
+
 
         const result = {
             sales: {
@@ -110,6 +94,73 @@ const getCounts = async (clientId) => {
             customers: customerCount,
             suppliers: supplierCount,
             products: productCount,
+            employees: employeeCount,
+            lastUpdated: new Date().toISOString()
+        };
+
+        return result;
+
+    } catch (error) {
+        console.error('❌ Dashboard Counts Error:', error);
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error fetching dashboard counts: ${error.message}`
+        );
+    }
+};
+
+const getLatest = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const SaleInvoice = clientConnection.model('saleInvoice', saleInvoiceSchema);
+        const Order = clientConnection.model("Order", orderSchema);
+        const User = clientConnection.model("clientUsers", clinetUserSchema)
+        const Supplier = clientConnection.model('supplier', supplierSchema);
+
+        const [
+            latestSales,
+            latestPurchases,
+            latestOrders
+        ] = await Promise.all([
+            SaleInvoice.find({ deletedAt: null })
+                .sort({ createdAt: -1, _id: -1 })
+                .limit(5)
+                .populate({
+                    path: "customer",
+                    model: User,
+                })
+            ,
+
+            // === Latest 5 Purchase Invoices ===
+            PurchaseInvoice.find({ deletedAt: null })
+                .sort({ createdAt: -1, _id: -1 })
+                .limit(5)
+                .populate({
+                    path: "supplier",
+                    model: Supplier,
+                    select: "-items"
+                })
+            ,
+
+            // === Latest 5 Orders ===
+            Order.find({ deletedAt: null })  // or whatever soft delete field you use
+                .sort({ createdAt: -1, _id: -1 })
+                .limit(5)
+                .populate({
+                    path: "customer",
+                    model: User,
+                    select: "firstName lastName email phone _id",
+                })
+            ,
+        ]);
+
+
+
+        const result = {
+            latestSales,
+            latestPurchases,
+            latestOrders,
             lastUpdated: new Date().toISOString()
         };
 
@@ -128,4 +179,5 @@ const getCounts = async (clientId) => {
 
 module.exports = {
     getCounts,
+    getLatest
 }; 

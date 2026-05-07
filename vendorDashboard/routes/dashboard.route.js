@@ -9,6 +9,7 @@ const { uploadBranchIcon } = require("../../utils/multer");
 
 
 router.get('/get/counts/:clientId', entityAuth.authorizeEntity("Administration", "Employee", "create"), dashboardController.getCounts); 
+router.get('/get/latest/:clientId', entityAuth.authorizeEntity("Administration", "Employee", "create"), dashboardController.getLatest); 
 
 
 

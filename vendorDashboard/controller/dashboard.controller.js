@@ -28,5 +28,23 @@ exports.getCounts = async (req, res, next) => {
     }
 };
 
+exports.getLatest = async (req, res, next) => {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) {
+            return res.status(400).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+        const asset = await dashboardService.getLatest(clientId);
+        return res.status(200).send({
+            message: "Counts found successfully",
+            data: asset,
+        });
+    } catch (error) {
+        next(error)
+    }
+};
+
 
 
