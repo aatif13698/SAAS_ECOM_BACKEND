@@ -472,6 +472,32 @@ const allByCustomer = async (clientId, filters = {}) => {
 };
 
 
+const listFiltered = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SaleInvoice = clientConnection.model('saleInvoice', SaleInvoiceSchema);
+        const User = clientConnection.model("clientUsers", clinetUserSchema);
+
+        const invoices = await SaleInvoice.find(filters)
+            .sort({ siDate: -1, createdAt: -1 })   
+            .populate({
+                path: "customer",
+                model: User,
+                select: "fullName email phone"   
+            })
+            .lean();   
+
+        return {
+            count: invoices.length,
+            invoices
+        };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error fetching filtered invoices: ${error.message}`);
+    }
+};
+
+
+
 
 module.exports = {
     create,
@@ -480,5 +506,6 @@ module.exports = {
     list,
     changeStatus,
     unpaid,
-    allByCustomer
+    allByCustomer,
+    listFiltered
 }; 

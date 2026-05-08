@@ -453,3 +453,68 @@ exports.all = async (req, res, next) => {
         next(error);
     }
 };
+
+
+
+// GET /api/sale-invoices/filtered
+exports.listFiltered = async (req, res, next) => {
+    try {
+        const mainUser = req.user;
+        const {
+            clientId,
+            keyword = '',
+            startDate,
+            endDate,
+            status,
+            customerId,
+        } = req.query;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        // Build filters
+        const filters = {
+            deletedAt: null,
+        };
+
+        // Keyword search on SI Number
+        if (keyword?.trim()) {
+            filters.$or = [
+                { siNumber: { $regex: keyword.trim(), $options: "i" } },
+            ];
+        }
+
+        // Date Range (on siDate)
+        if (startDate || endDate) {
+            filters.siDate = {};
+            if (startDate) {
+                filters.siDate.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                filters.siDate.$lte = new Date(endDate);
+            }
+        }
+
+        // Status Filter
+        if (status && status !== 'all') {
+            filters.status = status;
+        }
+
+        // Customer filter
+        if (customerId) {
+            filters.customer = customerId;
+        }
+
+        const result = await saleInvoiceService.listFiltered(clientId, filters);
+
+        return res.status(statusCode.OK).send({
+            message: "Sale invoices fetched successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -31,5 +31,8 @@ router.get('/unpaid/purchaseInvoice', entityAuth.authorizeEntity("Purchases", "P
 
 router.post("/change/status/purchaseInvoice", entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), purchaseInvoiceController.changeStatus);
 
+router.get('/filtered',entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), purchaseInvoiceController.listFilteredPurchase);
+
+
 
 exports.router = router; 

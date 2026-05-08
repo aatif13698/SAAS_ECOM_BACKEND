@@ -701,11 +701,38 @@ const changeStatus = async (clientId, purchaseInvoiceId, data) => {
     }
 };
 
+const listFilteredPurchaseInvoice = async (clientId, filters = {}) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        
+        const PurchaseInvoice = clientConnection.model('purchaseInvoice', purchaseInvoiceSchema);
+        const Supplier = clientConnection.model('supplier', supplierSchema); // assuming you have supplier model
+
+        const invoices = await PurchaseInvoice.find(filters)
+            .sort({ piDate: -1, createdAt: -1 })
+            .populate({
+                path: "supplier",
+                model: Supplier,
+                select: "name email phone"   // adjust fields as per your supplier schema
+            })
+            .lean();
+
+        return {
+            count: invoices.length,
+            invoices
+        };
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error fetching filtered purchase invoices: ${error.message}`);
+    }
+};
+
+
 
 module.exports = {
     create,
     getAuditPurchaseInvoice,
     auditItem,
+    listFilteredPurchaseInvoice,
 
     update,
     getById,

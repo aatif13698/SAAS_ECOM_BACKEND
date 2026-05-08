@@ -25,5 +25,7 @@ router.get('/unpaid/invoice', entityAuth.authorizeEntity("Purchases", "Purchase 
 
 router.get('/all/byCustomer/saleInvoice', entityAuth.authorizeEntity("Purchases", "Purchase Invoices", "create"), invoiceController.all);
 
+router.get('/filtered',entityAuth.authorizeEntity("Administration", "Employee", "create"), invoiceController.listFiltered);
+
 
 exports.router = router; 

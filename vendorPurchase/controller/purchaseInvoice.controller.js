@@ -491,3 +491,61 @@ exports.changeStatus = async (req, res, next) => {
         next(error);
     }
 }; 
+
+
+// GET /api/vendor/purchase/pi/filtered
+exports.listFilteredPurchase = async (req, res, next) => {
+    try {
+        const { 
+            clientId,
+            keyword = '',
+            startDate,
+            endDate,
+            status,
+            supplierId 
+        } = req.query;
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        const filters = {
+            deletedAt: null,
+        };
+
+        // Keyword Search on PI Number
+        if (keyword?.trim()) {
+            filters.$or = [
+                { piNumber: { $regex: keyword.trim(), $options: "i" } },
+            ];
+        }
+
+        // Date Range Filter (piDate)
+        if (startDate || endDate) {
+            filters.piDate = {};
+            if (startDate) filters.piDate.$gte = new Date(startDate);
+            if (endDate) filters.piDate.$lte = new Date(endDate);
+        }
+
+        // Status Filter
+        if (status && status !== 'all') {
+            filters.status = status;
+        }
+
+        // Supplier Filter (this is the main difference from sales invoice)
+        if (supplierId) {
+            filters.supplier = supplierId;
+        }
+
+        const result = await purchaseInvoice.listFilteredPurchaseInvoice(clientId, filters);
+
+        return res.status(statusCode.OK).send({
+            message: "Purchase invoices fetched successfully",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
