@@ -698,6 +698,24 @@ const defaultPersmissionsList = [
         }
       }
     ]
+  },
+  {
+    name: "Analytics",
+    access: false,
+    menu: [
+      {
+        name: "Report",
+        displayName: "All Report",
+        access: false,
+        subMenus: {
+          create: { id: 271, access: false, api: "/demo/path" },
+          view: { id: 272, access: false, api: "/demo/path" },
+          update: { id: 273, access: false, api: "/demo/path" },
+          softDelete: { id: 274, access: false, api: "/demo/path" },
+          activeActive: { id: 275, access: false, api: "/demo/path" }
+        }
+      },
+    ]
   }
 ];
 
@@ -1397,6 +1415,24 @@ const vendorPersmissionsList = [
           activeActive: { id: 270, access: true, api: "/demo/path" }
         }
       }
+    ]
+  },
+  {
+    name: "Analytics",
+    access: true,
+    menu: [
+      {
+        name: "Report",
+        displayName: "All Report",
+        access: true,
+        subMenus: {
+          create: { id: 271, access: true, api: "/demo/path" },
+          view: { id: 272, access: true, api: "/demo/path" },
+          update: { id: 273, access: true, api: "/demo/path" },
+          softDelete: { id: 274, access: true, api: "/demo/path" },
+          activeActive: { id: 275, access: true, api: "/demo/path" }
+        }
+      },
     ]
   }
 ];
