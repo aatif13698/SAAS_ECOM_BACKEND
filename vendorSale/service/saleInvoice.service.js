@@ -483,7 +483,7 @@ const listFiltered = async (clientId, filters = {}) => {
             .populate({
                 path: "customer",
                 model: User,
-                select: "fullName email phone"   
+                select: "firstName lastName email phone"   
             })
             .lean();   
 
