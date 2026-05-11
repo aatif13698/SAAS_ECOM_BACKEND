@@ -184,7 +184,7 @@ const clientAndDomainConnection = [
     },
     {
         userId: "6997f3fba3547262dfee99c3",
-        domains: ['http://localhost:5174',]
+         domains: ['http://localhost:5173', 'https://aayesha.com', 'aayesha.com', 'https://www.aayesha.com']
     }
 ]
 
