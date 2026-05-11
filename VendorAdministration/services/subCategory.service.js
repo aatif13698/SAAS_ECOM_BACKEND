@@ -79,11 +79,11 @@ const getById = async (subCategoryId) => {
     }
 };
 
-const subcategoryByCategory = async (clientId,categoryId) => {
+const subcategoryByCategory = async (clientId, categoryId) => {
     try {
         const clientConnection = await getClientDatabaseConnection(clientId);
         const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
-        const subCategory = await SubCategory.find({categoryId : categoryId});
+        const subCategory = await SubCategory.find({ categoryId: categoryId });
         if (!subCategory) {
             throw new CustomError(statusCode.NotFound, message.lblSubCategoryNotFound);
         }
@@ -119,6 +119,22 @@ const activeInactive = async (clientId, subCategoryId, data) => {
         }
         Object.assign(subCategory, data);
         return await subCategory.save();
+    } catch (error) {
+        throw new CustomError(error.statusCode || 500, `Error active inactive subCategory: ${error.message}`);
+    }
+};
+
+const activeInactiveCategory = async (clientId, categoryId, data) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const category = await Category.findById(categoryId);
+        if (!category) {
+            throw new CustomError(statusCode.NotFound, message.lblSubCategoryNotFound);
+        }
+        Object.assign(category, data);
+        return await category.save();
     } catch (error) {
         throw new CustomError(error.statusCode || 500, `Error active inactive subCategory: ${error.message}`);
     }
@@ -160,6 +176,65 @@ const restore = async (subCategoryId) => {
     }
 };
 
+const allActiveCategoriesWithSubcategories = async (clientId) => {
+    try {
+        const clientConnection = await getClientDatabaseConnection(clientId);
+
+        const Category = clientConnection.model('clientCategory', clinetCategorySchema);
+        const SubCategory = clientConnection.model('clientSubCategory', clinetSubCategorySchema);
+
+        // Step 1: Get active categories (sorted by name)
+        const categories = await Category.find({
+            deletedAt: null
+        })
+            .select('name description slug icon isActive  createdAt updatedAt') // select only needed fields
+            .sort({ name: 1 })
+            .lean(); // lean = faster, plain JS objects
+
+        if (!categories.length) {
+            return []; // return empty array instead of throwing (better for list endpoints)
+        }
+
+        // Step 2: Get only relevant active subcategories in ONE query using $in
+        const categoryIds = categories.map(cat => cat._id);
+
+        const subcategories = await SubCategory.find({
+            categoryId: { $in: categoryIds },
+
+            deletedAt: null
+        })
+            .select('name description categoryId isActive slug icon iconKey createdAt updatedAt') // select only needed fields
+            .sort({ name: 1 })
+            .lean();
+
+        console.log("subcategories", subcategories);
+
+
+        // Step 3: Group subcategories by categoryId (very fast in memory)
+        const subCatMap = subcategories.reduce((acc, sub) => {
+            const catId = sub?.categoryId?.toString();
+            if (!acc[catId]) acc[catId] = [];
+            acc[catId].push(sub);
+            return acc;
+        }, {});
+
+        // Step 4: Attach subcategories to each category
+        const result = categories.map(category => ({
+            ...category,
+            subcategories: subCatMap[category?._id?.toString()] || []
+        }));
+
+        return result;
+    } catch (error) {
+        console.error('Error in allActiveCategoriesWithSubcategories:', error);
+        throw new CustomError(
+            error.statusCode || 500,
+            `Error getting categories with subcategories: ${error.message}`
+        );
+    }
+};
+
+
 module.exports = {
     allActiveCategory,
     create,
@@ -168,6 +243,8 @@ module.exports = {
     subcategoryByCategory,
     list,
     activeInactive,
+    activeInactiveCategory,
     deleted,
-    restore
+    restore,
+    allActiveCategoriesWithSubcategories
 };

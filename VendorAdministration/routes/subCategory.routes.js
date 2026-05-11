@@ -128,7 +128,11 @@ router.get('/subCategoryByCategory/:clientId/:categoryId', entityAuth.authorizeE
 
 router.get('/listSubCategory', entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.listSubCategory);
 
+router.get('/categories-with-subcategories/:clientId', subCategoryContrller.getAllCategoriesWithSubcategories);
+
 router.post("/activeInactiveSubCategory", entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.activeinactiveSubCategory);
+router.post("/activeInactiveSubCategory-new", entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.activeinactiveSubCategory);
+router.post("/activeInactiveCategory-new", entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.activeinactiveCategoryNew);
 
 router.post("/softDeleteSubCategory", entityAuth.authorizeEntity("Product", "SubCategory", "create"), subCategoryContrller.softDeleteSubCategory);
 

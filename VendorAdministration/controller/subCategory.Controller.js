@@ -254,6 +254,27 @@ exports.listSubCategory = async (req, res, next) => {
     }
 };
 
+exports.getAllCategoriesWithSubcategories = async (req, res, next) => {
+    try {
+        const {clientId} = req.params; // comes from your auth/tenant middleware
+
+        if (!clientId) {
+            throw new CustomError(400, 'Client ID is required');
+        }
+
+        const data = await subCategoryService.allActiveCategoriesWithSubcategories(clientId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Categories with subcategories fetched successfully',
+            totalCategories: data.length,
+            data
+        });
+    } catch (error) {
+        next(error); // let your global error handler manage it
+    }
+};
+
 // active inactive subCategory by superAdmin
 exports.activeinactiveSubCategory = async (req, res, next) => {
     try {
@@ -271,6 +292,46 @@ exports.activeinactiveSubCategory = async (req, res, next) => {
             isActive: status === "1",
         });
         this.listSubCategory(req, res, next)
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.activeinactiveSubCategoryNew = async (req, res, next) => {
+    try {
+        const { clientId, id, status } = req.body;
+        if (!id) {
+            return res.status(400).send({
+                message: message.lblSubCategoryIdIsRequired,
+            });
+        }
+        await subCategoryService.activeInactive(clientId, id, {
+            isActive: status === "1",
+        });
+        return res.status(200).send({
+            message: "Updated Success fully",
+            success: true
+        })
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.activeinactiveCategoryNew = async (req, res, next) => {
+    try {
+        const { clientId, id, status } = req.body;
+        if (!id) {
+            return res.status(400).send({
+                message: message.lblSubCategoryIdIsRequired,
+            });
+        }
+        await subCategoryService.activeInactiveCategory(clientId, id, {
+            isActive: status === "1",
+        });
+        return res.status(200).send({
+            message: "Updated Success fully",
+            success: true
+        })
     } catch (error) {
         next(error);
     }
