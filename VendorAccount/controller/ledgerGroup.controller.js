@@ -748,6 +748,56 @@ exports.getAllCashAndBankLedger = async (req, res, next) => {
 
 
 
+// controllers/reportController.js
+const BalanceSheetService = require('../services/balanceSheet.service');
+
+exports.getBalanceSheet = async (req, res, next) => {
+    try {
+        const { clientId, level = "vendor", levelId = "", asOfDate } = req.query;
+
+
+        if (!clientId) {
+            return res.status(statusCode.BadRequest).send({
+                message: message.lblClinetIdIsRequired,
+            });
+        }
+
+        let businessId = null;
+
+        let branchId = null;
+
+        let warehouseId = null; 
+
+
+        if (level == "vendor") {
+        } else if (level == "business" && levelId) {
+            businessId = levelId
+        } else if (level == "branch" && levelId) {
+            branchId = levelId
+        } else if (level == "warehouse" && levelId) {
+            warehouseId = levelId
+        }
+
+
+        const service = new BalanceSheetService(clientId); // your middleware adds clientId
+        const report = await service.generateBalanceSheet({
+            businessId,
+            branchId,
+            warehouseId,
+            asOfDate: asOfDate ? new Date(asOfDate) : new Date(),
+            level: level || 'business'
+        });
+
+        res.json({
+            success: true,
+            data: report
+        });
+    } catch (error) {
+        console.error('Balance Sheet generation error:', error);
+        next(error);
+    }
+};
+
 
 
 

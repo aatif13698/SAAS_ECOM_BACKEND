@@ -34,6 +34,8 @@ router.post("/update/order/field/:groupId/:clientId", entityAuth.authorizeEntity
 
 router.get('/get/all/cash/bank/ledger', entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.getAllCashAndBankLedger);
 
+router.get('/get/balance-sheet',entityAuth.authorizeEntity("Accounting Master", "Group", "create"), ledgerGroupController.getBalanceSheet )
+
 
 
 
