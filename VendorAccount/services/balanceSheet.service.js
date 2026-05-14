@@ -116,7 +116,7 @@ class BalanceSheetService {
 
                 // Sign convention (real-world standard)
                 let balance = ledger.balance || 0;
-                if (ledger.isCredit) balance = -balance; // credit balance is positive for liability/equity
+                // if (ledger.isCredit) balance = -balance; // credit balance is positive for liability/equity
                 group.total += balance;
             }
         });
